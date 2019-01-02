@@ -50,12 +50,12 @@ rxModel <- RxODE::RxODE('
 # TODO: covariate effects
 
 KA = 1.01;
-CL= 16.1*exp(0.40*ECL);
-V1= 125 * exp(0.54*EV1);
-Q=23.8 * exp(0.63*EQ);
+CL= 16.1*exp(ECL);
+V1= 125 * exp(EV1);
+Q=23.8 * exp(EQ);
 V2=636;
 TLag=0.41;   # no IOV or IIV; TODO needs to be included
-F=1 * exp(0.57*EFDay2); # TODO: code "increase after day 2"
+F=1 * exp(EFDay2); # TODO: code "increase after day 2"
 # TODO: include IIV correlations CL-V1 of 0.43, CL-Q of 0.62
 # TODO: include IOV of 23% on F, 120% on Ka
 # TODO: covariate effects
@@ -70,7 +70,8 @@ d/dt(ABS) = -KA*ABS;
 d/dt(CENTR) = KA*ABS - K12*CENTR + K21*PERIP - Ke*CENTR;
 d/dt(PERIP) = K12*CENTR - K21*PERIP;
 ')
-model <- tdmore(rxModel, prop=0.149)
+omegas=c(ECL=0.40^2, EV1=0.54^2, EQ=0.63^2, EFDay2=0.57^2)
+model <- tdmore(rxModel, omega=vectorToDiagonalMatrix(omegas), res_var=list(errorModel("CONC", prop=0.149)))
 
 ui <- navbarPage("TDMore mockup",
                 tabPanel("Patient", icon=icon("users"),
@@ -482,9 +483,9 @@ server <- function(input, output, session) {
       TIME=c(regimen$TIME, lastDose+c(12,24,36,48)),
       AMT=c(regimen$AMT, c(NA,NA,NA,NA))
       )
-    root <- tdmore::findDose(fit, doseRows=which(is.na(newRegimen$AMT)),regimen = newRegimen, target = Target)
+    recommendation <- tdmore::findDose(fit, doseRows=which(is.na(newRegimen$AMT)),regimen = newRegimen, target = Target)
     #browser()
-    newRegimen$AMT[ is.na(newRegimen$AMT)] <- root$root
+    newRegimen$AMT[ is.na(newRegimen$AMT)] <- recommendation$dose
     ipredNew <- fit %>%
       predict(newdata = data.frame(TIME=seq(max(regimen$TIME), max(newRegimen$TIME)+12, length.out=300), CONC=NA), 
               regimen=newRegimen, 
