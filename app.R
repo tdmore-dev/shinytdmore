@@ -204,6 +204,7 @@ server <- function(input, output, session) {
     TIME=as.numeric(difftime(db$t, start, units="hour")),
     AMT=db$dose
   )
+  
   pred <- predict(
     model,
     newdata = data.frame(TIME=seq(0, max(regimen$TIME)+24, length.out=300), CONC=NA),
@@ -211,16 +212,21 @@ server <- function(input, output, session) {
     se=TRUE) %>% as.data.frame()
   pred$TIME <- min(db$t) + pred$TIME*60*60
   
-  fulldb <- bind_rows(db%>%mutate(TIME=t,OCC=row_number(),eventType="TMT")%>%select(-t),pred%>%mutate(eventType="PRED"))%>%arrange(TIME)%>%fill(OCC)
+  # Merge dosing history and predictions in the same db and make sure to have identical format in shared dbs: to keep link beween selections when using subplot
+  fulldb <- bind_rows(db %>% mutate(TIME=t,OCC=row_number(),eventType="TMT") %>% select(-t),
+                      pred %>% mutate(eventType="PRED")) %>% 
+              arrange(TIME) %>% 
+              fill(OCC)
   
-  df1 <- fulldb%>%filter(eventType=="TMT")%>%select(dose,TIME,OCC)
-  df2 <- fulldb%>%filter(eventType=="PRED")%>%select(-dose)
+  df1 <- fulldb %>% filter(eventType=="TMT") %>% select(dose,TIME,OCC)
+  df2 <- fulldb %>% filter(eventType=="PRED") %>% select(-dose)
   
   shared_df1 <- SharedData$new(df1, ~OCC, group = "Choose dosing")
   shared_df2 <- SharedData$new(df2, ~OCC, group = "Choose dosing")
   
   filter_select("occ", "Dosing occasion:", shared_df1, ~OCC)
   
+  # Output for tab "Doses"
   output$dosingTable <- DT::renderDataTable( datatable(shared_df1), server=FALSE)
   
   output$dosingPlot <- renderPlotly({
@@ -228,19 +234,22 @@ server <- function(input, output, session) {
     p1 <- ggplot(shared_df2, aes(x=TIME)) +
       geom_line(aes(y=CONC)) +
       geom_ribbon(aes(ymin=CONC.lower, ymax=CONC.upper), alpha=0.3) +
-      labs(title="Population prediction", x="", y="Concentration (ug/L)", size="Dose (mg)")
+      labs(title="Population prediction", y="Concentration (ug/L)")
    
     p2 <- ggplot(shared_df1,aes(x=TIME, y=dose))+
+      geom_text(aes(x=TIME, y=dose,label=dose), nudge_x = 10000, nudge_y = 0, check_overlap = T, show.legend = FALSE) +
       geom_linerange(ymin=0, aes(ymax=dose))+
-      coord_cartesian(xlim = c(min(db$t),max(pred$TIME)), ylim = c(0,max(db$dose), expand = FALSE))
+      coord_cartesian(xlim = c(min(db$t),max(pred$TIME)), ylim = c(0,max(db$dose)+1, expand = FALSE))+
+      labs(x="Time", y="Dose (mg)")
 
     subplot(
       ggplotly(p1) %>% config(scrollZoom=TRUE, collaborate=FALSE, displayModeBar=FALSE, displaylogo=FALSE), 
       ggplotly(p2) %>% config(scrollZoom=TRUE, collaborate=FALSE, displayModeBar=FALSE, displaylogo=FALSE), 
       nrows = 2, heights = c(0.8, 0.2), widths = c(1), 
-      shareX = TRUE, shareY = FALSE, titleX = FALSE, titleY = FALSE)
+      shareX = TRUE, shareY = FALSE, titleX = TRUE, titleY = TRUE)
   })
   
+  # Output for tab "Covariates"
   predCov <- reactive({
     db <- dosing$data(withFilter=FALSE)
     db$selected <- FALSE
@@ -266,22 +275,15 @@ server <- function(input, output, session) {
      db <- dosing$data(withFilter=FALSE)
      pred <- predCov()
      
-     fulldb <- bind_rows(db%>%mutate(TIME=t,OCC=row_number(),eventType="TMT")%>%select(-t),pred%>%mutate(eventType="PRED"))%>%arrange(TIME)%>%fill(OCC)
-     
-     df1 <- fulldb%>%filter(eventType=="TMT")%>%select(dose,TIME,OCC)
-     df2 <- fulldb%>%filter(eventType=="PRED")%>%select(-dose)
-     
-     shared_df1 <- SharedData$new(df1, ~OCC, group = "Choose dosing")
-     shared_df2 <- SharedData$new(df2, ~OCC, group = "Choose dosing")
-     
      p1 <- ggplot(shared_df2) +
-       geom_line(aes(x=TIME, y=CONC), data=pred) +
+       geom_line(aes(x=TIME, y=CONC)) +
        geom_ribbon(aes(x=TIME,ymin=CONC.lower, ymax=CONC.upper), alpha=0.3) +
        labs(title="A priori prediction", y="Concentration (mg/L)", caption="Same as population prediction, as no cov effects in model yet")
     
      p2 <- ggplot(shared_df1,aes(x=TIME, y=dose))+
+            geom_text(aes(x=TIME, y=dose,label=dose), nudge_x = 10000, nudge_y = 0, check_overlap = T, show.legend = FALSE) +
             geom_linerange(ymin=0, aes(ymax=dose))+
-            coord_cartesian(xlim = c(min(db$t),max(pred$TIME)), ylim = c(0,max(db$dose), expand = FALSE)) +
+            coord_cartesian(xlim = c(min(db$t),max(pred$TIME)), ylim = c(0,max(db$dose)+2, expand = FALSE)) +
             labs(x="Time", y="Dose (mg)")
      
      subplot(
@@ -300,6 +302,7 @@ server <- function(input, output, session) {
     db
   })
   
+  # Output for tab "Measures"
   output$measuresTable <- renderDT( measures(), 
                                   options = list(
                                     paging = FALSE,
@@ -345,7 +348,7 @@ server <- function(input, output, session) {
     ipred$TIME <- min(db$t) + ipred$TIME*60*60
     
     fulldb <- bind_rows(db%>%mutate(TIME=t,OCC=row_number(),eventType="TMT")%>%select(-t),pred%>%mutate(eventType="PRED"))%>%
-      bind_rows(ipred%>%mutate(eventType="IPRED"))%>%
+      bind_rows(ipred%>%mutate(eventType="IPRED")) %>%
       arrange(TIME)%>%fill(OCC)
     
     df1 <- fulldb%>%filter(eventType=="TMT")%>%select(dose,TIME,OCC)
@@ -357,15 +360,12 @@ server <- function(input, output, session) {
     shared_df3 <- SharedData$new(df3, ~OCC, group = "Choose dosing")
     
     p1 <- ggplot(shared_df3) +
-      #geom_point(aes(x=t, y=0, size=factor(dose))) +
       geom_line(aes(x=TIME, y=CONC, color="Population"), data=shared_df2) +
-      #geom_ribbon(aes(x=TIME, ymin=CONC.lower, ymax=CONC.upper, fill="Population"), data=pred, alpha=0.3) +
       geom_line(aes(x=TIME, y=CONC, color="Individual"), data=shared_df3) +
       geom_ribbon(aes(x=TIME, ymin=CONC.lower, ymax=CONC.upper, fill="Individual"), data=shared_df3, alpha=0.3) +
       geom_point(aes(x=t, y=measure, color="Samples"),shape=4, size=3, data=tdm)+
       geom_text(data=tdm,aes(x=t, y=measure,label=measure, color="Samples"), nudge_x = 10000, nudge_y = 0, check_overlap = T, show.legend = FALSE) +
-      #geom_text(aes(x=t, y=measure, label=measure, color="Samples"), data=tdm, nudge_x=+30, hjust=0) +
-      labs(title="Individual prediction")+#, fill="Prediction", size="Dose (mg)", color="Prediction")
+      labs(title="Individual prediction", y="Concentration (mg/L)")+
       scale_fill_discrete(guide=FALSE)+
       scale_colour_discrete(name="Data",
                             breaks=c("Population", "Individual", "Samples"),
@@ -375,26 +375,28 @@ server <- function(input, output, session) {
     
     mytext=paste("Time = ", shared_df2$data()$TIME, "\n" , "Conc = ", shared_df2$data()$CONC, "\n", "Data: ",shared_df2$data()$eventType,  sep="")    
     mytext2=paste("Time = ", shared_df3$data()$TIME, "\n" , "Conc = ", shared_df3$data()$CONC, "\n", "Data: ",shared_df3$data()$eventType,  sep="")    
-  
+    mytext3=paste("Time = ", tdm$t, "\n" , "Conc = ", tdm$measure, "mg/L \n", "Data: Observation",  sep="")    
+    mytext4=paste("Time = ", shared_df1$data()$TIME, "\n" , "Dose = ", shared_df1$data()$dose, "mg \n", sep="")    
+    
     
     p2 <- ggplot(shared_df1,aes(x=TIME, y=dose))+
       geom_linerange(ymin=0, aes(ymax=dose))+
-      coord_cartesian(xlim = c(min(db$t),max(pred$TIME)), ylim = c(0,max(db$dose), expand = FALSE))
+      geom_text(aes(x=TIME, y=dose,label=dose), nudge_x = 10000, nudge_y = 0, check_overlap = T, show.legend = FALSE) +
+      coord_cartesian(xlim = c(min(db$t),max(pred$TIME)), ylim = c(0,max(db$dose)+2, expand = FALSE)) +
+      labs(x="Time", y="Dose (mg)")
     
     pt2 <- ggplotly(p2) %>% config(scrollZoom=TRUE, collaborate=FALSE, displayModeBar=FALSE, displaylogo=FALSE)
     subplot(
       style(pt1, text=mytext, hoverinfo = "text", traces = c(1)) %>%
         style(text=mytext2, hoverinfo = "text", traces = c(2)) %>%
         style(hoverinfo = "none", traces = c(3)),
-        #style(text=mytext3, hoverinfo = "text", traces = c(4)),
-      pt2,
+      style(pt2),#, text=mytext4, hoverinfo = "text"),
       nrows = 2, heights = c(0.8, 0.2), widths = c(1),
-      shareX = TRUE, shareY = FALSE, titleX = FALSE, titleY = FALSE, which_layout = 1
+      shareX = TRUE, shareY = FALSE, titleX = TRUE, titleY = TRUE, which_layout = 1
     )
   })
   
-  
-  
+  # Output for tab "Targets"
   output$targetsPlot <- renderPlotly({
     db <- dosing$data(withFilter=FALSE)
     start <- min(db$t)
@@ -429,23 +431,65 @@ server <- function(input, output, session) {
       upper=15
       )
     
-    p1 <- ggplot(db) +
-      geom_point(aes(x=t, y=0, size=factor(dose))) +
-      geom_line(aes(x=TIME, y=CONC, color="Population"), data=pred) +
-      geom_ribbon(aes(x=TIME, ymin=CONC.lower, ymax=CONC.upper, fill="Population"), data=pred, alpha=0.3) +
-      geom_point(aes(x=t, y=measure, color="Samples"), data=tdm)+
-      geom_text(aes(x=t, y=measure, label=measure), data=tdm, nudge_x=+30, hjust=0) +
-      geom_line(aes(x=TIME, y=CONC, color="Individual"), data=ipred) +
-      geom_ribbon(aes(x=TIME, ymin=CONC.lower, ymax=CONC.upper, fill="Individual"), data=ipred, alpha=0.3) +
-      labs(title="Individual prediction", fill="Prediction", size="Dose (mg)", color="Prediction") +
-      geom_rect(data=targets, aes(xmin=t1, xmax=t2, ymin=lower, ymax=upper, fill="Target"), alpha=0.3)
-    ggplotly(p1) %>%
-      config(scrollZoom=TRUE, collaborate=FALSE, displayModeBar=FALSE, displaylogo=FALSE)
+    fulldb <- bind_rows(db%>%mutate(TIME=t,OCC=row_number(),eventType="TMT")%>%select(-t),
+                        pred%>%mutate(eventType="PRED"),
+                        tdm%>%mutate(TIME=t,eventType="Sample")) %>%
+      bind_rows(ipred%>%mutate(eventType="IPRED"))%>%
+      arrange(TIME)%>%fill(OCC)
+    
+    df1 <- fulldb%>%filter(eventType=="TMT")%>%select(dose,TIME,OCC)
+    df2 <- fulldb%>%filter(eventType=="PRED")%>%select(-dose)
+    df3 <- fulldb%>%filter(eventType=="IPRED")%>%select(-dose)
+    df4 <- fulldb%>%filter(eventType=="Sample")%>%select(-dose)
+    
+    shared_df1 <- SharedData$new(df1, ~OCC, group = "Choose dosing")
+    shared_df2 <- SharedData$new(df2, ~OCC, group = "Choose dosing")
+    shared_df3 <- SharedData$new(df3, ~OCC, group = "Choose dosing")
+    shared_df4 <- SharedData$new(df4, ~OCC, group = "Choose dosing")
+  
+    p1 <- ggplot(shared_df3) +
+      geom_line(aes(x=TIME, y=CONC, color="Population"), data=shared_df2) +
+      geom_line(aes(x=TIME, y=CONC, color="Individual"), data=shared_df3) +
+      geom_ribbon(aes(x=TIME, ymin=CONC.lower, ymax=CONC.upper, fill="Population"), data=shared_df2, alpha=0.3) +
+      geom_ribbon(aes(x=TIME, ymin=CONC.lower, ymax=CONC.upper, fill="Individual"), data=shared_df3, alpha=0.3) +
+      geom_text(aes(x=TIME, y=measure,label=measure, color="Sample"), nudge_x = 10000, nudge_y = 0, check_overlap = T, show.legend = FALSE, data=shared_df4) +
+      geom_point(aes(x=TIME, y=measure, color="Sample"),shape=4, size=3, data=shared_df4) +
+      geom_rect(data=targets, aes(xmin=t1, xmax=t2, ymin=lower, ymax=upper, fill="Target"), alpha=0.3) +
+      labs(title="Individual prediction", y="Concentration (mg/L)")+
+      scale_fill_discrete(guide=FALSE)+
+      scale_colour_discrete(name="Data",
+                            breaks=c("Population", "Individual", "Samples"),
+                            labels=c("Population", "Individual", "Samples"))
+    
+    pt1 <- ggplotly(p1) %>% config(scrollZoom=TRUE, collaborate=FALSE, displayModeBar=FALSE, displaylogo=FALSE)
+    
+    mytext=paste("Time = ", shared_df2$data()$TIME, "\n" , "Conc = ", shared_df2$data()$CONC, "\n", "Data: ",shared_df2$data()$eventType,  sep="")    
+    mytext2=paste("Time = ", shared_df3$data()$TIME, "\n" , "Conc = ", shared_df3$data()$CONC, "\n", "Data: ",shared_df3$data()$eventType,  sep="")    
+    mytext3=paste("Time = ", shared_df4$data()$TIME, "\n" , "Conc = ", shared_df4$data()$measure, "mg/L \n", "Data: Observation",  sep="")    
+    mytext4=paste("Time = ", shared_df1$data()$TIME, "\n" , "Dose = ", shared_df1$data()$dose, "mg \n", sep="")
+    mytext5=paste("Targets: \n Min ", targets$lower, "mg/L \n Max " , targets$upper, "mg/L", sep="")
+    
+    
+    p2 <- ggplot(shared_df1,aes(x=TIME, y=dose))+
+      geom_linerange(ymin=0, aes(ymax=dose))+
+      geom_text(aes(x=TIME, y=dose,label=dose), nudge_x = 10000, nudge_y = 0, check_overlap = T, show.legend = FALSE) +
+      coord_cartesian(xlim = c(min(db$t),max(pred$TIME)), ylim = c(0,max(db$dose)+2, expand = FALSE)) +
+      labs(x="Time", y="Dose (mg)")
+    
+    pt2 <- ggplotly(p2) %>% config(scrollZoom=TRUE, collaborate=FALSE, displayModeBar=FALSE, displaylogo=FALSE)
+    subplot(
+      style(pt1, text=mytext, hoverinfo = "text", traces = c(1)) %>%
+        style(text=mytext2, hoverinfo = "text", traces = c(2)) %>%
+        style(hoverinfo = "none", traces = c(3,4,5)) %>%
+        style(text=mytext4, hoverinfo = "text", traces = c(6)) %>%
+        style(text=mytext5, hoverinfo = "text", traces = c(7)),
+      style(pt2),#, text=mytext4, hoverinfo = "text"),
+      nrows = 2, heights = c(0.8, 0.2), widths = c(1),
+      shareX = TRUE, shareY = FALSE, titleX = TRUE, titleY = TRUE, which_layout = 1
+    )
   })
   
-  
-  
-  
+  # Output for tab "Adjustments"
   output$adjustmentsPlot <- renderPlotly({
     db <- dosing$data(withFilter=FALSE)
     start <- min(db$t)
@@ -492,16 +536,72 @@ server <- function(input, output, session) {
               se=TRUE) %>%
       mutate(TIME = min(db$t) + TIME*60*60)
     #stop(newRegimen)
-    p1 <- ggplot(db) +
-      geom_point(aes(x=t, y=0, size=factor(dose))) +
-      geom_point(aes(x=t, y=measure, color="Samples"), data=tdm)+
-      geom_text(aes(x=t, y=measure, label=measure), data=tdm, nudge_x=+30, hjust=0) +
-      geom_line(aes(x=TIME, y=CONC, color="Individual"), data=ipred) +
-      geom_line(aes(x=TIME, y=CONC, color="Recommendation"), data=ipredNew) +
-      geom_ribbon(aes(x=TIME, ymin=CONC.lower, ymax=CONC.upper, fill="Recommendation"), data=ipredNew, alpha=0.3) +
-      labs(title="Individual prediction", fill="Prediction", size="Dose (mg)", color="Prediction") +
-      geom_rect(data=targets, aes(xmin=t1, xmax=t2, ymin=lower, ymax=upper, fill="Target"), alpha=0.3)
-    p1
+    
+    fulldb <- bind_rows(db%>%mutate(TIME=t,OCC=row_number(),eventType="TMT")%>%select(-t),
+                        pred%>%mutate(eventType="PRED"),
+                        tdm%>%mutate(TIME=t,eventType="Sample")%>%select(-t),
+                        ipredNew%>%mutate(eventType="Recommendation")) %>%
+      bind_rows(ipred%>%mutate(eventType="IPRED"))%>%
+      bind_rows(recommendation$regimen%>%mutate(TIME=min(db$t) + TIME*60*60,dose=AMT,eventType="TMT Recommended",dose=round(dose,digits=2))%>%select(-AMT))%>%
+      arrange(TIME)%>%fill(OCC)
+
+    df1 <- fulldb%>%filter(eventType=="TMT")%>%select(dose,TIME,OCC)
+    df2 <- fulldb%>%filter(eventType=="PRED")%>%select(-dose)
+    df3 <- fulldb%>%filter(eventType=="IPRED")%>%select(-dose)
+    df4 <- fulldb%>%filter(eventType=="Sample")%>%select(-dose)
+    df5 <- fulldb%>%filter(eventType=="Recommendation")%>%select(-dose)%>%filter(OCC==max(OCC))%>%mutate(OCC=OCC+1)
+    df6 <- fulldb%>%filter(eventType=="TMT Recommended")%>%select(dose,TIME,OCC)%>%filter(OCC==max(OCC))%>%mutate(OCC=OCC+1)
+
+    shared_df1 <- SharedData$new(df1, ~OCC, group = "Choose dosing")
+    shared_df2 <- SharedData$new(df2, ~OCC, group = "Choose dosing")
+    shared_df3 <- SharedData$new(df3, ~OCC, group = "Choose dosing")
+    shared_df4 <- SharedData$new(df4, ~OCC, group = "Choose dosing")
+    shared_df5 <- SharedData$new(df5, ~OCC, group = "Choose dosing")
+    shared_df6 <- SharedData$new(df6%>%filter(row_number()!=1), ~OCC, group = "Choose dosing")
+
+    p1 <- ggplot(shared_df3) +
+      geom_line(aes(x=TIME, y=CONC, color="Population"), data=shared_df2) +
+      geom_line(aes(x=TIME, y=CONC, color="Individual"), data=shared_df3) +
+      geom_line(aes(x=TIME, y=CONC, color="Recommendation"), data=shared_df5) +
+      geom_ribbon(aes(x=TIME, ymin=CONC.lower, ymax=CONC.upper, color="Recommendation", fill="Recommendation"), data=shared_df5, alpha=0.3) +
+      geom_text(aes(x=TIME, y=measure,label=measure, color="Sample"), nudge_x = 10000, nudge_y = 0, check_overlap = T, show.legend = FALSE, data=shared_df4) +
+      geom_point(aes(x=TIME, y=measure, color="Sample"),shape=4, size=3, data=shared_df4) +
+      geom_rect(data=targets, aes(xmin=t1, xmax=t2, ymin=lower, ymax=upper, fill="Target"), alpha=0.3) +
+      labs(title="Individual prediction", y="Concentration (mg/L)")+
+      scale_fill_discrete(guide=FALSE)+
+      scale_colour_discrete(name="Data",
+                            breaks=c("Population", "Individual", "Samples"),
+                            labels=c("Population", "Individual", "Samples"))
+
+    pt1 <- ggplotly(p1) %>% config(scrollZoom=TRUE, collaborate=FALSE, displayModeBar=FALSE, displaylogo=FALSE)
+
+    mytext=paste("Time = ", shared_df2$data()$TIME, "\n" , "Conc = ", shared_df2$data()$CONC, "\n", "Data: ",shared_df2$data()$eventType,  sep="")
+    mytext2=paste("Time = ", shared_df3$data()$TIME, "\n" , "Conc = ", shared_df3$data()$CONC, "\n", "Data: ",shared_df3$data()$eventType,  sep="")
+    mytext3=paste("Time = ", shared_df4$data()$TIME, "\n" , "Conc = ", shared_df4$data()$measure, "mg/L \n", "Data: Observation",  sep="")
+    mytext4=paste("Time = ", shared_df1$data()$TIME, "\n" , "Dose = ", shared_df1$data()$dose, "mg \n", sep="")
+    mytext5=paste("Targets: \n Min ", targets$lower, "mg/L \n Max " , targets$upper, "mg/L", sep="")
+
+
+    p2 <- ggplot(shared_df1,aes(x=TIME, y=dose))+
+      geom_linerange(ymin=0, aes(ymax=dose))+
+      geom_text(aes(x=TIME, y=dose,label=dose),size=3, check_overlap = T, show.legend = FALSE) +
+      geom_linerange(data=shared_df6, ymin=0, aes(ymax=dose))+
+      geom_text(data=shared_df6, aes( x=TIME, y=dose,label=dose),size=3, check_overlap = T, show.legend = FALSE) +
+      coord_cartesian(xlim = c(min(db$t),max(shared_df5$data()$TIME)), ylim = c(0,max(shared_df6$data()$dose)+2, expand = FALSE)) +
+      labs(x="Time", y="Dose (mg)")
+
+    pt2 <- ggplotly(p2) %>% config(scrollZoom=TRUE, collaborate=FALSE, displayModeBar=FALSE, displaylogo=FALSE)
+    subplot(
+      style(pt1, text=mytext, hoverinfo = "text", traces = c(1)) %>%
+        style(text=mytext2, hoverinfo = "text", traces = c(2)) %>%
+        style(hoverinfo = "none", traces = c(3,4,5)) %>%
+        style(text=mytext4, hoverinfo = "text", traces = c(6)) %>%
+        style(text=mytext5, hoverinfo = "text", traces = c(7)),
+      style(pt2),#, text=mytext4, hoverinfo = "text"),
+      nrows = 2, heights = c(0.8, 0.2), widths = c(1),
+      shareX = TRUE, shareY = FALSE, titleX = TRUE, titleY = TRUE, which_layout = 1
+    )
+    
   })
   
   
