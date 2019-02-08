@@ -71,7 +71,7 @@ d/dt(CENTR) = KA*ABS - K12*CENTR + K21*PERIP - Ke*CENTR;
 d/dt(PERIP) = K12*CENTR - K21*PERIP;
 ')
 omegas=c(ECL=0.40^2, EV1=0.54^2, EQ=0.63^2, EFDay2=0.57^2)
-model <- tdmore(rxModel, omega=vectorToDiagonalMatrix(omegas), res_var=list(errorModel("CONC", prop=0.149)))
+model <- tdmore(rxModel, omega=omegas, res_var=list(errorModel("CONC", prop=0.149)))
 
 ui <- navbarPage("TDMore mockup",
                 tabPanel("Patient", icon=icon("users"),
