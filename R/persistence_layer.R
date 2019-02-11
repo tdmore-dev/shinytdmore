@@ -33,7 +33,6 @@ createPatient <- function(firstname, lastname, covariates=NULL) {
 #' 
 toJSONPatient <- function(patient) {
   str <- toJSON(patient)
-  print(str)
   return(gsub("\\[|\\]", "", str))
 }
 
@@ -114,10 +113,7 @@ getPatient <- function(id=NULL, firstname=NULL, lastname=NULL) {
 
 #' Get all patiens from the database. 
 #'
-#' @param id by ID
-#' @param firstname by firstname 
-#' @param lastname by lastname
-#' @return the requested patient
+#' @return all the patients in a dataframe
 #' @export
 #'
 getAllPatients <- function() {
