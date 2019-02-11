@@ -1,5 +1,7 @@
 library(shiny)
 library(tdmore)
+library(assertthat)
+library(dplyr)
 
 model <- tacrolimus_storset
 covariates <- model$covariates
@@ -8,17 +10,22 @@ fields <- c("firstname", "lastname")
 #'
 #' Save data of both user and covariate forms.
 #'
-#' @param userData data from user from
-#' @param covariateData data from covariate form
+#' @param userData data from user from, named vector
+#' @param covariateData data from covariate form, named vector
 #' 
 saveData <- function(userData, covariateData) {
   patient <- getPatient(firstname = userData[["firstname"]], lastname = userData[["lastname"]])
-  
+  if(!is.null(covariateData)) {
+    covs <- setNames(as.numeric(covariateData), names(covariateData)) # String to numeric conversion
+    covs <- as.list(covs)
+  } else {
+    covs <- NULL
+  }
   if (is.null(patient)) {
-    patient <- createPatient(firstname = userData[["firstname"]], lastname = userData[["lastname"]], covariates = c())
+    patient <- createPatient(firstname = userData[["firstname"]], lastname = userData[["lastname"]], covariates = covs)
     addPatient(patient)
   } else {
-    patient$covariates <- as.list(covariateData)
+    patient$covariates <- covs
     updatePatient(patient$id, patient)
   }
 }
@@ -31,9 +38,9 @@ loadData <- function() {
   nb <- nrow(patients)
   if(nb > 0) {
     print(nrow(patients))
-    myDf<- patients %>% select(id, firstname, lastname)
-    myDf$action <- shinyInput(actionButton, nb, 'button_', label = "Edit", onclick = 'Shiny.onInputChange(\"edit_button\",  this.id)' )
-    myDf$remove <- shinyInput(actionButton, nb, 'button_', label = "Remove", onclick = 'Shiny.onInputChange(\"remove_button\",  this.id)' )
+    myDf<- patients %>% select(id, firstname, lastname, created_at, modified_at) %>% rename(ID=id, Firstname=firstname, Lastname=lastname, 'Created'=created_at, 'Modified'=modified_at)
+    myDf$Action <- shinyInput(actionButton, nb, 'button_', label = "Edit", onclick = 'Shiny.onInputChange(\"edit_button\",  this.id)' )
+    myDf$Remove <- shinyInput(actionButton, nb, 'button_', label = "Remove", onclick = 'Shiny.onInputChange(\"remove_button\",  this.id)' )
     DTtable <<- reactiveValues(patientDf = myDf)
   }
 }
@@ -125,7 +132,7 @@ server <- function(input, output, session) {
   
   # User form data
   userFormData <- reactive({
-    return(sapply(fields, function(x) input[[x]]))
+    return(unlist(sapply(fields, function(x) input[[x]])))
   })
   
   # Covariate form data
@@ -134,8 +141,7 @@ server <- function(input, output, session) {
       str <- input[[x]]
       if(str == "") NULL else str
     })
-    data[sapply(data, is.null)] <- NULL
-    return(data[!is.null(data)])
+    return(unlist(data))
   })
   
   # Submit button
@@ -147,7 +153,7 @@ server <- function(input, output, session) {
   observeEvent(input$remove_button, {
     row <- as.numeric(strsplit(input$remove_button, "_")[[1]][2])
     patientRow <- DTtable$patientDf[row,]
-    removePatient(as.numeric(patientRow$id))
+    removePatient(as.numeric(patientRow$ID))
     output$DTtable <- renderTable(input)
   })
   
@@ -156,17 +162,17 @@ server <- function(input, output, session) {
     eraseCovariateForm(session)
     row <- as.numeric(strsplit(input$edit_button, "_")[[1]][2])
     patientRow <- DTtable$patientDf[row,]
-    patient <- getPatient(as.numeric(patientRow$id))
+    patient <- getPatient(as.numeric(patientRow$ID))
     for (covariate in covariates) {
       tryCatch({
-        updateTextInput(session, inputId=covariate, label = covariate, value = patient$covariates[[covariate]])
+        updateTextInput(session, inputId=covariate, value = patient$covariates[[covariate]])
       }, error = function(e) {
         print(paste("Covariate", covariate, "not found"))
       })
     }
     for (field in fields) {
       tryCatch({
-        updateTextInput(session, inputId=field, label = field, value = patient[[field]])
+        updateTextInput(session, inputId=field, value = patient[[field]])
       }, error = function(e) {
         print(paste("Field", field, "not found"))
       })

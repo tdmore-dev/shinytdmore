@@ -7,9 +7,9 @@
 saveData(userData, covariateData)
 }
 \arguments{
-\item{userData}{data from user from}
+\item{userData}{data from user from, named vector}
 
-\item{covariateData}{data from covariate form}
+\item{covariateData}{data from covariate form, named vector}
 }
 \description{
 Save data of both user and covariate forms.

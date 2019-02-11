@@ -22,6 +22,8 @@ createPatient <- function(firstname, lastname, covariates=NULL) {
   }
   
   patient$created_at <- as.POSIXlt(Sys.time())
+  patient$modified_at <- as.POSIXlt(Sys.time())
+  
   return(patient)
 }
 
@@ -87,6 +89,7 @@ removePatient <- function(id) {
 updatePatient <- function(id, patient) {
   removePatient(id)
   patient$id <- id
+  patient$modified_at <- as.POSIXlt(Sys.time())
   db <- getDB()
   db$insert(toJSONPatient(patient))
   return(patient$id)
@@ -118,6 +121,6 @@ getPatient <- function(id=NULL, firstname=NULL, lastname=NULL) {
 #'
 getAllPatients <- function() {
   db <- getDB()
-  retValue <- db$find(fields = '{"id" : true, "firstname" : true, "lastname" : true}', sort = '{"id": -1}')
+  retValue <- db$find(fields = '{"id" : true, "firstname" : true, "lastname" : true, "created_at" : true, "modified_at" : true}', sort = '{"id": -1}')
   return(retValue)
 }
