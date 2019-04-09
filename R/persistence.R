@@ -106,7 +106,7 @@ removePatient <- function(id) {
 updatePatient <- function(id, patient) {
   removePatient(id)
   patient$id <- id
-  patient$modified_at <- posixToString(Sys.time())
+  patient$modified_at <- Sys.time()
   db <- getDB()
   db$insert(patientModelToJson(patient))
   return(patient$id)
