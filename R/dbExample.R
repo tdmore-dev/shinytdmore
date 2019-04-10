@@ -11,7 +11,7 @@ initiateDb <- function() {
     doseModel <- tibble(
       date=as.Date(c("2018/06/25","2018/06/25","2018/06/26","2018/06/26", "2018/06/27")),
       time=c("08:00", "20:00","08:00", "20:00", "08:00"),
-      dose=c(6, 6, 7, 7, 7)
+      dose=c(6, 6, 7, 7, 7)*1000
     )
     patient <- updatePatientDoses(patient, doseModel)
     
