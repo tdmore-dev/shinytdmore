@@ -11,10 +11,17 @@ context("Test the persistence layer")
 getDB()$remove("{}")
 
 # Create 4 patients
-patient1 <- createPatient("Nicolas", "Luyckx", c(AGE=30, WT=60))
-patient2 <- createPatient("Quentin", "Leirens", c(AGE=30, WT=61))
-patient3 <- createPatient("Ruben", "Faelens", c(AGE=30, WT=62))
-patient4 <- createPatient("Thomas", "Bouillon", c(AGE=30, WT=63))
+patient1 <- createPatient("Nicolas", "Luyckx")
+patient1 <- updatePatientModel(patient1, "", c(AGE=30, WT=60))
+
+patient2 <- createPatient("Quentin", "Leirens")
+patient2 <- updatePatientModel(patient2, "", c(AGE=30, WT=61))
+
+patient3 <- createPatient("Ruben", "Faelens")
+patient3 <- updatePatientModel(patient3, "", c(AGE=30, WT=62))
+
+patient4 <- createPatient("Thomas", "Bouillon")
+patient4 <- updatePatientModel(patient4, "", c(AGE=30, WT=63))
 
 # Add these 4 patients in the database
 addPatient(patient1)
@@ -33,7 +40,9 @@ removePatient(4)
 expect_true(is.null(getPatient(4)))
 
 # Update a patient & check
-patient <- createPatient("Nicolas", "Luyckx", c(WT=70, HT=1.8, FEMALE=0, CYP3A5=0, PredDose=50, FirstDay=0, HCT=0.45))
+patient <- createPatient("Nicolas", "Luyckx")
+patient <- updatePatientModel(patient, "", c(WT=70, HT=1.8, FEMALE=0, CYP3A5=0, PredDose=50, FirstDay=0, HCT=0.45))
+
 updatePatient(1, patient)
 patient <- getPatient(1)
 expect_equal(patient$covariates, c(WT=70, HT=1.8, FEMALE=0, CYP3A5=0, PredDose=50, FirstDay=0, HCT=0.45))

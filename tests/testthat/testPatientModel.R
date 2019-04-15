@@ -16,7 +16,8 @@ doseModel <- tibble(
   time=c("08:00", "20:00","08:00", "20:00", "08:00"),
   dose=c(6, 6, 7, 7, 7)
 )
-patientModel <- createPatient("Nicolas", "Luyckx", c(AGE=30, WT=60))
+patientModel <- createPatient("Nicolas", "Luyckx")
+patientModel <- updatePatientModel(patientModel, "", c(AGE=30, WT=60))
 patientModel <- updatePatientDoses(patientModel, doseModel)
 retrievedPatient <- getPatient(addPatient(patientModel))
 expect_equal(doseModel, retrievedPatient$doses)

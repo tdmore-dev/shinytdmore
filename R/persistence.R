@@ -3,27 +3,34 @@
 #'
 #' @param firstname patient's firstname
 #' @param lastname patient's lastname
+#' 
+#' @return the patient
+#' @export
+#' 
+createPatient <- function(firstname, lastname) {
+  checkFirstname(firstname)
+  checkLastname(lastname)
+  patient <- list(firstname=firstname, lastname=lastname)
+  patient$created_at <- Sys.time()
+  patient$modified_at <- Sys.time()
+  return(patient)
+}
+
+#' Update patient model and covariates
+#'
+#' @param patient the given patient
+#' @param modelName model name
 #' @param covariates named numeric with the covariates
 #' 
 #' @return the patient
 #' @export
 #' 
-createPatient <- function(firstname, lastname, covariates=NULL) {
-  assert_that(is.character(firstname), msg = "firstname is not character")
-  assert_that(is.character(lastname), msg = "lastname is not character")
-  
-  if (is.null(covariates)) {
-    patient <- list(firstname=firstname, lastname=lastname)
-  } else {
-    covariates <- unlist(covariates)
-    assert_that(is.numeric(covariates), msg = "covariates is not numeric")
-    assert_that(!is.null(names(covariates)), msg = "covariates are not named")
-    patient <- list(firstname=firstname, lastname=lastname, covariates=as.list(covariates))
-  }
-  
-  patient$created_at <- Sys.time()
+updatePatientModel <- function(patient, modelName, covariates=c()) {
+  checkModelName(modelName)
+  checkCovariates(covariates)
+  patient$model <- modelName
+  patient$covariates <- as.list(covariates)
   patient$modified_at <- Sys.time()
-  
   return(patient)
 }
 

@@ -4,14 +4,12 @@
 \alias{createPatient}
 \title{Patient constructor.}
 \usage{
-createPatient(firstname, lastname, covariates = NULL)
+createPatient(firstname, lastname)
 }
 \arguments{
 \item{firstname}{patient's firstname}
 
 \item{lastname}{patient's lastname}
-
-\item{covariates}{named numeric with the covariates}
 }
 \value{
 the patient

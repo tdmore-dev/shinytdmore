@@ -4,23 +4,32 @@
 #' 
 initiateDb <- function() {
   patients <- getAllPatients()
-  
   if(nrow(patients)==0) {
-    patient <- createPatient("Ruben", "Faelens", c(AGE=30, WT=60, CYP3A5=0))
-    
-    doseModel <- tibble(
-      date=as.Date(c("2018/06/25","2018/06/25","2018/06/26","2018/06/26", "2018/06/27")),
-      time=c("08:00", "20:00","08:00", "20:00", "08:00"),
-      dose=c(6, 6, 7, 7, 7)*1000
-    )
-    patient <- updatePatientDoses(patient, doseModel)
-    
-    measureModel <- tibble(
-      date=as.Date(c("2018/06/26","2018/06/27")),
-      time=c("08:00", "08:00"),
-      measure=c(3.1, 5.3)
-    )
-    patient <- updatePatientMeasures(patient, measureModel)
-    addPatient(patient)
+    addPatient(createFakePatient())
   }
+}
+
+#' Create a fake patient.
+#'
+#' @return a fake patient
+#' @export
+#' 
+createFakePatient <- function() {
+  patient <- createPatient("Ruben", "Faelens")
+  patient <- updatePatientModel(patient, "bergmann2014_base", c(CYP3A5=0))
+  
+  doseModel <- tibble(
+    date=Sys.Date(),
+    time=c("08:00"),
+    dose=c(8000)
+  )
+  patient <- updatePatientDoses(patient, doseModel)
+  
+  measureModel <- tibble(
+    date=Sys.Date(),
+    time=c("20:00"),
+    measure=c(5.0)
+  )
+  patient <- updatePatientMeasures(patient, measureModel)
+  return(patient)
 }
