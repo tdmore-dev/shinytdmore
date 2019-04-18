@@ -1,4 +1,4 @@
-library(tdmui)
+library(shinytdmore)
 library(testthat)
 library(mongolite)
 library(assertthat)

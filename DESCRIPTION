@@ -1,6 +1,6 @@
-Package: tdmui
+Package: shinytdmore
 Type: Package
-Title: TDM user interface
+Title: TDMore Shiny app
 Version: 1.0.0
 Authors@R: c(
   person("Ruben", "Faelens", role = c("aut", "cre"), email = "ruben.faelens@kuleuven.be"),
@@ -12,10 +12,10 @@ Authors@R: c(
   person("KULeuven", role="cph"),
   person("FWO TBM Grant", role="fnd")
   )
-Description: This package contains the TDM user interface
+Description: This package contains the TDMore Shiny app
 Depends: R (>= 3.5.0)
 Imports: assertthat, plyr, dplyr, tdmore, rjson, jsonlite, lubridate, mongolite, shiny, DT, tidyverse, plotly, crosstalk
-Remotes: tdmore-dev/tdm.ui
+Remotes: tdmore-dev/shinytdmore
 License: file LICENSE
 Encoding: UTF-8
 Language: en-US
@@ -23,5 +23,5 @@ LazyData: true
 Suggests: stringr, knitr, rmarkdown, testthat, roxygen2, devtools, vdiffr, svglite, pkgdown, bookdown
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
-URL: https://github.com/tdmore-dev/tdm.ui
-BugReports: https://github.com/tdmore-dev/tdm.ui/issues
+URL: https://github.com/tdmore-dev/shinytdmore
+BugReports: https://github.com/tdmore-dev/shinytdmore/issues

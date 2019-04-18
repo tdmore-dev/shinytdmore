@@ -1,5 +1,5 @@
 # This project
-`tdm.ui` provides a series of UI elements to easily build dose adaptation software.
+`shinytdmore` provides a series of UI elements to easily build dose adaptation software.
 
 The project focuses on four things:
 
