@@ -69,7 +69,13 @@ updatePatientMeasures <- function(patient, measures) {
 #' @export
 #' 
 getDB <- function() {
-  db <- mongo(collection = "virtual_patients", db = "tdmore")
+  testDB <- getOption("testShinyTdmore")
+  if (!is.null(testDB) && testDB) {
+    db <- mongo(collection = "patients_tests", db = "shinytdmore") # Used by unit tests
+  } else {
+    db <- mongo(collection = "patients", db = "shinytdmore") # Used by Shiny app
+  }
+  
   return(db)
 }
 
@@ -149,7 +155,7 @@ getPatient <- function(id=NULL, firstname=NULL, lastname=NULL) {
 #'
 getAllPatients <- function() {
   db <- getDB()
-  retValue <- db$find(fields = '{"id" : true, "firstname" : true, "lastname" : true, "created_at" : true, "modified_at" : true}', sort = '{"id": -1}')
+  retValue <- db$find(fields = '{"id" : true, "firstname" : true, "lastname" : true, "model" : true,"created_at" : true, "modified_at" : true}', sort = '{"id": -1}')
   return(retValue)
 }
 

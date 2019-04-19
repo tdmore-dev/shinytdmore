@@ -6,6 +6,7 @@ library(rjson)
 library(tidyverse)
 
 context("Test the persistence layer")
+options(testShinyTdmore=T) # Make sure the test mode is enabled (a test database is used)
 
 # Remove everything from the database
 getDB()$remove("{}")
