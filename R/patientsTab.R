@@ -61,7 +61,7 @@ setPatient <- function(patient, val) {
   # Copy model
   modelId <- patient$model
   envir <- new.env()
-  data(list=modelId, package="tacrolimuskws", envir=envir)
+  data(list=modelId, package="shinytdmore", envir=envir)
   if(is.null(envir[[modelId]])) stop("Model ", modelId, " not available...")
   val$model <- envir[[modelId]]
   

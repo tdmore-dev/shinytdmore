@@ -71,29 +71,41 @@ dateAndTimeToPOSIX <- function(date, time) {
 }
 
 #'
+#' Get a nice Y-axis label.
+#' 
+#' @param model tdmore model
+#'
+getYAxisLabel <- function(model) {
+  output <- model$res_var[[1]]$var # TODO: what if several outputs?
+  outputMetadata <- getMetadataByName(model, output)
+  yLabel <- if(!is.null(outputMetadata)) {toString(outputMetadata)} else {"Concentration"}
+  return(yLabel)
+}
+
+#'
 #' Prepare the prediction plot.
 #' 
 #' @param data dataframe containing the prediction data
 #' @param obs dataframe containing the observations
 #' @param target numeric vector of size 2, min and max value
 #' @param population logical value, true for population, false for individual prediction
+#' @param model tdmore model
 #'
-preparePredictionPlot <- function(data, obs, target, population) {
+preparePredictionPlot <- function(data, obs, target, population, model) {
   color <- if(population) {predColor()} else {ipredColor()}
   
   targetData <- data.frame(
     lower=target[1],
     upper=target[2]
   )
-  
+
   plot <- ggplot(mapping=aes(x=TIME, y=CONC)) +
     geom_line(data=data, color=color) +
     geom_ribbon(fill=color, aes(ymin=CONC.lower, ymax=CONC.upper), data=data, alpha=0.1) +
     geom_point(data=obs, aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure), color=samplesColor(), shape=4, size=3) +
-    # geom_text(data=obs, aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure, label=measure), color=samplesColor(), check_overlap=T) +
     geom_hline(data=targetData, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=targetData, aes(yintercept=upper), color=targetColor(), lty=2) +
-    labs(y="Concentration (mg/L)")
+    labs(y=getYAxisLabel(model))
   return(plot)
 }
 
@@ -172,7 +184,7 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population) 
     se=TRUE) %>% as.data.frame()
   data$TIME <- min(pos) + data$TIME*60*60
   
-  return(list(p1=preparePredictionPlot(data=data, obs=obs %>% filter(use==TRUE), target=target, population=population),
+  return(list(p1=preparePredictionPlot(data=data, obs=obs %>% filter(use==TRUE), target=target, population=population, model=model),
               p2=prepareTimelinePlot(doses=doses, xlim=c(min(pos), max(data$TIME)))))
 }
 
@@ -256,7 +268,7 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target) {
     geom_text(data=obs,aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure,label=measure, color="Samples"), check_overlap = T, show.legend = TRUE) +
     geom_hline(data=targetData, aes(yintercept=lower, color="Target"), lty=2)+
     geom_hline(data=targetData, aes(yintercept=upper, color="Target"), lty=2)+
-    labs(y="Concentration (mg/L)")+
+    labs(y=getYAxisLabel(model))+
     scale_fill_discrete(guide=FALSE)+
     scale_colour_discrete(name="Data",
                           breaks=c("Individual","Recommendation", "Samples"),
