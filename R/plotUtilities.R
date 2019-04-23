@@ -122,17 +122,14 @@ getMeasureColumnLabel <- function(model, breakLine=T) {
 preparePredictionPlot <- function(data, obs, target, population, model) {
   color <- if(population) {predColor()} else {ipredColor()}
   
-  targetData <- data.frame(
-    lower=target[1],
-    upper=target[2]
-  )
+  ggplotTarget <- data.frame(lower=target[1], upper=target[2])
 
   plot <- ggplot(mapping=aes(x=TIME, y=CONC)) +
     geom_line(data=data, color=color) +
     geom_ribbon(fill=color, aes(ymin=CONC.lower, ymax=CONC.upper), data=data, alpha=0.1) +
     geom_point(data=obs, aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure), color=samplesColor(), shape=4, size=3) +
-    geom_hline(data=targetData, aes(yintercept=lower), color=targetColor(), lty=2) +
-    geom_hline(data=targetData, aes(yintercept=upper), color=targetColor(), lty=2) +
+    geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
+    geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
     labs(y=getYAxisLabel(model))
   return(plot)
 }
@@ -218,8 +215,7 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population) 
 }
 
 #'
-#' Prepare recommendation plots (to be refactored).
-#' This includes the recommendation plot and the timeline plot.
+#' Prepare recommendation.
 #' 
 #' @param doses doses
 #' @param obs observations
@@ -227,12 +223,9 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population) 
 #' @param covs covariates
 #' @param target numeric vector of size 2, min and max value
 #' 
-#' @return a list of two plots
+#' @return a list with pred, ipred and the recommendation
 #'
-prepareRecommendationPlots <- function(doses, obs, model, covs, target) {
-  if (is.null(doses)) {
-    return(NULL)
-  }
+prepareRecommendation <- function(doses, obs, model, covs, target) {
   pos <- dateAndTimeToPOSIX(doses$date, doses$time)
   start <- min(pos)
   stop <- max(pos + 24*60*60)
@@ -248,7 +241,7 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target) {
     covariates=covs,
     se=TRUE) %>% as.data.frame()
   pred$TIME <- min(pos) + pred$TIME*60*60
-
+  
   pos2 <- dateAndTimeToPOSIX(obs$date, obs$time)
   observed <- data.frame(
     TIME=as.numeric(difftime(pos2, start, units="hour")),
@@ -263,21 +256,15 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target) {
             covariates=covs)
   ipred$TIME <- start + ipred$TIME*60*60
   
-  targetData <- data.frame(
-    t1=start,
-    t2=start + 4*24*60*60,
-    lower=target[1],
-    upper=target[2]
-  )
   lastDose <- max(regimen$TIME)
   nextDose <- lastDose + 12
-  Target <- data.frame(TIME=lastDose+48, CONC=10) #trough after next dose
+  targetDf <- data.frame(TIME=lastDose+48, CONC=target[1]) #trough after next dose
   
   newRegimen <- data.frame(
     TIME=c(regimen$TIME, lastDose+c(12,24,36,48)),
     AMT=c(regimen$AMT, c(NA,NA,NA,NA))
   )
-  recommendation <- tdmore::findDose(fit, doseRows=which(is.na(newRegimen$AMT)),regimen = newRegimen, target = Target)
+  recommendation <- tdmore::findDose(fit, doseRows=which(is.na(newRegimen$AMT)),regimen = newRegimen, target = targetDf)
   
   newRegimen$AMT[ is.na(newRegimen$AMT)] <- recommendation$dose
   ipredNew <- fit %>%
@@ -287,7 +274,37 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target) {
             se=TRUE) %>%
     mutate(TIME = start + TIME*60*60)
   
-  testtt <- recommendation$regimen %>% filter(TIME>lastDose) %>% mutate(TIME = start + TIME*60*60, Dose=round(AMT, digits=2))
+  recommendedRegimen <- recommendation$regimen %>% filter(TIME>lastDose) %>% mutate(TIME=start + TIME*60*60)
+  
+  return(list(pred=pred, ipred=ipred, ipredNew=ipredNew, recommendedRegimen=recommendedRegimen, start=start))
+}
+
+#'
+#' Prepare recommendation plots (to be refactored).
+#' This includes the recommendation plot and the timeline plot.
+#' 
+#' @param doses doses
+#' @param obs observations
+#' @param model tdmore model
+#' @param covs covariates
+#' @param target numeric vector of size 2, min and max value
+#' @param recommendation recommendation (contains pred, ipred and the recommendation)
+#' 
+#' @return a list of two plots
+#'
+prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommendation) {
+  if (is.null(doses)) {
+    return(NULL)
+  }
+  
+  start <- recommendation$start
+  pred <- recommendation$pred
+  ipred <- recommendation$ipred
+  ipredNew <- recommendation$ipredNew
+  recommendedRegimen <- recommendation$recommendedRegimen
+  recommendedRegimen$Dose <- round(recommendedRegimen$AMT, digits=2)
+  
+  ggplotTarget <- data.frame(t1=start, t2=start + 4*24*60*60, lower=target[1], upper=target[2])
   
   p1 <- ggplot(pred) +
     geom_line(aes(x=TIME, y=CONC, color="Individual"), data=ipred, alpha=0.2) +
@@ -295,8 +312,8 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target) {
     geom_ribbon(aes(x=TIME, ymin=CONC.lower, ymax=CONC.upper, color="Recommendation", fill="Recommendation"), data=ipredNew, alpha=0.3) +
     geom_point(aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure, color="Samples"),shape=4, size=3, data=obs)+
     geom_text(data=obs,aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure,label=measure, color="Samples"), check_overlap = T, show.legend = TRUE) +
-    geom_hline(data=targetData, aes(yintercept=lower, color="Target"), lty=2)+
-    geom_hline(data=targetData, aes(yintercept=upper, color="Target"), lty=2)+
+    geom_hline(data=ggplotTarget, aes(yintercept=lower, color="Target"), lty=2)+
+    geom_hline(data=ggplotTarget, aes(yintercept=upper, color="Target"), lty=2)+
     labs(y=getYAxisLabel(model))+
     scale_fill_discrete(guide=FALSE)+
     scale_colour_discrete(name="Data",
@@ -306,9 +323,9 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target) {
   p2 <- ggplot(doses)+
     geom_text(aes(x=dateAndTimeToPOSIX(doses$date, doses$time), y=dose,label=dose), nudge_x = 0, nudge_y = 0, check_overlap = T, show.legend = FALSE, alpha=0.2) +
     geom_linerange(ymin=0, aes(x=dateAndTimeToPOSIX(doses$date, doses$time), ymax=dose), alpha=0.2)+
-    geom_text(data=testtt, aes(x=TIME, y=Dose, label=Dose) , nudge_x = 0, nudge_y = 0, check_overlap = T, show.legend = FALSE) +
-    geom_linerange(data=testtt, aes(x=TIME,ymax=Dose), ymin=0)+
-    coord_cartesian(xlim = c(min(pos),max(c(pred$TIME,testtt$TIME)+12*60*60)), ylim = c(0,max(c(doses$dose,testtt$Dose)+2)), expand = FALSE) +
+    geom_text(data=recommendedRegimen, aes(x=TIME, y=Dose, label=Dose) , nudge_x = 0, nudge_y = 0, check_overlap = T, show.legend = FALSE) +
+    geom_linerange(data=recommendedRegimen, aes(x=TIME,ymax=Dose), ymin=0)+
+    coord_cartesian(xlim = c(start,max(c(pred$TIME,recommendedRegimen$TIME)+12*60*60)), ylim = c(0,max(c(doses$dose,recommendedRegimen$Dose)+2)), expand = FALSE) +
     labs(x="Time", y=getDoseColumnLabel(model, breakLine=F))
   return(list(p1=p1, p2=p2))
 }

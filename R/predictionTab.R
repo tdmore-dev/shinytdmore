@@ -117,9 +117,8 @@ predictionTabServer <- function(input, output, session, val) {
   output$tab_title <- renderText({return(paste(val$patient$firstname, val$patient$lastname))})
   
   observe({
-    ## Update `regimen` based on changes in db_dose
-    ## TODO: tdmore should be able to work with POSIXct directly
-    pos <- as.POSIXct(strptime(paste(val$db_dose$date,val$db_dose$time),format = "%Y-%m-%d %H:%M"))
+    # Update `regimen` based on changes in db_dose
+    pos <- dateAndTimeToPOSIX(val$db_dose$date, val$db_dose$time)
     regimen <- data.frame(
       TIME=as.numeric(difftime(pos, min(pos), units="hour")),
       AMT=val$db_dose$dose
@@ -176,7 +175,7 @@ predictionTabServer <- function(input, output, session, val) {
   observeEvent(input$addDose, {
     if(nrow(val$db_dose) > 0) {
       newdose <- val$db_dose[ nrow(val$db_dose), ]
-      lastdose <- as.POSIXct(strptime(paste(newdose$date, newdose$time),format = "%Y-%m-%d %H:%M"))
+      lastdose <- dateAndTimeToPOSIX(newdose$date, newdose$time)
       lastdose <- lastdose + 12*60*60
     } else {
       newdose <- data.frame(date=NULL, time=NULL, dose=5)
@@ -300,80 +299,21 @@ predictionTabServer <- function(input, output, session, val) {
     on.exit(progress$close())
     progress$set(message = "Preparing...", value = 0.5)
     target <- c(input$targetDown, input$targetUp)
-    plots <- prepareRecommendationPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target)
+    recommendation <- prepareRecommendation(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target)
+
+    # Handsontable Dose Future
+    output$hotdosefuture <- renderDataTable({
+      doseColumnName <- getDoseColumnLabel(val$model, breakLine=F)
+      retValue <- recommendation$recommendedRegimen %>%
+        mutate(Date=as.Date(TIME),
+               Time=strftime(TIME,"%H:%M"),
+               !!doseColumnName:=round(AMT, digits=2))
+      return(retValue %>% select(-AMT,-TIME))
+    })
+    
+    plots <- prepareRecommendationPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, recommendation=recommendation)
     progress$set(message = "Rendering plot...", value = 1)
     if(!is.null(plots)) mergePlots(plots$p1, plots$p2)
   })
   output$recommendationPlot <- renderPlotly(recommendationPlot())
-  
-  # Handsontable Dose Future
-  output$hotdosefuture <- renderDataTable({
-    db_dose <- val[["db_dose"]]
-    db_obs <- val[["db_obs"]]
-    db_obs_filtered <-  db_obs %>% filter(use==TRUE)
-    
-    if (!is.null(db_dose) | !is.null(db_obs_filtered)) {
-      pos <- dateAndTimeToPOSIX(db_dose$date, db_dose$time)
-      start <- min(pos)
-      stop <- max(pos + 24*60*60)
-      regimen <- data.frame(
-        TIME=as.numeric(difftime(pos, start, units="hour")),
-        AMT=db_dose$dose
-      )
-      
-      pred <- predict(
-        val$model,
-        newdata = data.frame(TIME=seq(0, max(regimen$TIME)+24, length.out=300), CONC=NA),
-        regimen=regimen,
-        covariates=val$covs,
-        se=TRUE) %>% as.data.frame()
-      pred$TIME <- min(pos) + pred$TIME*60*60
-      
-      
-      pos2 <- dateAndTimeToPOSIX(db_obs$date, db_obs$time)
-      observed <- data.frame(
-        TIME=as.numeric(difftime(pos2, start, units="hour")),
-        CONC=db_obs_filtered$measure
-      )
-      #debugonce(tdmore:::predict.tdmore)
-      fit <- estimate(val$model, observed=observed, regimen=regimen, covariates=val$covs)
-      ipred <- fit %>%
-        predict(newdata = data.frame(TIME=seq(0, max(regimen$TIME)+24, length.out=300), CONC=NA),
-                regimen=regimen,
-                covariates=val$covs,
-                se=TRUE)
-      ipred$TIME <- start + ipred$TIME*60*60
-      
-      targets <- data.frame(
-        t1=start,
-        t2=start + 4*24*60*60,
-        lower=input$targetDown,
-        upper=input$targetUp
-      )
-      lastDose <- max(regimen$TIME)
-      nextDose <- lastDose + 12
-      Target <- data.frame(TIME=lastDose+48, CONC=10) #trough after next dose
-      
-      newRegimen <- data.frame(
-        TIME=c(regimen$TIME, lastDose+c(12,24,36,48)),
-        AMT=c(regimen$AMT, c(NA,NA,NA,NA))
-      )
-      recommendation <- tdmore::findDose(fit, doseRows=which(is.na(newRegimen$AMT)),regimen = newRegimen, target = Target)
-      
-      newRegimen$AMT[ is.na(newRegimen$AMT)] <- recommendation$dose
-      ipredNew <- fit %>%
-        predict(newdata = data.frame(TIME=seq(max(regimen$TIME), max(newRegimen$TIME)+12, length.out=300), CONC=NA),
-                regimen=newRegimen,
-                covariates=val$covs,
-                se=TRUE) %>%
-        mutate(TIME = start + TIME*60*60)
-    }
-    doseColumnName <- getDoseColumnLabel(val$model, breakLine=F)
-    retValue <- recommendation$regimen %>%
-      filter(TIME>lastDose) %>%
-      mutate(Date=as.Date(start + TIME*60*60),
-             Time=strftime(start + TIME*60*60,"%H:%M"),
-             !!doseColumnName:=round(AMT, digits=2))
-    return(retValue %>% select(-AMT,-TIME))
-    })
 }
