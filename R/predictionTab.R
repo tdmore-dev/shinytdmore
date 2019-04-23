@@ -7,7 +7,7 @@ getPredictionTabPanel <- function() {
   panel <- tabPanel(
     "Prediction",
     icon = icon("address-card"),
-    titlePanel("Data"),
+    textOutput(outputId="tab_title"),
     fluidRow(
       column(
         3,
@@ -58,21 +58,19 @@ getPredictionTabPanel <- function() {
                          plotlyOutput('recommendationPlot', height = "600px"))
       )
     ),
-    tags$head(tags$style(HTML(".handsontable {overflow-x:hidden;}")))
+    tags$head(tags$style(HTML(".handsontable {overflow-x:hidden;}"), "#tab_title{font-size: 30px; margin-top: 10px; margin-bottom: 10px;}"))
   )
   return(panel)
 }
 
 #'
-#' Prediction tab server.
+#' Previous/Next button logic.
 #'
 #' @param input shiny input
 #' @param output shiny output
-#' @param session shiny session
 #' @param val main reactive container
 #'
-predictionTabServer <- function(input, output, session, val) {
-  
+previousNextLogic <- function(input, output, val) {
   plotTypes <- c("population", "fit", "recommendation")
   plotTitles <- c("Population prediction", "Individual prediction", "Recommendation")
   
@@ -100,6 +98,23 @@ predictionTabServer <- function(input, output, session, val) {
   })
   
   outputOptions(output, "plot_type", suspendWhenHidden = FALSE)
+}
+
+#'
+#' Prediction tab server.
+#'
+#' @param input shiny input
+#' @param output shiny output
+#' @param session shiny session
+#' @param val main reactive container
+#'
+predictionTabServer <- function(input, output, session, val) {
+
+  # Previous/Next button logic
+  previousNextLogic(input, output, val)
+  
+  # Update tab title according to patient's name
+  output$tab_title <- renderText({return(paste(val$patient$firstname, val$patient$lastname))})
   
   observe({
     ## Update `regimen` based on changes in db_dose
