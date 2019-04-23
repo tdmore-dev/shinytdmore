@@ -74,12 +74,40 @@ dateAndTimeToPOSIX <- function(date, time) {
 #' Get a nice Y-axis label.
 #' 
 #' @param model tdmore model
+#' @return a label
 #'
 getYAxisLabel <- function(model) {
   output <- model$res_var[[1]]$var # TODO: what if several outputs?
   outputMetadata <- getMetadataByName(model, output)
-  yLabel <- if(!is.null(outputMetadata)) {toString(outputMetadata)} else {"Concentration"}
-  return(yLabel)
+  label <- if(!is.null(outputMetadata)) {toString(outputMetadata)} else {"Concentration"}
+  return(label)
+}
+
+#'
+#' Get dose column label.
+#' 
+#' @param model tdmore model
+#' @return a label
+#'
+getDoseColumnLabel <- function(model, breakLine=T) {
+  doseMetadata <- getMetadataByName(model, "DOSE")
+  separator <- if(breakLine){"\n"} else{" "}
+  label <- if(!is.null(doseMetadata)) {paste0("Dose", separator, "(", doseMetadata$unit, ")")} else {"Dose"}
+  return(label)
+}
+
+#'
+#' Get measure column label.
+#' 
+#' @param model tdmore model
+#' @return a label
+#'
+getMeasureColumnLabel <- function(model, breakLine=T) {
+  output <- model$res_var[[1]]$var # TODO: what if several outputs?
+  separator <- if(breakLine){"\n"} else{" "}
+  outputMetadata <- getMetadataByName(model, output)
+  label <- if(!is.null(outputMetadata)) {paste0("Measure", separator, "(", outputMetadata$unit, ")")} else {"Measure"}
+  return(label)
 }
 
 #'
@@ -114,8 +142,9 @@ preparePredictionPlot <- function(data, obs, target, population, model) {
 #' 
 #' @param doses dataframe containing the doses
 #' @param xlim ggplot xlim argument
+#' @param model tdmore model
 #'
-prepareTimelinePlot <- function(doses, xlim) {
+prepareTimelinePlot <- function(doses, xlim, model) {
   times <- dateAndTimeToPOSIX(doses$date, doses$time)
   maxDose <- max(doses$dose)
   addSpace <- maxDose*0.15 # Add 15% margin for dose number
@@ -124,7 +153,7 @@ prepareTimelinePlot <- function(doses, xlim) {
     geom_text(aes(x=times, y=dose, label=dose), nudge_x=0, nudge_y=0, check_overlap=T, show.legend=F) +
     geom_linerange(ymin=0, aes(ymax=dose)) +
     coord_cartesian(xlim=xlim, ylim=c(0, maxDose + addSpace)) +
-    labs(x="Time", y="Dose (mg)")
+    labs(x="Time", y=getDoseColumnLabel(model, breakLine=F))
   return(plot)
 }
 
@@ -185,7 +214,7 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population) 
   data$TIME <- min(pos) + data$TIME*60*60
   
   return(list(p1=preparePredictionPlot(data=data, obs=obs %>% filter(use==TRUE), target=target, population=population, model=model),
-              p2=prepareTimelinePlot(doses=doses, xlim=c(min(pos), max(data$TIME)))))
+              p2=prepareTimelinePlot(doses=doses, xlim=c(min(pos), max(data$TIME)), model=model)))
 }
 
 #'
@@ -280,6 +309,6 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target) {
     geom_text(data=testtt, aes(x=TIME, y=Dose, label=Dose) , nudge_x = 0, nudge_y = 0, check_overlap = T, show.legend = FALSE) +
     geom_linerange(data=testtt, aes(x=TIME,ymax=Dose), ymin=0)+
     coord_cartesian(xlim = c(min(pos),max(c(pred$TIME,testtt$TIME)+12*60*60)), ylim = c(0,max(c(doses$dose,testtt$Dose)+2)), expand = FALSE) +
-    labs(x="Time", y="Dose (mg)")
+    labs(x="Time", y=getDoseColumnLabel(model, breakLine=F))
   return(list(p1=p1, p2=p2))
 }

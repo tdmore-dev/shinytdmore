@@ -149,9 +149,10 @@ predictionTabServer <- function(input, output, session, val) {
     v2 <- paste0(":",substr(str2,(nchar(str2)+1)-2,nchar(str2)))
     HOURS <- sort(apply(expand.grid(v1, v2), 1, paste, collapse = "", sep = "")) 
     
-    rhandsontable(val$db_dose, useTypes = TRUE, stretchH = "all", rowHeaders = NULL) %>%
+    rhandsontable(val$db_dose, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
+      colHeaders = c("Date", "Time", getDoseColumnLabel(val$model))) %>%
       hot_context_menu(allowRowEdit = TRUE, allowColEdit = FALSE) %>%
-      hot_col(col = "time", type = "dropdown", source = HOURS)
+      hot_col(col = "Time", type = "dropdown", source = HOURS)
   })
   observeEvent(input$hotdose, {
     val$db_dose <- hot_to_r(input$hotdose)
@@ -206,10 +207,10 @@ predictionTabServer <- function(input, output, session, val) {
   
   # Handsontable Obs
   output$hotobs <- renderRHandsontable({
-    db_obs <- val[["db_obs"]]
+    db_obs <- val$db_obs
     if (!is.null(db_obs))
-      rhandsontable(data.frame(db_obs), useTypes = TRUE, stretchH = "all", rowHeaders = NULL) %>% 
-      hot_col("use",halign = "htCenter")
+      rhandsontable(data.frame(db_obs), useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
+        colHeaders = c("Date", "Time", getMeasureColumnLabel(val$model), "Use")) %>% hot_col("Use", halign = "htCenter")
   })
   observeEvent(input$hotobs, {
     if (!is.null(input$hotobs)) {
@@ -367,10 +368,12 @@ predictionTabServer <- function(input, output, session, val) {
                 se=TRUE) %>%
         mutate(TIME = start + TIME*60*60)
     }
-    recommendation$regimen %>%
+    doseColumnName <- getDoseColumnLabel(val$model, breakLine=F)
+    retValue <- recommendation$regimen %>%
       filter(TIME>lastDose) %>%
-      mutate(date=as.Date(start + TIME*60*60),
-             time=strftime(start + TIME*60*60,"%H:%M"),
-             dose=AMT,dose=round(dose,digits=2)) %>%
-      select(-AMT,-TIME) })
+      mutate(Date=as.Date(start + TIME*60*60),
+             Time=strftime(start + TIME*60*60,"%H:%M"),
+             !!doseColumnName:=round(AMT, digits=2))
+    return(retValue %>% select(-AMT,-TIME))
+    })
 }
