@@ -304,7 +304,7 @@ predictionTabServer <- function(input, output, session, val) {
     # Handsontable Dose Future
     output$hotdosefuture <- renderDataTable({
       doseColumnName <- getDoseColumnLabel(val$model, breakLine=F)
-      retValue <- recommendation$recommendedRegimen %>%
+      retValue <- recommendation$recommendedRegimenFiltered %>%
         mutate(Date=as.Date(TIME),
                Time=strftime(TIME,"%H:%M"),
                !!doseColumnName:=round(AMT, digits=2))

@@ -274,9 +274,12 @@ prepareRecommendation <- function(doses, obs, model, covs, target) {
             se=TRUE) %>%
     mutate(TIME = start + TIME*60*60)
   
-  recommendedRegimen <- recommendation$regimen %>% filter(TIME>lastDose) %>% mutate(TIME=start + TIME*60*60)
+  recommendedRegimenFiltered <- recommendation$regimen %>% filter(TIME>lastDose) %>% mutate(TIME=start + TIME*60*60)
+  recommendedRegimen <- recommendation$regimen %>% mutate(TIME=start + TIME*60*60)
   
-  return(list(pred=pred, ipred=ipred, ipredNew=ipredNew, recommendedRegimen=recommendedRegimen, start=start))
+  return(list(pred=pred, ipred=ipred, ipredNew=ipredNew,
+              recommendedRegimenFiltered=recommendedRegimenFiltered,
+              recommendedRegimen=recommendedRegimen, start=start))
 }
 
 #'
@@ -302,30 +305,22 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
   ipred <- recommendation$ipred
   ipredNew <- recommendation$ipredNew
   recommendedRegimen <- recommendation$recommendedRegimen
-  recommendedRegimen$Dose <- round(recommendedRegimen$AMT, digits=2)
+  recommendedRegimen$dose <- round(recommendedRegimen$AMT, digits=2)
   
   ggplotTarget <- data.frame(t1=start, t2=start + 4*24*60*60, lower=target[1], upper=target[2])
   
-  p1 <- ggplot(pred) +
-    geom_line(aes(x=TIME, y=CONC, color="Individual"), data=ipred, alpha=0.2) +
-    geom_line(aes(x=TIME, y=CONC, color="Recommendation"), data=ipredNew) +
-    geom_ribbon(aes(x=TIME, ymin=CONC.lower, ymax=CONC.upper, color="Recommendation", fill="Recommendation"), data=ipredNew, alpha=0.3) +
-    geom_point(aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure, color="Samples"),shape=4, size=3, data=obs)+
-    geom_text(data=obs,aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure,label=measure, color="Samples"), check_overlap = T, show.legend = TRUE) +
-    geom_hline(data=ggplotTarget, aes(yintercept=lower, color="Target"), lty=2)+
-    geom_hline(data=ggplotTarget, aes(yintercept=upper, color="Target"), lty=2)+
-    labs(y=getYAxisLabel(model))+
-    scale_fill_discrete(guide=FALSE)+
-    scale_colour_discrete(name="Data",
-                          breaks=c("Individual","Recommendation", "Samples"),
-                          labels=c("Individual","Recommendation", "Samples"))
+  color <- ipredColor()
+  p1 <- ggplot(mapping=aes(x=TIME, y=CONC)) +
+    geom_line(data=ipred, color=color, alpha=0.2) +
+    geom_line(data=ipredNew, color=color) +
+    geom_ribbon(fill=color, aes(ymin=CONC.lower, ymax=CONC.upper), data=ipredNew, alpha=0.1) +
+    geom_point(data=obs, aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure), color=samplesColor(), shape=4, size=3) +
+    geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
+    geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
+    labs(y=getYAxisLabel(model))
+  newDoses <- recommendedRegimen %>% mutate(date=as.Date(TIME), time=strftime(TIME,"%H:%M"))
+  print(newDoses)
+  p2 <- prepareTimelinePlot(doses=newDoses, xlim=c(start, max(ipredNew$TIME)), model=model)
   
-  p2 <- ggplot(doses)+
-    geom_text(aes(x=dateAndTimeToPOSIX(doses$date, doses$time), y=dose,label=dose), nudge_x = 0, nudge_y = 0, check_overlap = T, show.legend = FALSE, alpha=0.2) +
-    geom_linerange(ymin=0, aes(x=dateAndTimeToPOSIX(doses$date, doses$time), ymax=dose), alpha=0.2)+
-    geom_text(data=recommendedRegimen, aes(x=TIME, y=Dose, label=Dose) , nudge_x = 0, nudge_y = 0, check_overlap = T, show.legend = FALSE) +
-    geom_linerange(data=recommendedRegimen, aes(x=TIME,ymax=Dose), ymin=0)+
-    coord_cartesian(xlim = c(start,max(c(pred$TIME,recommendedRegimen$TIME)+12*60*60)), ylim = c(0,max(c(doses$dose,recommendedRegimen$Dose)+2)), expand = FALSE) +
-    labs(x="Time", y=getDoseColumnLabel(model, breakLine=F))
   return(list(p1=p1, p2=p2))
 }
