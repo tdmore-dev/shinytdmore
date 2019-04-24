@@ -121,7 +121,7 @@ CONC = center / V1
     omega=omega,
     iov=c("ECL_IOV", "EV1_IOV"),
     res_var=list(errorModel(var="CONC", prop=0.183))
-)
+) %>% metadata(covariate("CYP3A5", label="CYP3A5 expressor", choices=list(Fast=0, Slow=1)), covariate("WT", label="Weight", unit="kg", min=30, max=110), output("CONC", label="Tacrolimus concentration", unit="ng/mL"), dose("ug"))
 usethis::use_data(bergmann2014_full, overwrite=TRUE)
 
 

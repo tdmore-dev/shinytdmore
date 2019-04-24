@@ -49,7 +49,18 @@ createCovariateForm <- function(input) {
   covariates <- model$covariates
   retValue <- NULL
   for (covariate in covariates) {
-    retValue <- list(retValue, covariate=textInput(inputId = covariate, label = covariate, value = ""))
+    metadata <- getMetadataByName(model, covariate)
+    if (inherits(metadata, "tdmore_covariate")) {
+      choices <- metadata$choices
+      if (is.null(choices)) {
+        component <- sliderInput(inputId=covariate, label=covariate, min=metadata$min, max=metadata$max, value=(metadata$min+metadata$max)/2)
+      } else {
+        component <- selectInput(inputId=covariate, label=covariate, choices=choices)
+      }
+    } else {
+      component <- textInput(inputId=covariate, label=covariate, value="")
+    }
+    retValue <- list(retValue, covariate=component)
   }
   return(retValue)
 }
