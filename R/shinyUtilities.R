@@ -14,7 +14,8 @@ shinyInput <- function(FUN, id, label, ...) {
   inputs <- character(length(label))
   for (i in seq_along(label)) {
     inputLabel <- label[i]
-    inputs[i] <- as.character(FUN(paste0(id, "_", i), label=inputLabel, onclick=paste0("Shiny.onInputChange(\"", id, "\", this.id)"), ...))
+    onClickText <- paste0("Shiny.onInputChange(\"", id, "\", this.id + \"_\" + Date.now())")
+    inputs[i] <- as.character(FUN(paste0(id, "_", i), label=inputLabel, onclick=onClickText, ...))
   }
   return(inputs)
 }

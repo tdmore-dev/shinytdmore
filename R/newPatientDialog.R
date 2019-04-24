@@ -113,6 +113,9 @@ newPatientDialogServer <- function(input, output, session) {
         return(unlist(data))
       })
       saveData(userFormData(), input$modelCombobox, covariateFormData())
+      
+      # Render the patients table
+      output$patientTable <- renderPatientTable(input) # Added this to force rendering
       removeModal()
     } else {
       showModal(dataModal(failed = TRUE))
