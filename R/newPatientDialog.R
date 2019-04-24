@@ -70,7 +70,7 @@ createCovariateForm <- function(input) {
 #' 
 #' @param failed logical value, can be true if there was an error in the form
 #'
-patientFormModalDialog <- function(failed = FALSE) {
+patientFormModalDialog <- function(failed=FALSE) {
   modalDialog(
     h4("Patient"),
     createUserForm(),
@@ -79,7 +79,7 @@ patientFormModalDialog <- function(failed = FALSE) {
     h4("Covariates"),
     tags$div(id="placeholder"),
     if (failed)
-      div(tags$b("Do something", style = "color: red;")),
+      div(tags$b("Some covariates are missing or not numeric", style = "color: red;")),
     footer = tagList(
       actionButton("modalFormCancel", "Cancel"),
       actionButton("modalFormOK", "OK")
@@ -122,7 +122,6 @@ newPatientDialogServer <- function(input, output, session) {
   
   # Modal form OK button
   observeEvent(input$modalFormOK, {
-    if (TRUE) {
       # Retrieve user form data
       userFormData <- reactive({
         fields <- c("firstname", "lastname")
@@ -135,22 +134,32 @@ newPatientDialogServer <- function(input, output, session) {
         covariates <- model$covariates
         data <- sapply(covariates, function(x) {
           str <- input[[x]]
-          if(str == "") NULL else str
         })
         return(unlist(data))
       })
-      saveData(userFormData(), input$modelCombobox, covariateFormData())
-
-      # Render the patients table
-      output$patientTable <- renderPatientTable(input) # Added this to force rendering
       
-      # Close modal dialog
-      hackSelectInput(session)
-      removeModal(session)
+      userData <- userFormData()
+      covariateData <- covariateFormData()
+      valuesAllNumeric <- length(which(is.na(suppressWarnings(as.numeric(covariateData))))) == 0
       
-    } else {
-      showModal(dataModal(failed = TRUE))
-    }
+      if(valuesAllNumeric) {
+        saveData(userData, input$modelCombobox, covariateData)
+        
+        # Render the patients table
+        output$patientTable <- renderPatientTable(input) # Added this to force rendering
+        
+        # Close modal dialog
+        hackSelectInput(session)
+        removeModal(session)
+      } else {
+        selectedModel <- input$modelCombobox
+        showModal(patientFormModalDialog(failed = TRUE))
+        hackSelectInput(session)
+        updateSelectInput(session, "modelCombobox",
+                          label = "Choose your model",
+                          choices = getModelList(),
+                          selected = selectedModel)
+      }
   })
   
   # Modal form Cancel button
