@@ -42,13 +42,16 @@ createUserForm <- function() {
 #' @param input shiny input
 #'
 createCovariateForm <- function(input) {
+  if (!(input$modelCombobox %in% getModelList())) {
+    return()
+  }
   model <- get(input$modelCombobox)
   covariates <- model$covariates
   retValue <- NULL
   for (covariate in covariates) {
     retValue <- list(retValue, covariate=textInput(inputId = covariate, label = covariate, value = ""))
   }
-  retValue
+  return(retValue)
 }
 
 #' 
@@ -67,7 +70,7 @@ patientFormModalDialog <- function(failed = FALSE) {
     if (failed)
       div(tags$b("Do something", style = "color: red;")),
     footer = tagList(
-      modalButton("Cancel"),
+      actionButton("modalFormCancel", "Cancel"),
       actionButton("modalFormOK", "OK")
     )
   )
@@ -85,6 +88,19 @@ getModelList <- function() {
 }
 
 #'
+#' Hack select input (update it with fake values when dialog is closed).
+#' Without this workaround, covariate inputs do not appear when 'new patient' is clicked for the second time.
+#'
+#' @param session shiny session
+#'
+hackSelectInput <- function(session) {
+  updateSelectInput(session, "modelCombobox",
+                    label = "Choose your model",
+                    choices = c("fake_value_1", "fake_value_2"),
+                    selected = "fake_value_2")
+}
+
+#'
 #' New patient dialog server.
 #'
 #' @param input shiny input
@@ -93,7 +109,7 @@ getModelList <- function() {
 #'
 newPatientDialogServer <- function(input, output, session) {
   
-  # Observe event on modal window
+  # Modal form OK button
   observeEvent(input$modalFormOK, {
     if (TRUE) {
       # Retrieve user form data
@@ -113,13 +129,24 @@ newPatientDialogServer <- function(input, output, session) {
         return(unlist(data))
       })
       saveData(userFormData(), input$modelCombobox, covariateFormData())
-      
+
       # Render the patients table
       output$patientTable <- renderPatientTable(input) # Added this to force rendering
-      removeModal()
+      
+      # Close modal dialog
+      hackSelectInput(session)
+      removeModal(session)
+      
     } else {
       showModal(dataModal(failed = TRUE))
     }
+  })
+  
+  # Modal form Cancel button
+  observeEvent(input$modalFormCancel, {
+    # Close modal dialog
+    hackSelectInput(session)
+    removeModal(session)
   })
   
   # Observe combobox
