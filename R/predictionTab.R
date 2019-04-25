@@ -40,13 +40,14 @@ getPredictionTabPanel <- function() {
       column(
         9,
         fluidRow(
-          column(1,
-                 actionButton("previous_plot", label="", icon=icon("backward"))),
-          column(10,
-                 textOutput(outputId="plot_title"),
-                 tags$head(tags$style("#plot_title{font-size: 20px;text-align: center;justify-content: center;}"))),
-          column(1,
-                 actionButton("next_plot", label="", icon=icon("forward"), style="float:right"))
+          column(1, actionButton("previous_plot", label="Previous", icon=icon("backward"))),
+          tags$head(tags$style(HTML('#previous_plot{background-color:#dde5eb}'), '#previous_plot.attr("disabled", "true")')),
+          
+          column(10, textOutput(outputId="plot_title"),
+          tags$head(tags$style("#plot_title{font-size: 20px;text-align: center;justify-content: center;}"))),
+          
+          column(1, actionButton("next_plot", label="Next", icon=icon("forward"), style="float:right")),
+          tags$head(tags$style(HTML('#next_plot{background-color:#dde5eb}')))
         ),
         conditionalPanel(condition = "output.plot_type == 'population'",
                          plotlyOutput('populationPlot', height = "600px")),
@@ -58,7 +59,25 @@ getPredictionTabPanel <- function() {
                          plotlyOutput('recommendationPlot', height = "600px"))
       )
     ),
-    tags$head(tags$style(HTML(".handsontable {overflow-x:hidden;}"), "#tab_title{font-size: 30px; margin-top: 10px; margin-bottom: 10px;}"))
+    tags$head(tags$style(HTML(".handsontable {overflow-x:hidden;}"), "#tab_title{font-size: 30px; margin-top: 10px; margin-bottom: 10px;}")),
+    singleton(tags$head(HTML(
+      '
+    <script type="text/javascript">
+      $(document).ready(function() {
+      
+      // Disable previous_plot button after a click
+      Shiny.addCustomMessageHandler("disableButton", function(message) {
+      $("#"+message).attr("disabled", "true");
+      });
+      
+      // Enable previous_plot button when computation is finished
+      Shiny.addCustomMessageHandler("enableButton", function(message) {
+      $("#"+message).removeAttr("disabled");
+      });
+      })
+    </script>
+    '
+    )))
   )
   return(panel)
 }
@@ -68,17 +87,35 @@ getPredictionTabPanel <- function() {
 #'
 #' @param input shiny input
 #' @param output shiny output
+#' @param session shiny session
 #' @param val main reactive container
 #'
-previousNextLogic <- function(input, output, val) {
+previousNextLogic <- function(input, output, session, val) {
   plotTypes <- c("population", "fit", "recommendation")
   plotTitles <- c("Population prediction", "Individual prediction", "Recommendation")
+
+  enableDisableButtons <- function(plotTypeIndex) {
+    if (plotTypeIndex <= 1) {
+      session$sendCustomMessage("disableButton", "previous_plot")
+    } else {
+      session$sendCustomMessage("enableButton", "previous_plot")
+    }
+    if (plotTypeIndex >= 3) {
+      session$sendCustomMessage("disableButton", "next_plot")
+    } else {
+      session$sendCustomMessage("enableButton", "next_plot")
+    }
+  }
+  
+  # Necessary call for the previous button (should be disabled already at the beginning)
+  session$sendCustomMessage("disableButton", "previous_plot")
   
   observeEvent(input$previous_plot, {
     plotTypeIndex <- which(plotTypes==val$plot_type) - 1
     if (plotTypeIndex >= 1) {
       val$plot_type <- plotTypes[plotTypeIndex]
     }
+    enableDisableButtons(plotTypeIndex)
   })
   
   observeEvent(input$next_plot, {
@@ -86,6 +123,7 @@ previousNextLogic <- function(input, output, val) {
     if (plotTypeIndex <= length(plotTypes)) {
       val$plot_type <- plotTypes[plotTypeIndex]
     }
+    enableDisableButtons(plotTypeIndex)
   })
   
   output$plot_title <- renderText({
@@ -111,7 +149,7 @@ previousNextLogic <- function(input, output, val) {
 predictionTabServer <- function(input, output, session, val) {
 
   # Previous/Next button logic
-  previousNextLogic(input, output, val)
+  previousNextLogic(input, output, session, val)
   
   # Update tab title according to patient's name
   output$tab_title <- renderText({return(paste(val$patient$firstname, val$patient$lastname))})
