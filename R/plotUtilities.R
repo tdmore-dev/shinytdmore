@@ -34,6 +34,15 @@ targetColor <- function() {
   return("gray48")
 }
 
+#'
+#' Recommendation color (green).
+#'
+#' @return a color string
+#'
+recommendationColor <- function() {
+  return("yellowgreen")
+}
+
 
 #'
 #' Update plot using animation.
@@ -309,11 +318,10 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
   
   ggplotTarget <- data.frame(t1=start, t2=start + 4*24*60*60, lower=target[1], upper=target[2])
   
-  color <- ipredColor()
   p1 <- ggplot(mapping=aes(x=TIME, y=CONC)) +
-    geom_line(data=ipred, color=color, alpha=0.2) +
-    geom_line(data=ipredNew, color=color) +
-    geom_ribbon(fill=color, aes(ymin=CONC.lower, ymax=CONC.upper), data=ipredNew, alpha=0.1) +
+    geom_line(data=ipred, color=ipredColor(), alpha=0.2) +
+    geom_line(data=ipredNew, color=recommendationColor()) +
+    geom_ribbon(fill=recommendationColor(), aes(ymin=CONC.lower, ymax=CONC.upper), data=ipredNew, alpha=0.2) +
     geom_point(data=obs, aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure), color=samplesColor(), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
