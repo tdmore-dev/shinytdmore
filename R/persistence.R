@@ -69,11 +69,16 @@ updatePatientMeasures <- function(patient, measures) {
 #' @export
 #' 
 getDB <- function() {
-  testDB <- getOption("testShinyTdmore")
-  if (!is.null(testDB) && testDB) {
-    db <- mongo(collection = "patients_tests", db = "shinytdmore") # Used by unit tests
+  dbConfig <- fromConfig(key="db_config")
+  if (is.null(dbConfig)) {
+    dbConfig <- defaultDBConfig()
+  }
+  
+  if(!is.null(dbConfig$user)) {
+    db <- mongo(collection=dbConfig$collection, db=dbConfig$db,
+                url=paste0("mongodb://", dbConfig$user, ":", dbConfig$password ,"@", dbConfig$server, "/"))
   } else {
-    db <- mongo(collection = "patients", db = "shinytdmore") # Used by Shiny app
+    db <- mongo(collection=dbConfig$collection, db=dbConfig$db)
   }
   
   return(db)

@@ -4,7 +4,7 @@
 \alias{preparePredictionPlot}
 \title{Prepare the prediction plot.}
 \usage{
-preparePredictionPlot(data, obs, target, population)
+preparePredictionPlot(data, obs, target, population, model)
 }
 \arguments{
 \item{data}{dataframe containing the prediction data}
@@ -14,6 +14,8 @@ preparePredictionPlot(data, obs, target, population)
 \item{target}{numeric vector of size 2, min and max value}
 
 \item{population}{logical value, true for population, false for individual prediction}
+
+\item{model}{tdmore model}
 }
 \description{
 Prepare the prediction plot.

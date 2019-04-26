@@ -6,8 +6,7 @@ library(rjson)
 library(tidyverse)
 
 context("Test the patient model")
-options(testShinyTdmore=T) # Make sure the test mode is enabled (a test database is used)
-
+toConfig(key="db_config", value=testDBConfig()) # Make sure the test DB config is enabled (a test database is used)
 
 # Remove everything from the database
 getDB()$remove("{}")

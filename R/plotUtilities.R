@@ -96,6 +96,7 @@ getYAxisLabel <- function(model) {
 #' Get dose column label.
 #' 
 #' @param model tdmore model
+#' @param breakLine breakline or just space before the unit
 #' @return a label
 #'
 getDoseColumnLabel <- function(model, breakLine=T) {
@@ -109,6 +110,7 @@ getDoseColumnLabel <- function(model, breakLine=T) {
 #' Get measure column label.
 #' 
 #' @param model tdmore model
+#' @param breakLine breakline or just space before the unit
 #' @return a label
 #'
 getMeasureColumnLabel <- function(model, breakLine=T) {

@@ -4,12 +4,14 @@
 \alias{prepareTimelinePlot}
 \title{Prepare the timeline.}
 \usage{
-prepareTimelinePlot(doses, xlim)
+prepareTimelinePlot(doses, xlim, model)
 }
 \arguments{
 \item{doses}{dataframe containing the doses}
 
 \item{xlim}{ggplot xlim argument}
+
+\item{model}{tdmore model}
 }
 \description{
 Prepare the timeline.

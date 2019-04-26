@@ -4,7 +4,6 @@
 #' @export
 #' 
 shinyTdmoreUI <- function() {
-  options(testShinyTdmore=F) # Make sure test mode is disabled when UI is created
   ui <- navbarPage("TDMore mockup", 
                    id="tabs",
                    getPatientsTabPanel(),
