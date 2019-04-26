@@ -80,7 +80,6 @@ getDB <- function() {
   } else {
     db <- mongo(collection=dbConfig$collection, db=dbConfig$db)
   }
-  
   return(db)
 }
 

@@ -10,9 +10,9 @@
 toConfig <- function(key, value) {
   tryCatch(
     {
-      assign(key, value, pos=.shinytdmoreGlobals, inherits=FALSE)
+      assign(key, value, envir=.shinytdmoreGlobals)
     }, error = function(e) {
-      if (exists(key, where=.shinytdmoreGlobals, inherits=FALSE))
+      if (exists(key, envir=.shinytdmoreGlobals))
         remove(key, envir=.shinytdmoreGlobals)
       e
     })
@@ -25,7 +25,7 @@ toConfig <- function(key, value) {
 #' @export
 #' 
 fromConfig <- function(key) {
-  if (exists(key, where=.shinytdmoreGlobals, inherits=FALSE))
+  if (exists(key, envir=.shinytdmoreGlobals))
     .shinytdmoreGlobals[[key]]
   else
     NULL
@@ -48,7 +48,7 @@ createDBConfig <- function(collection, db, user=NULL, password=NULL, server=NULL
     user=user,
     password=password,
     server=server
-  ), class="shinytdmore_db_config")
+  ), class="mongo_db_config")
   return(config)
 }
 
