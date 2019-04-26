@@ -62,14 +62,14 @@ updatePatientMeasures <- function(patient, measures) {
   return(patient)
 }
 
-#' Get the TDMore database.
+#' Get the shinytdmore database.
 #'
-#' @return the TDMore database
+#' @return a mongo database
 #' @importFrom mongolite mongo
 #' @export
 #' 
 getDB <- function() {
-  dbConfig <- fromConfig(key="db_config")
+  dbConfig <- fromConfig(key="shinytdmore_db_config")
   if (is.null(dbConfig)) {
     dbConfig <- defaultDBConfig()
   }

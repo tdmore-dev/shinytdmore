@@ -28,7 +28,7 @@ library(shinytdmore)
 library(assertthat)
 
 # Default config added to environment
-toConfig(key="db_config", value=defaultDBConfig())
+toConfig(key="shinytdmore_db_config", value=defaultDBConfig())
 
 ui <- shinyTdmoreUI()
 server <- function(input, output, session) {

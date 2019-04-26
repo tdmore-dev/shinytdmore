@@ -2,13 +2,13 @@
 % Please edit documentation in R/persistence.R
 \name{getDB}
 \alias{getDB}
-\title{Get the TDMore database.}
+\title{Get the shinytdmore database.}
 \usage{
 getDB()
 }
 \value{
-the TDMore database
+a mongo database
 }
 \description{
-Get the TDMore database.
+Get the shinytdmore database.
 }
