@@ -32,6 +32,10 @@ getPredictionTabPanel <- function() {
           ),
           rHandsontableOutput('hotdosefuture')
         ),
+        fluidRow(
+          column(2, h5("Now:")),
+          column(10, editableInput(inputId="nowDate", type = "combodate", value="2019-04-29 12:00"), style="margin-top: 6px;")
+        ),
         hr(),
         h4("Target"),
         numericInput("targetDown", "Lower limit", 10),
