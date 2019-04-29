@@ -164,6 +164,7 @@ predictionTabServer <- function(input, output, session, val) {
     attr(regimen, "start") <- min(pos)
     val$regimen <- regimen
   })
+  
   observe({
     pred <- predict(
       val$model,
@@ -186,21 +187,6 @@ predictionTabServer <- function(input, output, session, val) {
     val$db_dose <- hot_to_r(input$hotdose)
   })
   
-  dataModalDose <- function(failed = FALSE) {
-    modalDialog(
-      numericInput("newdose", "Dose", 0),
-      textInput("newtimedose", "Time", "08:00"),
-      #timeInput("time_input", "Enter time", value = strptime("08:00:00", "%T")),
-      dateInput("newdatedose", "Date", tail(db_dose,n=1)$date, format = "yyyy/mm/dd"),
-      tags$style(
-        type = "text/css", ".datepicker{z-index: 1100 !important;}"),
-      footer = tagList(
-        modalButton("Cancel"),
-        actionButton("okDose", "OK")
-      )
-    )
-  }
-  
   observeEvent(input$addDose, {
     if(nrow(val$db_dose) > 0) {
       newdose <- val$db_dose[ nrow(val$db_dose), ]
@@ -214,26 +200,8 @@ predictionTabServer <- function(input, output, session, val) {
     newdose$time <- format(lastdose, "%H:%M")
     
     val$db_dose <- rbind(val$db_dose, newdose)
-    #showModal(dataModalDose())
   })
   
-  observeEvent(input$okDose, {
-    # Check that data object exists and is data frame.
-    if (!is.null(input$newdose) & !is.null(input$newtimedose) & !is.null(input$newdatedose)) {
-      db_dose <- isolate(val[["db_dose"]])
-      newrow <- tail(db_dose,n=1)
-      row.names(newrow) <- as.numeric(row.names(newrow))+1
-      newrow$dose <- isolate(input$newdose)
-      newrow$date <- isolate(input$newdatedose)
-      newrow$time <- isolate(input$newtimedose)
-      val[["db_dose"]] <- rbind(db_dose,newrow)
-      removeModal()
-    } else {
-      showModal(dataModal(failed = TRUE))
-    }
-  })
-  
-  # Handsontable Obs
   output$hotobs <- renderRHandsontable({
     db_obs <- val$db_obs
     if (!is.null(db_obs))
@@ -245,21 +213,6 @@ predictionTabServer <- function(input, output, session, val) {
       val$db_obs = hot_to_r(input$hotobs)
     }
   })
-  
-  dataModalObs <- function(failed = FALSE) {
-    modalDialog(
-      numericInput("newobs", "Measure", 0),
-      textInput("newtimeobs", "Time", "08:00"),
-      #timeInput("time_input", "Enter time", value = strptime("08:00:00", "%T")),
-      dateInput("newdateobs", "Date", tail(val$db_dose,n=1)$date, format = "yyyy/mm/dd"),
-      tags$style(
-        type = "text/css", ".datepicker{z-index: 1100 !important;}"),
-      footer = tagList(
-        modalButton("Cancel"),
-        actionButton("okObs", "OK")
-      )
-    )
-  }
   
   observeEvent(input$addObs, {
     if(nrow(val$db_obs) > 0) {
@@ -274,24 +227,6 @@ predictionTabServer <- function(input, output, session, val) {
     newobs$time <- format(lastobs, "%H:%M")
     
     val$db_obs <- rbind(val$db_obs, newobs)
-    #showModal(dataModalDose())
-  })
-  
-  observeEvent(input$okObs, {
-    # Check that data object exists and is data frame.
-    if (!is.null(input$newobs) & !is.null(input$newtimeobs) & !is.null(input$newdateobs)) {
-      db_obs <- isolate(val[["db_obs"]])
-      newrow <- tail(db_obs,n=1)
-      row.names(newrow) <- as.numeric(row.names(newrow))+1
-      newrow$measure <- isolate(input$newobs)
-      newrow$date <- isolate(input$newdateobs)
-      newrow$time <- isolate(input$newtimeobs)
-      newrow$use <- TRUE
-      val[["db_obs"]] <- rbind(db_obs, newrow)
-      removeModal()
-    } else {
-      showModal(dataModal(failed = TRUE))
-    }
   })
   
   # 1 - Population prediction
