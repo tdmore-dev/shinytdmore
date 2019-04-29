@@ -80,6 +80,27 @@ dateAndTimeToPOSIX <- function(date, time) {
 }
 
 #'
+#' Generate the list of hours that can be picked in the 'hours' combobox.
+#' 
+#' @return a list of all the hours
+#'
+hoursList <- function() {
+  grid <- expand.grid(pad(c(0,30)), pad(0:23))
+  hours <- paste0(grid$Var2, ":", grid$Var1)
+  return(hours)
+}
+
+#'
+#' Pad integer with a zero if needed.
+#' 
+#' @param integer the integer to be padded
+#' @return a string
+#'
+pad <- function(integer) {
+  ifelse(integer < 10, paste0('0', integer), paste0(integer))
+}
+
+#'
 #' Get a nice Y-axis label.
 #' 
 #' @param model tdmore model
@@ -107,6 +128,30 @@ getDoseColumnLabel <- function(model, breakLine=T) {
 }
 
 #'
+#' Get recommended dose column label.
+#' 
+#' @param model tdmore model
+#' @param breakLine breakline or just space before the unit
+#' @return a label
+#'
+getRecommendedDoseColumnLabel <- function(model, breakLine=T) {
+  doseMetadata <- getMetadataByName(model, "DOSE")
+  separator <- if(breakLine){"\n"} else{" "}
+  label <- if(!is.null(doseMetadata)) {paste0("Rec. dose", separator, "(", doseMetadata$unit, ")")} else {"Dose"}
+  return(label)
+}
+
+#'
+#' Get model output variable name.
+#' 
+#' @param model tdmore model
+#' @return the model output variable name, like 'CONC'
+#'
+getModelOutput <- function(model) {
+  return(model$res_var[[1]]$var) # TODO: what if several outputs?
+}
+
+#'
 #' Get measure column label.
 #' 
 #' @param model tdmore model
@@ -114,9 +159,8 @@ getDoseColumnLabel <- function(model, breakLine=T) {
 #' @return a label
 #'
 getMeasureColumnLabel <- function(model, breakLine=T) {
-  output <- model$res_var[[1]]$var # TODO: what if several outputs?
   separator <- if(breakLine){"\n"} else{" "}
-  outputMetadata <- getMetadataByName(model, output)
+  outputMetadata <- getMetadataByName(model, getModelOutput(model))
   label <- if(!is.null(outputMetadata)) {paste0("Measure", separator, "(", outputMetadata$unit, ")")} else {"Measure"}
   return(label)
 }
@@ -279,13 +323,13 @@ prepareRecommendation <- function(doses, obs, model, covs, target) {
   
   newRegimen$AMT[ is.na(newRegimen$AMT)] <- recommendation$dose
   ipredNew <- fit %>%
-    predict(newdata = data.frame(TIME=seq(max(regimen$TIME), max(newRegimen$TIME)+12, length.out=300), CONC=NA),
+    predict(newdata = data.frame(TIME=seq(nextDose, max(newRegimen$TIME)+12, length.out=300), CONC=NA),
             regimen=newRegimen,
             covariates=covs,
             se=TRUE) %>%
     mutate(TIME = start + TIME*60*60)
   
-  recommendedRegimenFiltered <- recommendation$regimen %>% filter(TIME>lastDose) %>% mutate(TIME=start + TIME*60*60)
+  recommendedRegimenFiltered <- recommendation$regimen %>% filter(TIME>=nextDose) %>% mutate(TIME=start + TIME*60*60)
   recommendedRegimen <- recommendation$regimen %>% mutate(TIME=start + TIME*60*60)
   
   return(list(pred=pred, ipred=ipred, ipredNew=ipredNew,
@@ -329,7 +373,6 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
     labs(y=getYAxisLabel(model))
   newDoses <- recommendedRegimen %>% mutate(date=as.Date(TIME), time=strftime(TIME,"%H:%M"))
-  print(newDoses)
   p2 <- prepareTimelinePlot(doses=newDoses, xlim=c(start, max(ipredNew$TIME)), model=model)
   
   return(list(p1=p1, p2=p2))

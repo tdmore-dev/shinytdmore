@@ -23,19 +23,19 @@ getPredictionTabPanel <- function() {
             column(10, h4("Doses")),
             column(2, actionButton("addDose", "Add", style="float:right"))
           ),
-          rHandsontableOutput('hotdose'),
-          hr(),
-          h4("Target"),
-          numericInput("targetDown", "Lower limit", 10),
-          numericInput("targetUp", "Upper limit", 15)
+          rHandsontableOutput('hotdose')
         ),
-        
         conditionalPanel(
           condition = "output.plot_type == 'recommendation'",
-          h3("Dosing future"),
-          dataTableOutput('hotdosefuture')
-          #actionButton("getComputerPrediction", "Computer prediction")
-        )
+          fluidRow(
+            column(10, h4("Doses & Recommendations"))
+          ),
+          rHandsontableOutput('hotdosefuture')
+        ),
+        hr(),
+        h4("Target"),
+        numericInput("targetDown", "Lower limit", 10),
+        numericInput("targetUp", "Upper limit", 15)
       ),
       column(
         9,
@@ -176,20 +176,11 @@ predictionTabServer <- function(input, output, session, val) {
     val$pred <- pred
   })
   
-  # Output for tab "Prediction"
-  # Handsontable Dose
   output$hotdose <- renderRHandsontable({
-    ## HOURS select option
-    str1 <- paste0("0",as.character(seq(0,23,1)))
-    v1 <- substr(str1,(nchar(str1)+1)-2,nchar(str1))
-    str2 <- paste0("0",as.character(seq(0,45,15)))
-    v2 <- paste0(":",substr(str2,(nchar(str2)+1)-2,nchar(str2)))
-    HOURS <- sort(apply(expand.grid(v1, v2), 1, paste, collapse = "", sep = "")) 
-    
     rhandsontable(val$db_dose, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
       colHeaders = c("Date", "Time", getDoseColumnLabel(val$model))) %>%
       hot_context_menu(allowRowEdit = TRUE, allowColEdit = FALSE) %>%
-      hot_col(col = "Time", type = "dropdown", source = HOURS)
+      hot_col(col="Time", type="dropdown", source=hoursList())
   })
   observeEvent(input$hotdose, {
     val$db_dose <- hot_to_r(input$hotdose)
@@ -296,7 +287,7 @@ predictionTabServer <- function(input, output, session, val) {
       newrow$date <- isolate(input$newdateobs)
       newrow$time <- isolate(input$newtimeobs)
       newrow$use <- TRUE
-      val[["db_obs"]] <- rbind(db_obs,newrow)
+      val[["db_obs"]] <- rbind(db_obs, newrow)
       removeModal()
     } else {
       showModal(dataModal(failed = TRUE))
@@ -339,14 +330,16 @@ predictionTabServer <- function(input, output, session, val) {
     target <- c(input$targetDown, input$targetUp)
     recommendation <- prepareRecommendation(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target)
 
-    # Handsontable Dose Future
-    output$hotdosefuture <- renderDataTable({
-      doseColumnName <- getDoseColumnLabel(val$model, breakLine=F)
-      retValue <- recommendation$recommendedRegimenFiltered %>%
-        mutate(Date=as.Date(TIME),
-               Time=strftime(TIME,"%H:%M"),
-               !!doseColumnName:=round(AMT, digits=2))
-      return(retValue %>% select(-AMT,-TIME))
+    temp_df <- val$db_dose
+    temp_df$rec <- "/"
+    temp_df <- rbind(temp_df, recommendation$recommendedRegimenFiltered %>%
+                     dplyr::transmute(date=as.Date(TIME), time=strftime(TIME,"%H:%M"), dose="/", rec=round(AMT, digits=2)))
+
+    output$hotdosefuture <- renderRHandsontable({
+      rhandsontable(temp_df, useTypes=TRUE, stretchH="all", rowHeaders=NULL, readOnly=TRUE,
+                    colHeaders = c("Date", "Time", getDoseColumnLabel(val$model), getRecommendedDoseColumnLabel(val$model))) %>%
+        hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE ) %>%
+        hot_col(col="Time", type="dropdown", source=hoursList())
     })
     
     plots <- prepareRecommendationPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, recommendation=recommendation)
