@@ -49,7 +49,7 @@ recommendationColor <- function() {
 #' @return a color string
 #'
 nowColor <- function() {
-  return("palegreen4")
+  return("gray48")
 }
 
 #'
@@ -194,7 +194,7 @@ preparePredictionPlot <- function(data, obs, target, population, model, xinterce
     geom_point(data=obs, aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure), color=samplesColor(), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
-    geom_vline(xintercept=as.numeric(xintercept), color=nowColor(), size=1, alpha=0.3) +
+    geom_vline(xintercept=as.numeric(xintercept), color=nowColor(), size=0.5, alpha=0.3) +
     labs(y=getYAxisLabel(model))
   return(plot)
 }
@@ -283,6 +283,16 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
               p2=prepareTimelinePlot(doses=doses, xlim=c(min(pos), max(data$TIME)), model=model, xintercept=xintercept)))
 }
 
+#' Convert POSIX date to hours (numeric).
+#'
+#' @param posixDate a date
+#' @return the converted dates, in hours
+#' @importFrom lubridate ymd_hms
+#'
+posixToHours <- function(posixDate) {
+  return(as.integer(lubridate::ymd_hms(posixDate)) / (3600))
+}
+
 #'
 #' Prepare recommendation.
 #' 
@@ -294,62 +304,83 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
 #' @param now now date, POSIXlt date
 #' 
 #' @return a list with pred, ipred and the recommendation
+#' @export
 #'
 prepareRecommendation <- function(doses, obs, model, covs, target, now) {
-  pos <- dateAndTimeToPOSIX(doses$date, doses$time)
-  start <- min(pos)
-  stop <- max(pos + 24*60*60)
+  doseDates <- dateAndTimeToPOSIX(doses$date, doses$time) # POSIXct dates (in seconds)
+  firstDoseDate <- min(doseDates)
+  stopDate <- max(doseDates + 24*60*60)
+  
+  # Initial regimen
   regimen <- data.frame(
-    TIME=as.numeric(difftime(pos, start, units="hour")),
+    TIME=as.numeric(difftime(doseDates, firstDoseDate, units="hour")),
     AMT=doses$dose
   )
   
-  pred <- predict(
-    model,
-    newdata = data.frame(TIME=seq(0, max(regimen$TIME)+24, length.out=300), CONC=NA),
-    regimen=regimen,
-    covariates=covs,
-    se=TRUE) %>% as.data.frame()
-  pred$TIME <- min(pos) + pred$TIME*60*60
-  
-  pos2 <- dateAndTimeToPOSIX(obs$date, obs$time)
+  # Collect all observations for tdmore
+  obsDates <- dateAndTimeToPOSIX(obs$date, obs$time)
   observed <- data.frame(
-    TIME=as.numeric(difftime(pos2, start, units="hour")),
+    TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")),
     CONC=obs$measure
   )
+
+  # Reference time
+  refTime <- posixToHours(firstDoseDate)
   
-  fit <- estimate(model, observed=observed, regimen=regimen, covariates=covs)
-  ipred <- fit %>%
-    predict(newdata = data.frame(TIME=seq(0, max(regimen$TIME)+24, length.out=300), CONC=NA),
-            regimen=regimen,
-            se=TRUE,
-            covariates=covs)
-  ipred$TIME <- start + ipred$TIME*60*60
+  # Now but in hours compared to the reference time
+  relativeNow <- posixToHours(now) - refTime
   
-  lastDose <- max(regimen$TIME)
-  nextDose <- lastDose + 12
-  targetDf <- data.frame(TIME=lastDose+48, CONC=target[1]) #trough after next dose
+  # Prepare regimen and doseRows vector for tdmore
+  regimen <- regimen %>% dplyr::mutate(PAST=TIME < relativeNow)
+  doseRows <- which(!regimen$PAST)
+  if(length(doseRows)==0) {
+    stop("There is no dose in the future")
+  }
+  filteredRegimen <- regimen %>% dplyr::filter(PAST) %>% dplyr::select(-PAST)
   
-  newRegimen <- data.frame(
-    TIME=c(regimen$TIME, lastDose+c(12,24,36,48)),
-    AMT=c(regimen$AMT, c(NA,NA,NA,NA))
-  )
-  recommendation <- tdmore::findDose(fit, doseRows=which(is.na(newRegimen$AMT)),regimen = newRegimen, target = targetDf)
+  # Prepare observations for tdmore
+  observed <- observed %>% dplyr::mutate(PAST=TIME < relativeNow)
+  filteredObserved <- observed %>% dplyr::filter(PAST) %>% dplyr::select(-PAST)
+
+  # Compute fit
+  fit <- estimate(model, observed = filteredObserved, regimen = filteredRegimen, covariates = covs)
+
+  # Implementing the iterative process
+  nextRegimen <- regimen %>% dplyr::select(-PAST)
   
-  newRegimen$AMT[ is.na(newRegimen$AMT)] <- recommendation$dose
-  ipredNew <- fit %>%
-    predict(newdata = data.frame(TIME=seq(nextDose, max(newRegimen$TIME)+12, length.out=300), CONC=NA),
-            regimen=newRegimen,
-            covariates=covs,
-            se=TRUE) %>%
-    mutate(TIME = start + TIME*60*60)
+  for (index in seq_along(doseRows)) {
+    row <- regimen[doseRows[index],]
+    last <- index == length(doseRows)
+    
+    if (last) {
+      nextTime <- row$TIME + 12 # By default, II
+    } else {
+      nextTime <- regimen[doseRows[index + 1],]$TIME
+    }
+    
+    recommendation <- findDose(fit, regimen=nextRegimen, doseRows=doseRows[(index:length(doseRows))],
+                               target=data.frame(TIME=nextTime, CONC=(target[1] + target[2])/2))
+    nextRegimen <- recommendation$regimen
+  }
   
-  recommendedRegimenFiltered <- recommendation$regimen %>% filter(TIME>=nextDose) %>% mutate(TIME=start + TIME*60*60)
-  recommendedRegimen <- recommendation$regimen %>% mutate(TIME=start + TIME*60*60)
+  firstDoseInFutureTime <- regimen$TIME[doseRows[1]]
   
-  return(list(pred=pred, ipred=ipred, ipredNew=ipredNew,
-              recommendedRegimenFiltered=recommendedRegimenFiltered,
-              recommendedRegimen=recommendedRegimen, start=start))
+  # Predict ipred without adapting the dose
+  ipred <- fit %>% predict(
+            newdata = data.frame(TIME=seq(0, max(regimen$TIME) + 12, length.out=300), CONC=NA),
+            regimen=regimen %>% dplyr::select(-PAST), se=F, covariates=covs)
+  ipred$TIME <- firstDoseDate + ipred$TIME*60*60 # Plotly able to plot POSIXct
+  
+  # Predict ipred with the new recommendation
+  ipredNew <- fit %>% predict(
+    newdata = data.frame(TIME=seq(firstDoseInFutureTime, max(regimen$TIME) + 12, length.out=300), CONC=NA),
+    regimen=nextRegimen, se=TRUE, covariates=covs)
+  ipredNew$TIME <- firstDoseDate + ipredNew$TIME*60*60 # Plotly able to plot POSIXct
+  
+  # Back compute to POSIXct
+  recommendedRegimen <- recommendation$regimen %>% mutate(TIME=firstDoseDate + TIME*60*60, PAST=regimen$PAST)
+
+  return(list(ipred=ipred, ipredNew=ipredNew, recommendedRegimen=recommendedRegimen, start=firstDoseDate))
 }
 
 #'
@@ -362,16 +393,17 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
 #' @param covs covariates
 #' @param target numeric vector of size 2, min and max value
 #' @param recommendation recommendation (contains pred, ipred and the recommendation)
+#' @param now now date
 #' 
 #' @return a list of two plots
 #'
-prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommendation) {
+prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommendation, now) {
   if (is.null(doses)) {
     return(NULL)
   }
   
+  xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
   start <- recommendation$start
-  pred <- recommendation$pred
   ipred <- recommendation$ipred
   ipredNew <- recommendation$ipredNew
   recommendedRegimen <- recommendation$recommendedRegimen
@@ -386,9 +418,10 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
     geom_point(data=obs, aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure), color=samplesColor(), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
+    geom_vline(xintercept=as.numeric(xintercept), color=nowColor(), size=0.5, alpha=0.3) +
     labs(y=getYAxisLabel(model))
   newDoses <- recommendedRegimen %>% mutate(date=as.Date(TIME), time=strftime(TIME,"%H:%M"))
-  p2 <- prepareTimelinePlot(doses=newDoses, xlim=c(start, max(ipredNew$TIME)), model=model)
+  p2 <- prepareTimelinePlot(doses=newDoses, xlim=c(start, max(ipredNew$TIME)), model=model, xintercept=xintercept)
   
   return(list(p1=p1, p2=p2))
 }

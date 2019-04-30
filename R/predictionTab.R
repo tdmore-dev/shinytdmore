@@ -282,11 +282,9 @@ predictionTabServer <- function(input, output, session, val) {
     progress$set(message = "Preparing...", value = 0.5)
     target <- c(input$targetDown, input$targetUp)
     recommendation <- prepareRecommendation(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, now=val$patient$now_date)
-
+    recommendedRegimen <- recommendation$recommendedRegimen
     temp_df <- val$db_dose
-    temp_df$rec <- "/"
-    temp_df <- rbind(temp_df, recommendation$recommendedRegimenFiltered %>%
-                     dplyr::transmute(date=as.Date(TIME), time=strftime(TIME,"%H:%M"), dose="/", rec=round(AMT, digits=2)))
+    temp_df$rec <- ifelse(recommendedRegimen$PAST, "/", round(recommendedRegimen$AMT, 2))
 
     output$hotdosefuture <- renderRHandsontable({
       rhandsontable(temp_df, useTypes=TRUE, stretchH="all", rowHeaders=NULL, readOnly=TRUE,
@@ -295,7 +293,7 @@ predictionTabServer <- function(input, output, session, val) {
         hot_col(col="Time", type="dropdown", source=hoursList())
     })
     
-    plots <- prepareRecommendationPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, recommendation=recommendation)
+    plots <- prepareRecommendationPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, recommendation=recommendation, now=val$patient$now_date)
     progress$set(message = "Rendering plot...", value = 1)
     if(!is.null(plots)) mergePlots(plots$p1, plots$p2)
   })
