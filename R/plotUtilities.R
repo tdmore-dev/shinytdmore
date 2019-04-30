@@ -43,6 +43,14 @@ recommendationColor <- function() {
   return("yellowgreen")
 }
 
+#'
+#' Now color (green).
+#'
+#' @return a color string
+#'
+nowColor <- function() {
+  return("palegreen4")
+}
 
 #'
 #' Update plot using animation.
@@ -173,8 +181,9 @@ getMeasureColumnLabel <- function(model, breakLine=T) {
 #' @param target numeric vector of size 2, min and max value
 #' @param population logical value, true for population, false for individual prediction
 #' @param model tdmore model
+#' @param xintercept xintercept corresponding to now date
 #'
-preparePredictionPlot <- function(data, obs, target, population, model) {
+preparePredictionPlot <- function(data, obs, target, population, model, xintercept) {
   color <- if(population) {predColor()} else {ipredColor()}
   
   ggplotTarget <- data.frame(lower=target[1], upper=target[2])
@@ -185,6 +194,7 @@ preparePredictionPlot <- function(data, obs, target, population, model) {
     geom_point(data=obs, aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure), color=samplesColor(), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
+    geom_vline(xintercept=as.numeric(xintercept), color=nowColor(), size=1, alpha=0.3) +
     labs(y=getYAxisLabel(model))
   return(plot)
 }
@@ -195,8 +205,9 @@ preparePredictionPlot <- function(data, obs, target, population, model) {
 #' @param doses dataframe containing the doses
 #' @param xlim ggplot xlim argument
 #' @param model tdmore model
+#' @param xintercept xintercept corresponding to now date
 #'
-prepareTimelinePlot <- function(doses, xlim, model) {
+prepareTimelinePlot <- function(doses, xlim, model, xintercept) {
   times <- dateAndTimeToPOSIX(doses$date, doses$time)
   maxDose <- max(doses$dose)
   addSpace <- maxDose*0.15 # Add 15% margin for dose number
@@ -233,15 +244,18 @@ mergePlots <- function(p1, p2) {
 #' @param covs covariates
 #' @param target numeric vector of size 2, min and max value
 #' @param population logical value, true for population, false for individual
+#' @param now now date, POSIXlt date
 #' @return a list of two plots
 #'
-preparePredictionPlots <- function(doses, obs, model, covs, target, population) {
+preparePredictionPlots <- function(doses, obs, model, covs, target, population, now) {
   if (is.null(doses)) {
     return(NULL)
   }
   pos <- dateAndTimeToPOSIX(doses$date, doses$time)
   start <- min(pos)
   stop <- max(pos + 24*60*60)
+  xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
+
   regimen <- data.frame(
     TIME=as.numeric(difftime(pos, start, units="hour")),
     AMT=doses$dose
@@ -263,10 +277,10 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population) 
     regimen=regimen,
     covariates=covs,
     se=TRUE) %>% as.data.frame()
-  data$TIME <- min(pos) + data$TIME*60*60
+  data$TIME <- start + data$TIME*60*60
   
-  return(list(p1=preparePredictionPlot(data=data, obs=obs %>% filter(use==TRUE), target=target, population=population, model=model),
-              p2=prepareTimelinePlot(doses=doses, xlim=c(min(pos), max(data$TIME)), model=model)))
+  return(list(p1=preparePredictionPlot(data=data, obs=obs %>% filter(use==TRUE), target=target, population=population, model=model, xintercept=xintercept),
+              p2=prepareTimelinePlot(doses=doses, xlim=c(min(pos), max(data$TIME)), model=model, xintercept=xintercept)))
 }
 
 #'
@@ -277,10 +291,11 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population) 
 #' @param model tdmore model
 #' @param covs covariates
 #' @param target numeric vector of size 2, min and max value
+#' @param now now date, POSIXlt date
 #' 
 #' @return a list with pred, ipred and the recommendation
 #'
-prepareRecommendation <- function(doses, obs, model, covs, target) {
+prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   pos <- dateAndTimeToPOSIX(doses$date, doses$time)
   start <- min(pos)
   stop <- max(pos + 24*60*60)

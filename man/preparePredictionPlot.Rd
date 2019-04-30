@@ -4,7 +4,7 @@
 \alias{preparePredictionPlot}
 \title{Prepare the prediction plot.}
 \usage{
-preparePredictionPlot(data, obs, target, population, model)
+preparePredictionPlot(data, obs, target, population, model, xintercept)
 }
 \arguments{
 \item{data}{dataframe containing the prediction data}
@@ -16,6 +16,8 @@ preparePredictionPlot(data, obs, target, population, model)
 \item{population}{logical value, true for population, false for individual prediction}
 
 \item{model}{tdmore model}
+
+\item{xintercept}{xintercept corresponding to now date}
 }
 \description{
 Prepare the prediction plot.

@@ -5,7 +5,7 @@
 \title{Prepare population OR individual prediction plots.
 This includes the prediction plot and the timeline plot.}
 \usage{
-preparePredictionPlots(doses, obs, model, covs, target, population)
+preparePredictionPlots(doses, obs, model, covs, target, population, now)
 }
 \arguments{
 \item{doses}{doses}
@@ -19,6 +19,8 @@ preparePredictionPlots(doses, obs, model, covs, target, population)
 \item{target}{numeric vector of size 2, min and max value}
 
 \item{population}{logical value, true for population, false for individual}
+
+\item{now}{now date, POSIXlt date}
 }
 \value{
 a list of two plots

@@ -4,7 +4,7 @@
 \alias{prepareTimelinePlot}
 \title{Prepare the timeline.}
 \usage{
-prepareTimelinePlot(doses, xlim, model)
+prepareTimelinePlot(doses, xlim, model, xintercept)
 }
 \arguments{
 \item{doses}{dataframe containing the doses}
@@ -12,6 +12,8 @@ prepareTimelinePlot(doses, xlim, model)
 \item{xlim}{ggplot xlim argument}
 
 \item{model}{tdmore model}
+
+\item{xintercept}{xintercept corresponding to now date}
 }
 \description{
 Prepare the timeline.

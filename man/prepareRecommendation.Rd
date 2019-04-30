@@ -4,7 +4,7 @@
 \alias{prepareRecommendation}
 \title{Prepare recommendation.}
 \usage{
-prepareRecommendation(doses, obs, model, covs, target)
+prepareRecommendation(doses, obs, model, covs, target, now)
 }
 \arguments{
 \item{doses}{doses}
@@ -16,6 +16,8 @@ prepareRecommendation(doses, obs, model, covs, target)
 \item{covs}{covariates}
 
 \item{target}{numeric vector of size 2, min and max value}
+
+\item{now}{now date, POSIXlt date}
 }
 \value{
 a list with pred, ipred and the recommendation

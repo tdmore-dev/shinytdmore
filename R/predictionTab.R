@@ -172,7 +172,6 @@ nowDateLogic <- function(input, output, session, val) {
     }
   })
   observeEvent(val$set_patient_counter, {
-    print(val$set_patient_counter)
     forceUpdateNowDate(session, val, val$patient$now_date)
   })
 }
@@ -254,7 +253,7 @@ predictionTabServer <- function(input, output, session, val) {
     on.exit(progress$close())
     progress$set(message = "Preparing...", value = 0.5)
     target <- c(input$targetDown, input$targetUp)
-    plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, population=T)
+    plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, population=T, now=val$patient$now_date)
     progress$set(message = "Rendering plot...", value = 1)
     if(!is.null(plots)) mergePlots(plots$p1, plots$p2)
   })
@@ -270,7 +269,7 @@ predictionTabServer <- function(input, output, session, val) {
     on.exit(progress$close())
     progress$set(message = "Preparing...", value = 0.5)
     target <- c(input$targetDown, input$targetUp)
-    plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, population=F)
+    plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, population=F, now=val$patient$now_date)
     progress$set(message = "Rendering plot...", value = 1)
     if(!is.null(plots)) mergePlots(plots$p1, plots$p2)
   })
@@ -282,7 +281,7 @@ predictionTabServer <- function(input, output, session, val) {
     on.exit(progress$close())
     progress$set(message = "Preparing...", value = 0.5)
     target <- c(input$targetDown, input$targetUp)
-    recommendation <- prepareRecommendation(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target)
+    recommendation <- prepareRecommendation(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, now=val$patient$now_date)
 
     temp_df <- val$db_dose
     temp_df$rec <- "/"
