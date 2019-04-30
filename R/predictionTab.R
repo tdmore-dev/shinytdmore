@@ -34,7 +34,7 @@ getPredictionTabPanel <- function() {
         ),
         fluidRow(
           column(2, h5("Now:")),
-          column(10, editableInput(inputId="nowDate", type = "combodate", value="2019-04-29 12:00"), style="margin-top: 6px;")
+          column(10, editableInput(inputId="nowDate", type = "combodate", value="2000-01-01 00:00"), style="margin-top: 6px;")
         ),
         hr(),
         h4("Target"),
@@ -78,6 +78,11 @@ getPredictionTabPanel <- function() {
       Shiny.addCustomMessageHandler("enableButton", function(message) {
       $("#"+message).removeAttr("disabled");
       });
+
+      Shiny.addCustomMessageHandler("nowDate", function(message) {
+      $("#nowDate").editable("setValue", message);
+      });
+
       })
     </script>
     '
@@ -142,6 +147,36 @@ previousNextLogic <- function(input, output, session, val) {
   outputOptions(output, "plot_type", suspendWhenHidden = FALSE)
 }
 
+forceUpdateNowDate <- function(session, val, date) {
+  minute <- lubridate::minute(date) %/% 5
+  value <- paste0(format(date, format = "%Y-%m-%d %H"), ":", pad(minute*5))
+  updateTextInput(session=session, inputId="nowDate", value=value) # This updates the 'visual' text
+  session$sendCustomMessage("nowDate", value) # This update the javascript value in the date picket
+  val$patient$now_date <- date
+}
+
+#'
+#' Now date logic.
+#'
+#' @param input shiny input
+#' @param output shiny output
+#' @param session shiny session
+#' @param val main reactive container
+#' @importFrom lubridate ymd_hm
+#'
+nowDateLogic <- function(input, output, session, val) {
+  observeEvent(input$nowDate, {
+    defaultDateInUI <- "2000-01-01 00:00"
+    if (input$nowDate != val$patient$now_date && input$nowDate != defaultDateInUI) {
+      forceUpdateNowDate(session, val, lubridate::ymd_hm(input$nowDate))
+    }
+  })
+  observeEvent(val$set_patient_counter, {
+    print(val$set_patient_counter)
+    forceUpdateNowDate(session, val, val$patient$now_date)
+  })
+}
+
 #'
 #' Prediction tab server.
 #'
@@ -155,31 +190,11 @@ predictionTabServer <- function(input, output, session, val) {
   # Previous/Next button logic
   previousNextLogic(input, output, session, val)
   
+  # Now date logic
+  nowDateLogic(input, output, session, val)
+  
   # Update tab title according to patient's name
   output$tab_title <- renderText({return(paste(val$patient$firstname, val$patient$lastname))})
-  
-  observe({
-    # Update `regimen` based on changes in db_dose
-    pos <- dateAndTimeToPOSIX(val$db_dose$date, val$db_dose$time)
-    regimen <- data.frame(
-      TIME=as.numeric(difftime(pos, min(pos), units="hour")),
-      AMT=val$db_dose$dose
-    )
-    attr(regimen, "start") <- min(pos)
-    val$regimen <- regimen
-  })
-  
-  observe({
-    pred <- predict(
-      val$model,
-      newdata = data.frame(TIME=seq(0, max(val$regimen$TIME)+24, length.out=300), CONC=NA),
-      regimen=val$regimen,
-      covariates=val$covs,
-      se=TRUE) %>% as.data.frame()
-    ## TODO: tdmore should be able to work with POSIXct directly
-    pred$TIME <- attr(val$regimen, "start") + pred$TIME*60*60
-    val$pred <- pred
-  })
   
   output$hotdose <- renderRHandsontable({
     rhandsontable(val$db_dose, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,

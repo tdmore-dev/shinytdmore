@@ -62,6 +62,20 @@ updatePatientMeasures <- function(patient, measures) {
   return(patient)
 }
 
+#' Update the date of now.
+#'
+#' @param patient the given patient
+#' @param now the date of now, POSIXlt time
+#' 
+#' @return the patient
+#' @export
+#' 
+updateNowDate <- function(patient, now) {
+  patient$now_date <- now
+  patient$modified_at <- Sys.time()
+  return(patient)
+}
+
 #' Get the shinytdmore database.
 #'
 #' @return a mongo database

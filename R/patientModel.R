@@ -74,6 +74,7 @@ patientModelToJson <- function(patientModel) {
   patientJson$measures <- measureModelToJson(patientModel$measures)
   patientJson$created_at <- posixToString(patientModel$created_at)
   patientJson$modified_at <- posixToString(patientModel$modified_at)
+  patientJson$now_date <- posixToString(patientModel$now_date)
   json <- toJSON(patientJson)
   return(json)
 }
@@ -89,6 +90,9 @@ jsonToPatientModel <- function(patientJson) {
   patientModel$measures <- jsonToMeasureModel(patientJson$measures)
   patientModel$created_at <- as.POSIXlt(patientJson$created_at)
   patientModel$modified_at <- as.POSIXlt(patientJson$modified_at)
+  patientModel$now_date <- if(is.null(patientJson$now_date)){Sys.time()} else {as.POSIXlt(patientJson$now_date)}
   patientModel$covariates <- unlist(patientJson$covariates)
   return(patientModel)
 }
+
+

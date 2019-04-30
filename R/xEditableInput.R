@@ -25,21 +25,6 @@ editableInput <- function(inputId, type, value = "", options = list()) {
   dependency <- buildDependency()
 
   htmltools::tagList(element, script, dependency)
-
-}
-
-#'
-#' Update an editable input.
-#'
-#' @param session inputId
-#' @param inputId type
-#' @param value value
-#' @param options options
-#' @export
-#'
-updateEditableInput <- function(session, inputId, value = NULL) {
-  message <- dropNulls(list(value = value))
-  session$sendInputMessage(inputId, message)
 }
 
 buildScript <- function(inputId, type, options) {
@@ -69,10 +54,6 @@ buildElement <- function(inputId, value) {
     class = "shinyEditable-bound-input",
     value
   )
-}
-
-dropNulls <- function(x) {
-  x[!vapply(x, is.null, FUN.VALUE=logical(1))]
 }
 
 buildDependency <- function() {
