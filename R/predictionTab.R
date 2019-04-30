@@ -168,7 +168,7 @@ nowDateLogic <- function(input, output, session, val) {
   observeEvent(input$nowDate, {
     defaultDateInUI <- "2000-01-01 00:00"
     if (input$nowDate != val$now_date && input$nowDate != defaultDateInUI) {
-      forceUpdateNowDate(session, val, lubridate::ymd_hm(input$nowDate))
+      forceUpdateNowDate(session, val, lubridate::ymd_hm(input$nowDate, tz = Sys.timezone()))
     }
   })
   observeEvent(val$set_patient_counter, {
