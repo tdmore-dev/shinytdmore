@@ -21,6 +21,7 @@ saveData <- function(userData, modelName, covariateData) {
     tmp <- createFakePatient()
     patient <- updatePatientDoses(patient, tmp$doses) # Temporarily, app needs at least a dose
     patient <- updatePatientMeasures(patient, tmp$measures) # Temporarily, app needs at least a measure
+    patient <- updateNowDate(patient, Sys.time())
     addPatient(patient)
   } else {
     patient <- updatePatientModel(patient, modelName, covs)

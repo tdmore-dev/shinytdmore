@@ -25,7 +25,8 @@ dataHasChanged <- function(val) {
   patient <- val$patient
   dosesHasChanged <- !are_equal(patient$doses, val$db_dose)
   measuresHasChanged <- !are_equal(patient$measures, val$db_obs %>% select(-use))
-  return(dosesHasChanged || measuresHasChanged)
+  nowDateHasChanged <- !are_equal(patient$now_date, val$now_date)
+  return(dosesHasChanged || measuresHasChanged || nowDateHasChanged)
 }
 
 #'
@@ -36,6 +37,7 @@ dataHasChanged <- function(val) {
 saveProject <- function(val) {
   val$patient <- updatePatientDoses(val$patient, val$db_dose)
   val$patient <- updatePatientMeasures(val$patient, val$db_obs %>% select(-use))
+  val$patient <- updateNowDate(val$patient, val$now_date)
   updatePatient(val$patient$id, val$patient)
 }
 

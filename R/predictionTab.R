@@ -152,7 +152,7 @@ forceUpdateNowDate <- function(session, val, date) {
   value <- paste0(format(date, format = "%Y-%m-%d %H"), ":", pad(minute*5))
   updateTextInput(session=session, inputId="nowDate", value=value) # This updates the 'visual' text
   session$sendCustomMessage("nowDate", value) # This update the javascript value in the date picket
-  val$patient$now_date <- date
+  val$now_date <- date
 }
 
 #'
@@ -167,12 +167,12 @@ forceUpdateNowDate <- function(session, val, date) {
 nowDateLogic <- function(input, output, session, val) {
   observeEvent(input$nowDate, {
     defaultDateInUI <- "2000-01-01 00:00"
-    if (input$nowDate != val$patient$now_date && input$nowDate != defaultDateInUI) {
+    if (input$nowDate != val$now_date && input$nowDate != defaultDateInUI) {
       forceUpdateNowDate(session, val, lubridate::ymd_hm(input$nowDate))
     }
   })
   observeEvent(val$set_patient_counter, {
-    forceUpdateNowDate(session, val, val$patient$now_date)
+    forceUpdateNowDate(session, val, val$now_date)
   })
 }
 
@@ -253,7 +253,7 @@ predictionTabServer <- function(input, output, session, val) {
     on.exit(progress$close())
     progress$set(message = "Preparing...", value = 0.5)
     target <- c(input$targetDown, input$targetUp)
-    plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, population=T, now=val$patient$now_date)
+    plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, population=T, now=val$now_date)
     progress$set(message = "Rendering plot...", value = 1)
     if(!is.null(plots)) mergePlots(plots$p1, plots$p2)
   })
@@ -269,7 +269,7 @@ predictionTabServer <- function(input, output, session, val) {
     on.exit(progress$close())
     progress$set(message = "Preparing...", value = 0.5)
     target <- c(input$targetDown, input$targetUp)
-    plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, population=F, now=val$patient$now_date)
+    plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, population=F, now=val$now_date)
     progress$set(message = "Rendering plot...", value = 1)
     if(!is.null(plots)) mergePlots(plots$p1, plots$p2)
   })
@@ -281,7 +281,7 @@ predictionTabServer <- function(input, output, session, val) {
     on.exit(progress$close())
     progress$set(message = "Preparing...", value = 0.5)
     target <- c(input$targetDown, input$targetUp)
-    recommendation <- prepareRecommendation(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, now=val$patient$now_date)
+    recommendation <- prepareRecommendation(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, now=val$now_date)
     recommendedRegimen <- recommendation$recommendedRegimen
     temp_df <- val$db_dose
     temp_df$rec <- ifelse(recommendedRegimen$PAST, "/", round(recommendedRegimen$AMT, 2))
@@ -293,7 +293,7 @@ predictionTabServer <- function(input, output, session, val) {
         hot_col(col="Time", type="dropdown", source=hoursList())
     })
     
-    plots <- prepareRecommendationPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, recommendation=recommendation, now=val$patient$now_date)
+    plots <- prepareRecommendationPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=target, recommendation=recommendation, now=val$now_date)
     progress$set(message = "Rendering plot...", value = 1)
     if(!is.null(plots)) mergePlots(plots$p1, plots$p2)
   })

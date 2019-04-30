@@ -31,5 +31,7 @@ createFakePatient <- function() {
     measure=c(5.0)
   )
   patient <- updatePatientMeasures(patient, measureModel)
+  
+  patient <- updateNowDate(patient, Sys.time())
   return(patient)
 }

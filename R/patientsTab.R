@@ -77,6 +77,9 @@ setPatient <- function(patient, val) {
   db_obs$use <- TRUE # All measures used by default
   val$db_obs <- db_obs
   
+  # Copy now_date
+  val$now_date <- patient$now_date
+  
   # Set patient counter
   if(is.null(val$set_patient_counter)) {
     val$set_patient_counter <- 1
