@@ -19,6 +19,7 @@
 ## ---------------------------
 
 library(nlmixr)
+library(tdmore)
 
 #Bergmann, Troels K., et al. "Population pharmacokinetics of tacrolimus in adult kidney transplant patients: impact of CYP3A5 genotype on starting dose." Therapeutic drug monitoring 36.1 (2014): 62-70.
 omega <- c(ECL=0.486, EV1=1.136, EV2=0.914, EKA=0.549)**2
@@ -47,10 +48,13 @@ d/dt(periph) = K12*center - K21 * periph
 
 CONC = center / V1
 ") %>% tdmore(
-    parameters=names(omega),
-    omega=omega,
-    res_var=list(errorModel(prop=0.295))
-) %>% metadata(covariate("CYP3A5", label="CYP3A5 expressor", choices=list(Fast=0, Slow=1)), output("CONC", label="Tacrolimus concentration", unit="ng/mL"), dose("ug"))
+  parameters=names(omega),
+  omega=omega,
+  res_var=list(errorModel(prop=0.295))
+) %>% metadata(covariate("CYP3A5", label="CYP3A5 expressor", choices=list(Fast=0, Slow=1))) %>%
+  metadata(output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
+  metadata(dose(unit="ug", dosing_interval=12, default_value=8000)) %>%
+  metadata(target(min=10, max=15))
 usethis::use_data(bergmann2014_base, overwrite=TRUE)
 
 meropenem <- nlmixrUI(function(){
@@ -77,7 +81,11 @@ meropenem <- nlmixrUI(function(){
     CONC = center / V1
     CONC ~ prop(EPS_PROP) # Proportional error linked to the PK model
   })
-}) %>% tdmore() %>% metadata(covariate(name="WT", label="Weight", unit="kg", min=20, max=150), output("CONC", label="Meropenem", unit="ng/mL"), dose("ug"))
+}) %>% tdmore() %>% 
+  metadata(covariate(name="WT", label="Weight", unit="kg", min=20, max=150)) %>%
+  metadata(output(name="CONC", label="Meropenem concentration", unit="ng/mL", default_value=1)) %>%
+  metadata(dose(unit="ug", dosing_interval=8, default_value=1000)) %>%
+  metadata(target(min=10, max=15))
 usethis::use_data(meropenem, overwrite=TRUE)
 
 rxModel <- RxODE::RxODE('
@@ -106,5 +114,8 @@ d/dt(CENTR) = KA*ABS - K12*CENTR + K21*PERIP - Ke*CENTR;
 d/dt(PERIP) = K12*CENTR - K21*PERIP;
 ')
 omegas=c(ECL=0.40^2, EV1=0.54^2, EQ=0.63^2, EFDay2=0.57^2)
-tacrolimuskidney <- tdmore(rxModel, omega=omegas, res_var=list(errorModel("CONC", prop=0.149)))
+tacrolimuskidney <- tdmore(rxModel, omega=omegas, res_var=list(errorModel("CONC", prop=0.149))) %>% 
+  metadata(output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
+  metadata(dose(unit="ug", dosing_interval=12, default_value=8)) %>%
+  metadata(target(min=10, max=15))
 usethis::use_data(tacrolimuskidney, overwrite=TRUE)

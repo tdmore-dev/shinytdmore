@@ -221,11 +221,11 @@ predictionTabServer <- function(input, output, session, val) {
   })
   
   output$hotobs <- renderRHandsontable({
-    db_obs <- val$db_obs
-    if (!is.null(db_obs))
-      rhandsontable(data.frame(db_obs), useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
+    if (!is.null(val$db_obs))
+      rhandsontable(val$db_obs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
         colHeaders = c("Date", "Time", getMeasureColumnLabel(val$model), "Use")) %>% hot_col("Use", halign = "htCenter")
   })
+  
   observeEvent(input$hotobs, {
     if (!is.null(input$hotobs)) {
       val$db_obs = hot_to_r(input$hotobs)
@@ -236,14 +236,15 @@ predictionTabServer <- function(input, output, session, val) {
     if(nrow(val$db_obs) > 0) {
       newobs <- val$db_obs[ nrow(val$db_obs), ]
       lastobs <- dateAndTimeToPOSIX(newobs$date, newobs$time)
-      lastobs <- lastobs + 24*60*60
+      lastobs <- lastobs + 24*3600 # 24 hours is a good default value
     } else {
-      newobs <- data.frame(date=NULL, time=NULL, measure=0)
-      lastobs <- now()
+      output <- getModelOutput(val$model)
+      outputMetadata <- getMetadataByName(val$model, output)
+      newobs <- data.frame(date="", time="", measure=if(is.null(outputMetadata)) {0} else {outputMetadata$default_value}, use=T)
+      lastobs <- Sys.time()
     }
     newobs$date <- format(lastobs, "%Y-%m-%d")
     newobs$time <- format(lastobs, "%H:%M")
-    
     val$db_obs <- rbind(val$db_obs, newobs)
   })
   

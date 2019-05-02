@@ -30,7 +30,7 @@ updatePlot <- function(plot, outputId) {
 #' @return a label
 #'
 getYAxisLabel <- function(model) {
-  output <- model$res_var[[1]]$var # TODO: what if several outputs?
+  output <- getModelOutput(model)
   outputMetadata <- getMetadataByName(model, output)
   label <- if(!is.null(outputMetadata)) {toString(outputMetadata)} else {"Concentration"}
   return(label)
@@ -126,18 +126,21 @@ convertDataToTdmore <- function(doses, obs, now) {
   regimen <- regimen %>% dplyr::mutate(PAST=TIME < relativeNow) # sign '<' used on purpose
   filteredRegimen <- regimen %>% dplyr::filter(PAST) %>% dplyr::select(-PAST)
   
-  
   # Make observed and filtered observed dataframes
-  obsDates <- dateAndTimeToPOSIX(obs$date, obs$time)
-  observed <- data.frame(
-    TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")),
-    CONC=obs$measure,
-    USE=obs$use
-  )
-  
-  observed <- observed %>% dplyr::mutate(PAST=TIME <= relativeNow) # sign '<=' used on purpose (through concentration can be used for recommendation dose at same time)
-  filteredObserved <- observed %>% dplyr::filter(PAST && USE) %>% dplyr::select(-c("PAST", "USE"))
-  
+  if (nrow(obs) > 0) {
+    obsDates <- dateAndTimeToPOSIX(obs$date, obs$time)
+    observed <- data.frame(
+      TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")),
+      CONC=obs$measure,
+      USE=obs$use
+    )
+    observed <- observed %>% dplyr::mutate(PAST=TIME <= relativeNow) # sign '<=' used on purpose (through concentration can be used for recommendation dose at same time)
+    filteredObserved <- observed %>% dplyr::filter(PAST && USE) %>% dplyr::select(-c("PAST", "USE"))
+  } else {
+    observed <- NULL
+    filteredObserved <- NULL
+  }
+
   return(list(regimen=regimen, filteredRegimen=filteredRegimen,
               observed=observed, filteredObserved=filteredObserved,
               firstDoseDate=firstDoseDate))
