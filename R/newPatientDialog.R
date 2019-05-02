@@ -18,9 +18,17 @@ saveData <- function(userData, modelName, covariateData) {
   if (is.null(patient)) {
     patient <- createPatient(firstname = userData[["firstname"]], lastname = userData[["lastname"]])
     patient <- updatePatientModel(patient, modelName, covs)
-    tmp <- createFakePatient()
-    patient <- updatePatientDoses(patient, tmp$doses) # Temporarily, app needs at least a dose
-    patient <- updatePatientMeasures(patient, tmp$measures) # Temporarily, app needs at least a measure
+    doseMetadata <- getMetadataByName(get(modelName), "DOSE")
+    dose=if(is.null(doseMetadata)) {0} else {doseMetadata$default_value}
+    
+    # Add by default a first dose at 8am
+    doses <- tibble(date=Sys.Date(), time=c("08:00"), dose=dose)
+    
+    # Create a empty measure data frame
+    measures <- tibble(date = date(), time = character(), measure=numeric())
+    
+    patient <- updatePatientMeasures(patient, measures)
+    patient <- updatePatientDoses(patient, doses)
     patient <- updateNowDate(patient, Sys.time())
     addPatient(patient)
   } else {

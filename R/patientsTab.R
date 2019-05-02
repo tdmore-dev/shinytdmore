@@ -74,7 +74,11 @@ setPatient <- function(patient, val) {
   
   # Copy measures
   db_obs <- val$patient$measures
-  db_obs$use <- TRUE # All measures used by default
+  if(nrow(db_obs) == 0){
+    db_obs$use <- logical() # Add column type
+  } else {
+    db_obs$use <- TRUE # All measures used by default
+  }
   val$db_obs <- db_obs
   
   # Copy now_date

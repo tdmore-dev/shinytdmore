@@ -5,8 +5,8 @@
 #' @return tibble with date, time and dose columns
 #' 
 jsonToDoseModel <- function(doseJson) {
-  if(is.null(doseJson)) {
-    return(NULL)
+  if (is.null(doseJson) || length(doseJson$date) == 0) {
+    return(tibble(date=date(), time=character(), dose=numeric()))
   }
   datePosix <- as.POSIXct(unlist(doseJson$date))
   date <- as.Date(format(datePosix, format="%Y/%m/%d"))
@@ -21,9 +21,7 @@ jsonToDoseModel <- function(doseJson) {
 #' @return data frame with date column (full date) and amount column
 #' 
 doseModelToJson <- function(doseModel) {
-  if(is.null(doseModel)) {
-    return(NULL)
-  }
+  assert_that(!is.null(doseModel))
   date_tmp <- lubridate::ymd(doseModel$date)
   time <- lubridate::hm(doseModel$time)
   date <- date_tmp + time
@@ -37,8 +35,8 @@ doseModelToJson <- function(doseModel) {
 #' @return tibble with date, time and dose columns
 #' 
 jsonToMeasureModel <- function(measureJson) {
-  if(is.null(measureJson)) {
-    return(NULL)
+  if (is.null(measureJson) || length(measureJson$date) == 0) {
+    return(tibble(date=date(), time=character(), measure=numeric()))
   }
   datePosix <- as.POSIXct(unlist(measureJson$date))
   date <- as.Date(format(datePosix, format="%Y/%m/%d"))
@@ -53,9 +51,7 @@ jsonToMeasureModel <- function(measureJson) {
 #' @return data frame with date column (full date) and measure column
 #' 
 measureModelToJson <- function(measureModel) {
-  if(is.null(measureModel)) {
-    return(NULL)
-  }
+  assert_that(!is.null(measureModel))
   date_tmp <- lubridate::ymd(measureModel$date)
   time <- lubridate::hm(measureModel$time)
   date <- date_tmp + time
