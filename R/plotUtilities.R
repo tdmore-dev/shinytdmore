@@ -26,6 +26,15 @@ samplesColor <- function() {
 }
 
 #'
+#' Samples color in the future (red).
+#'
+#' @return a color string
+#'
+samplesColorFuture <- function() {
+  return("indianred3")
+}
+
+#'
 #' Target color (grey).
 #'
 #' @return a color string
@@ -181,17 +190,20 @@ getMeasureColumnLabel <- function(model, breakLine=T) {
 #' @param target numeric vector of size 2, min and max value
 #' @param population logical value, true for population, false for individual prediction
 #' @param model tdmore model
-#' @param xintercept xintercept corresponding to now date
+#' @param now now date
 #'
-preparePredictionPlot <- function(data, obs, target, population, model, xintercept) {
+preparePredictionPlot <- function(data, obs, target, population, model, now) {
   color <- if(population) {predColor()} else {ipredColor()}
+  obs <- obs %>% filter(use==TRUE) # Plot only used observations
+  obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
+  xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
   
   ggplotTarget <- data.frame(lower=target[1], upper=target[2])
 
   plot <- ggplot(mapping=aes(x=TIME, y=CONC)) +
     geom_line(data=data, color=color) +
     geom_ribbon(fill=color, aes(ymin=CONC.lower, ymax=CONC.upper), data=data, alpha=0.1) +
-    geom_point(data=obs, aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure), color=samplesColor(), shape=4, size=3) +
+    geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
     geom_vline(xintercept=as.numeric(xintercept), color=nowColor(), size=0.5, alpha=0.3) +
@@ -205,9 +217,9 @@ preparePredictionPlot <- function(data, obs, target, population, model, xinterce
 #' @param doses dataframe containing the doses
 #' @param xlim ggplot xlim argument
 #' @param model tdmore model
-#' @param xintercept xintercept corresponding to now date
+#' @param now now date, currently not used here
 #'
-prepareTimelinePlot <- function(doses, xlim, model, xintercept) {
+prepareTimelinePlot <- function(doses, xlim, model, now) {
   times <- dateAndTimeToPOSIX(doses$date, doses$time)
   maxDose <- max(doses$dose)
   addSpace <- maxDose*0.15 # Add 15% margin for dose number
@@ -251,36 +263,46 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
   if (is.null(doses)) {
     return(NULL)
   }
-  pos <- dateAndTimeToPOSIX(doses$date, doses$time)
-  start <- min(pos)
-  stop <- max(pos + 24*60*60)
-  xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
+  # Important dates
+  doseDates <- dateAndTimeToPOSIX(doses$date, doses$time)
+  firstDoseDate <- min(doseDates)
 
+  # Initial regimen
   regimen <- data.frame(
-    TIME=as.numeric(difftime(pos, start, units="hour")),
+    TIME=as.numeric(difftime(doseDates, firstDoseDate, units="hour")),
     AMT=doses$dose
   )
   
+  # Now but in hours compared to the reference time
+  relativeNow <- posixToHours(now) - posixToHours(firstDoseDate)
+  
+  # Collect all observations for tdmore
+  obsDates <- dateAndTimeToPOSIX(obs$date, obs$time)
+  observed <- data.frame(
+    TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")),
+    CONC=obs$measure,
+    USE=obs$use
+  )
+  observed <- observed %>% dplyr::mutate(PAST=TIME < relativeNow)
+  filteredObserved <- observed %>% dplyr::filter(PAST && USE) %>% dplyr::select(-c("PAST", "USE"))
+  
+  # Compute fit if individual prediction is asked
   object <- model
   if (!population) {
-    pos2 <- dateAndTimeToPOSIX(obs$date, obs$time)
-    observed <- data.frame(
-      TIME=as.numeric(difftime(pos2, start, units="hour")),
-      CONC=obs$measure
-    )
-    object <- estimate(model, observed=observed, regimen=regimen, covariates=covs)
+    object <- estimate(model, observed=filteredObserved, regimen=regimen, covariates=covs)
   }
   
+  # Predictions
   data <- predict(
     object,
     newdata = data.frame(TIME=seq(0, max(regimen$TIME)+24, length.out=300), CONC=NA),
     regimen=regimen,
     covariates=covs,
     se=TRUE) %>% as.data.frame()
-  data$TIME <- start + data$TIME*60*60
+  data$TIME <- firstDoseDate + data$TIME*60*60
   
-  return(list(p1=preparePredictionPlot(data=data, obs=obs %>% filter(use==TRUE), target=target, population=population, model=model, xintercept=xintercept),
-              p2=prepareTimelinePlot(doses=doses, xlim=c(min(pos), max(data$TIME)), model=model, xintercept=xintercept)))
+  return(list(p1=preparePredictionPlot(data=data, obs=obs, target=target, population=population, model=model, now=now),
+              p2=prepareTimelinePlot(doses=doses, xlim=c(firstDoseDate, max(data$TIME)), model=model, now=now)))
 }
 
 #' Convert POSIX date to hours (numeric).
@@ -307,6 +329,7 @@ posixToHours <- function(posixDate) {
 #' @export
 #'
 prepareRecommendation <- function(doses, obs, model, covs, target, now) {
+  # Important dates
   doseDates <- dateAndTimeToPOSIX(doses$date, doses$time) # POSIXct dates (in seconds)
   firstDoseDate <- min(doseDates)
   stopDate <- max(doseDates + 24*60*60)
@@ -317,18 +340,18 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
     AMT=doses$dose
   )
   
+  # Now but in hours compared to the reference time
+  relativeNow <- posixToHours(now) - posixToHours(firstDoseDate)
+  
   # Collect all observations for tdmore
   obsDates <- dateAndTimeToPOSIX(obs$date, obs$time)
   observed <- data.frame(
     TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")),
-    CONC=obs$measure
+    CONC=obs$measure,
+    USE=obs$use
   )
-
-  # Reference time
-  refTime <- posixToHours(firstDoseDate)
-  
-  # Now but in hours compared to the reference time
-  relativeNow <- posixToHours(now) - refTime
+  observed <- observed %>% dplyr::mutate(PAST=TIME < relativeNow)
+  filteredObserved <- observed %>% dplyr::filter(PAST && USE) %>% dplyr::select(-c("PAST", "USE"))
   
   # Prepare regimen and doseRows vector for tdmore
   regimen <- regimen %>% dplyr::mutate(PAST=TIME < relativeNow)
@@ -337,10 +360,6 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
     stop("There is no dose in the future")
   }
   filteredRegimen <- regimen %>% dplyr::filter(PAST) %>% dplyr::select(-PAST)
-  
-  # Prepare observations for tdmore
-  observed <- observed %>% dplyr::mutate(PAST=TIME < relativeNow)
-  filteredObserved <- observed %>% dplyr::filter(PAST) %>% dplyr::select(-PAST)
 
   # Compute fit
   fit <- estimate(model, observed = filteredObserved, regimen = filteredRegimen, covariates = covs)
@@ -401,13 +420,16 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
   if (is.null(doses)) {
     return(NULL)
   }
-  
-  xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
+
   start <- recommendation$start
   ipred <- recommendation$ipred
   ipredNew <- recommendation$ipredNew
   recommendedRegimen <- recommendation$recommendedRegimen
   recommendedRegimen$dose <- round(recommendedRegimen$AMT, digits=2)
+  
+  obs <- obs %>% filter(use==TRUE) # Plot only used observations
+  obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
+  xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
   
   ggplotTarget <- data.frame(t1=start, t2=start + 4*24*60*60, lower=target[1], upper=target[2])
   
@@ -415,13 +437,15 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
     geom_line(data=ipred, color=ipredColor(), alpha=0.2) +
     geom_line(data=ipredNew, color=recommendationColor()) +
     geom_ribbon(fill=recommendationColor(), aes(ymin=CONC.lower, ymax=CONC.upper), data=ipredNew, alpha=0.2) +
-    geom_point(data=obs, aes(x=dateAndTimeToPOSIX(obs$date, obs$time), y=measure), color=samplesColor(), shape=4, size=3) +
+    geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
     geom_vline(xintercept=as.numeric(xintercept), color=nowColor(), size=0.5, alpha=0.3) +
     labs(y=getYAxisLabel(model))
-  newDoses <- recommendedRegimen %>% mutate(date=as.Date(TIME), time=strftime(TIME,"%H:%M"))
-  p2 <- prepareTimelinePlot(doses=newDoses, xlim=c(start, max(ipredNew$TIME)), model=model, xintercept=xintercept)
+  
+  # We have to be very careful with as.Date(), zone should be always taken into account
+  newDoses <- recommendedRegimen %>% mutate(date=as.Date(TIME, tz=Sys.timezone()), time=strftime(TIME,"%H:%M"))
+  p2 <- prepareTimelinePlot(doses=newDoses, xlim=c(start, max(ipredNew$TIME)), model=model, now=now)
   
   return(list(p1=p1, p2=p2))
 }

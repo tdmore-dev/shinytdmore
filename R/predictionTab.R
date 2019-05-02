@@ -11,14 +11,14 @@ getPredictionTabPanel <- function() {
     fluidRow(
       column(
         3,
+        fluidRow(
+          column(10, h4("Measures")),
+          column(2, actionButton("addObs", "Add", style="float:right"))
+        ),
+        rHandsontableOutput('hotobs'),
+        hr(),
         conditionalPanel(
           condition = "output.plot_type == 'population' || output.plot_type == 'fit'",
-          fluidRow(
-            column(10, h4("Measures")),
-            column(2, actionButton("addObs", "Add", style="float:right"))
-          ),
-          rHandsontableOutput('hotobs'),
-          hr(),
           fluidRow(
             column(10, h4("Doses")),
             column(2, actionButton("addDose", "Add", style="float:right"))

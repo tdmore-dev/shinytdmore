@@ -8,15 +8,20 @@ library(tidyverse)
 
 context("Test the recommendation")
 
+#toConfig(key="shinytdmore_db_config", value = createDBConfig(collection="patients", db="tacrolimuskws"))
+toConfig(key="shinytdmore_db_config", value = createDBConfig(collection="patients", db="shinytdmore"))
+
 # Very useful to test the recommendation without running the shiny app
 
-# patient <- getPatient(2)
-# doses <- patient$doses
-# obs <- patient$measures
-# model <- bergmann2014_base
-# covs <- patient$covariates
-# target <- c(10,15)
-# now <- patient$now_date
-# 
-# debugonce(shinytdmore::prepareRecommendation)
-# recommendation <- prepareRecommendation(doses, obs, model, covs, target, now)
+patient <- getPatient(4)
+doses <- patient$doses
+obs <- patient$measures
+envir < env
+model <- get(patient$model)
+covs <- patient$covariates
+now <- patient$now_date
+target <- c(50,100)
+
+
+debugonce(shinytdmore::prepareRecommendation)
+recommendation <- prepareRecommendation(doses, obs, model, covs, target, now)
