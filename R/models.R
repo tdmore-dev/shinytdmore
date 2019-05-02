@@ -29,3 +29,9 @@
 "tacrolimuskidney"
 
 
+#' Meropenem model.
+#'
+#' @format RxODE model
+"meropenem"
+
+

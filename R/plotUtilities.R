@@ -1,67 +1,4 @@
 #'
-#' Population prediction color (blue).
-#'
-#' @return a color string
-#'
-predColor <- function() {
-  return("steelblue2")
-}
-
-#'
-#' individual prediction color (red).
-#'
-#' @return a color string
-#'
-ipredColor <- function() {
-  return("tomato1")
-}
-
-#'
-#' Samples color (grey).
-#'
-#' @return a color string
-#'
-samplesColor <- function() {
-  return("gray48")
-}
-
-#'
-#' Samples color in the future (red).
-#'
-#' @return a color string
-#'
-samplesColorFuture <- function() {
-  return("indianred3")
-}
-
-#'
-#' Target color (grey).
-#'
-#' @return a color string
-#'
-targetColor <- function() {
-  return("gray48")
-}
-
-#'
-#' Recommendation color (green).
-#'
-#' @return a color string
-#'
-recommendationColor <- function() {
-  return("yellowgreen")
-}
-
-#'
-#' Now color (green).
-#'
-#' @return a color string
-#'
-nowColor <- function() {
-  return("gray48")
-}
-
-#'
 #' Update plot using animation.
 #' 
 #' @param plot the given plot
@@ -84,37 +21,6 @@ updatePlot <- function(plot, outputId) {
     proxy, "animate", plot_json,
     list(transition=list(duration=1000, easing='cubic-in-out'), frame=list(duration=1000))
   )
-}
-
-#'
-#' Convert date and time vectors to POSIX.
-#' 
-#' @param date date vector
-#' @param time character vector with '\%H:\%M'-formatted times
-#'
-dateAndTimeToPOSIX <- function(date, time) {
-  return(as.POSIXct(strptime(paste(date, time), format = "%Y-%m-%d %H:%M")))
-}
-
-#'
-#' Generate the list of hours that can be picked in the 'hours' combobox.
-#' 
-#' @return a list of all the hours
-#'
-hoursList <- function() {
-  grid <- expand.grid(pad(c(0,30)), pad(0:23))
-  hours <- paste0(grid$Var2, ":", grid$Var1)
-  return(hours)
-}
-
-#'
-#' Pad integer with a zero if needed.
-#' 
-#' @param integer the integer to be padded
-#' @return a string
-#'
-pad <- function(integer) {
-  ifelse(integer < 10, paste0('0', integer), paste0(integer))
 }
 
 #'
@@ -183,6 +89,102 @@ getMeasureColumnLabel <- function(model, breakLine=T) {
 }
 
 #'
+#' Merge plots.
+#' 
+#' @param p1 first plot
+#' @param p2 second plot
+#'
+mergePlots <- function(p1, p2) {
+  subplot(
+    ggplotly(p1) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+    ggplotly(p2) %>% config(scrollZoom=T, collaborate=F, displayModeBar=F, displaylogo=F),
+    nrows = 2, heights = c(0.8, 0.2), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
+  ) %>% layout(dragmode = "pan")
+}
+
+#' Convert main data to TDMore domain.
+#'
+#' @param doses doses
+#' @param obs observations
+#' @param now now date, POSIXlt date
+#' 
+#' @return to be described
+#'
+convertDataToTdmore <- function(doses, obs, now) {
+  # Important dates
+  doseDates <- dateAndTimeToPOSIX(doses$date, doses$time)
+  firstDoseDate <- min(doseDates)
+  
+  # Now but in hours compared to the reference time
+  relativeNow <- posixToHours(now) - posixToHours(firstDoseDate)
+  
+  # Make regimen and filtered regimen dataframes
+  regimen <- data.frame(
+    TIME=as.numeric(difftime(doseDates, firstDoseDate, units="hour")),
+    AMT=doses$dose
+  )
+  regimen <- regimen %>% dplyr::mutate(PAST=TIME < relativeNow) # sign '<' used on purpose
+  filteredRegimen <- regimen %>% dplyr::filter(PAST) %>% dplyr::select(-PAST)
+  
+  
+  # Make observed and filtered observed dataframes
+  obsDates <- dateAndTimeToPOSIX(obs$date, obs$time)
+  observed <- data.frame(
+    TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")),
+    CONC=obs$measure,
+    USE=obs$use
+  )
+  
+  observed <- observed %>% dplyr::mutate(PAST=TIME <= relativeNow) # sign '<=' used on purpose (through concentration can be used for recommendation dose at same time)
+  filteredObserved <- observed %>% dplyr::filter(PAST && USE) %>% dplyr::select(-c("PAST", "USE"))
+  
+  return(list(regimen=regimen, filteredRegimen=filteredRegimen,
+              observed=observed, filteredObserved=filteredObserved,
+              firstDoseDate=firstDoseDate))
+}
+
+#'
+#' Prepare population OR individual prediction plots.
+#' This includes the prediction plot and the timeline plot.
+#' 
+#' @param doses doses
+#' @param obs observations
+#' @param model tdmore model
+#' @param covs covariates
+#' @param target numeric vector of size 2, min and max value
+#' @param population logical value, true for population, false for individual
+#' @param now now date, POSIXlt date
+#' @return a list of two plots
+#'
+preparePredictionPlots <- function(doses, obs, model, covs, target, population, now) {
+  if (is.null(doses)) {
+    return(NULL)
+  }
+  data <- convertDataToTdmore(doses, obs, now)
+  regimen <- data$regimen %>% select(-PAST)
+  filteredObserved <- data$filteredObserved
+  firstDoseDate <- data$firstDoseDate
+  
+  # Compute fit if individual prediction is asked
+  object <- model
+  if (!population) {
+    object <- estimate(model, observed=filteredObserved, regimen=regimen, covariates=covs)
+  }
+  
+  # Predictions
+  data <- predict(
+    object,
+    newdata = data.frame(TIME=seq(0, max(regimen$TIME)+24, length.out=300), CONC=NA),
+    regimen=regimen,
+    covariates=covs,
+    se=TRUE) %>% as.data.frame()
+  data$TIME <- firstDoseDate + data$TIME*60*60
+  
+  return(list(p1=preparePredictionPlot(data=data, obs=obs, target=target, population=population, model=model, now=now),
+              p2=prepareTimelinePlot(doses=doses, xlim=c(firstDoseDate, max(data$TIME)), model=model, now=now)))
+}
+
+#'
 #' Prepare the prediction plot.
 #' 
 #' @param data dataframe containing the prediction data
@@ -199,7 +201,7 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
   xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
   
   ggplotTarget <- data.frame(lower=target[1], upper=target[2])
-
+  
   plot <- ggplot(mapping=aes(x=TIME, y=CONC)) +
     geom_line(data=data, color=color) +
     geom_ribbon(fill=color, aes(ymin=CONC.lower, ymax=CONC.upper), data=data, alpha=0.1) +
@@ -233,89 +235,6 @@ prepareTimelinePlot <- function(doses, xlim, model, now) {
 }
 
 #'
-#' Merge plots.
-#' 
-#' @param p1 first plot
-#' @param p2 second plot
-#'
-mergePlots <- function(p1, p2) {
-  subplot(
-    ggplotly(p1) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-    ggplotly(p2) %>% config(scrollZoom=T, collaborate=F, displayModeBar=F, displaylogo=F),
-    nrows = 2, heights = c(0.8, 0.2), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
-  ) %>% layout(dragmode = "pan")
-}
-
-#'
-#' Prepare population OR individual prediction plots.
-#' This includes the prediction plot and the timeline plot.
-#' 
-#' @param doses doses
-#' @param obs observations
-#' @param model tdmore model
-#' @param covs covariates
-#' @param target numeric vector of size 2, min and max value
-#' @param population logical value, true for population, false for individual
-#' @param now now date, POSIXlt date
-#' @return a list of two plots
-#'
-preparePredictionPlots <- function(doses, obs, model, covs, target, population, now) {
-  if (is.null(doses)) {
-    return(NULL)
-  }
-  # Important dates
-  doseDates <- dateAndTimeToPOSIX(doses$date, doses$time)
-  firstDoseDate <- min(doseDates)
-
-  # Initial regimen
-  regimen <- data.frame(
-    TIME=as.numeric(difftime(doseDates, firstDoseDate, units="hour")),
-    AMT=doses$dose
-  )
-  
-  # Now but in hours compared to the reference time
-  relativeNow <- posixToHours(now) - posixToHours(firstDoseDate)
-  
-  # Collect all observations for tdmore
-  obsDates <- dateAndTimeToPOSIX(obs$date, obs$time)
-  observed <- data.frame(
-    TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")),
-    CONC=obs$measure,
-    USE=obs$use
-  )
-  observed <- observed %>% dplyr::mutate(PAST=TIME < relativeNow)
-  filteredObserved <- observed %>% dplyr::filter(PAST && USE) %>% dplyr::select(-c("PAST", "USE"))
-  
-  # Compute fit if individual prediction is asked
-  object <- model
-  if (!population) {
-    object <- estimate(model, observed=filteredObserved, regimen=regimen, covariates=covs)
-  }
-  
-  # Predictions
-  data <- predict(
-    object,
-    newdata = data.frame(TIME=seq(0, max(regimen$TIME)+24, length.out=300), CONC=NA),
-    regimen=regimen,
-    covariates=covs,
-    se=TRUE) %>% as.data.frame()
-  data$TIME <- firstDoseDate + data$TIME*60*60
-  
-  return(list(p1=preparePredictionPlot(data=data, obs=obs, target=target, population=population, model=model, now=now),
-              p2=prepareTimelinePlot(doses=doses, xlim=c(firstDoseDate, max(data$TIME)), model=model, now=now)))
-}
-
-#' Convert POSIX date to hours (numeric).
-#'
-#' @param posixDate a date
-#' @return the converted dates, in hours
-#' @importFrom lubridate ymd_hms
-#'
-posixToHours <- function(posixDate) {
-  return(as.integer(lubridate::ymd_hms(posixDate)) / (3600))
-}
-
-#'
 #' Prepare recommendation.
 #' 
 #' @param doses doses
@@ -329,37 +248,17 @@ posixToHours <- function(posixDate) {
 #' @export
 #'
 prepareRecommendation <- function(doses, obs, model, covs, target, now) {
-  # Important dates
-  doseDates <- dateAndTimeToPOSIX(doses$date, doses$time) # POSIXct dates (in seconds)
-  firstDoseDate <- min(doseDates)
-  stopDate <- max(doseDates + 24*60*60)
+  data <- convertDataToTdmore(doses, obs, now)
+  regimen <- data$regimen
+  filteredRegimen <- data$filteredRegimen
+  filteredObserved <- data$filteredObserved
+  firstDoseDate <- data$firstDoseDate
   
-  # Initial regimen
-  regimen <- data.frame(
-    TIME=as.numeric(difftime(doseDates, firstDoseDate, units="hour")),
-    AMT=doses$dose
-  )
-  
-  # Now but in hours compared to the reference time
-  relativeNow <- posixToHours(now) - posixToHours(firstDoseDate)
-  
-  # Collect all observations for tdmore
-  obsDates <- dateAndTimeToPOSIX(obs$date, obs$time)
-  observed <- data.frame(
-    TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")),
-    CONC=obs$measure,
-    USE=obs$use
-  )
-  observed <- observed %>% dplyr::mutate(PAST=TIME < relativeNow)
-  filteredObserved <- observed %>% dplyr::filter(PAST && USE) %>% dplyr::select(-c("PAST", "USE"))
-  
-  # Prepare regimen and doseRows vector for tdmore
-  regimen <- regimen %>% dplyr::mutate(PAST=TIME < relativeNow)
+  # Find dose rows to be adapted
   doseRows <- which(!regimen$PAST)
   if(length(doseRows)==0) {
     stop("There is no dose in the future")
   }
-  filteredRegimen <- regimen %>% dplyr::filter(PAST) %>% dplyr::select(-PAST)
 
   # Compute fit
   fit <- estimate(model, observed = filteredObserved, regimen = filteredRegimen, covariates = covs)
@@ -399,7 +298,7 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   # Back compute to POSIXct
   recommendedRegimen <- recommendation$regimen %>% mutate(TIME=firstDoseDate + TIME*60*60, PAST=regimen$PAST)
 
-  return(list(ipred=ipred, ipredNew=ipredNew, recommendedRegimen=recommendedRegimen, start=firstDoseDate))
+  return(list(ipred=ipred, ipredNew=ipredNew, recommendedRegimen=recommendedRegimen, firstDoseDate=firstDoseDate))
 }
 
 #'
@@ -411,7 +310,7 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
 #' @param model tdmore model
 #' @param covs covariates
 #' @param target numeric vector of size 2, min and max value
-#' @param recommendation recommendation (contains pred, ipred and the recommendation)
+#' @param recommendation recommendation (contains ipred, ipredNew and the recommendation)
 #' @param now now date
 #' 
 #' @return a list of two plots
@@ -421,7 +320,7 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
     return(NULL)
   }
 
-  start <- recommendation$start
+  firstDoseDate <- recommendation$firstDoseDate
   ipred <- recommendation$ipred
   ipredNew <- recommendation$ipredNew
   recommendedRegimen <- recommendation$recommendedRegimen
@@ -431,7 +330,7 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
   obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
   xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
   
-  ggplotTarget <- data.frame(t1=start, t2=start + 4*24*60*60, lower=target[1], upper=target[2])
+  ggplotTarget <- data.frame(lower=target[1], upper=target[2])
   
   p1 <- ggplot(mapping=aes(x=TIME, y=CONC)) +
     geom_line(data=ipred, color=ipredColor(), alpha=0.2) +
@@ -445,7 +344,7 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
   
   # We have to be very careful with as.Date(), zone should be always taken into account
   newDoses <- recommendedRegimen %>% mutate(date=as.Date(TIME, tz=Sys.timezone()), time=strftime(TIME,"%H:%M"))
-  p2 <- prepareTimelinePlot(doses=newDoses, xlim=c(start, max(ipredNew$TIME)), model=model, now=now)
+  p2 <- prepareTimelinePlot(doses=newDoses, xlim=c(firstDoseDate, max(ipredNew$TIME)), model=model, now=now)
   
   return(list(p1=p1, p2=p2))
 }

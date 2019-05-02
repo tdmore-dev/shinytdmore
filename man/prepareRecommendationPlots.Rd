@@ -19,7 +19,7 @@ prepareRecommendationPlots(doses, obs, model, covs, target, recommendation,
 
 \item{target}{numeric vector of size 2, min and max value}
 
-\item{recommendation}{recommendation (contains pred, ipred and the recommendation)}
+\item{recommendation}{recommendation (contains ipred, ipredNew and the recommendation)}
 
 \item{now}{now date}
 }
