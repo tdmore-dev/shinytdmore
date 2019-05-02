@@ -160,9 +160,10 @@ convertDataToTdmore <- function(doses, obs, now) {
 #' @return a list of two plots
 #'
 preparePredictionPlots <- function(doses, obs, model, covs, target, population, now) {
-  if (is.null(doses)) {
-    return(NULL)
+  if(nrow(doses)==0) {
+    stop("Please add a dose in the left panel")
   }
+  
   data <- convertDataToTdmore(doses, obs, now)
   regimen <- data$regimen %>% select(-PAST)
   filteredObserved <- data$filteredObserved
@@ -174,10 +175,12 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
     object <- estimate(model, observed=filteredObserved, regimen=regimen, covariates=covs)
   }
   
+  
   # Predictions
+  maxTime <- if(nrow(regimen)==0){24} else {max(regimen$TIME)+24}
   data <- predict(
     object,
-    newdata = data.frame(TIME=seq(0, max(regimen$TIME)+24, length.out=300), CONC=NA),
+    newdata = data.frame(TIME=seq(0, maxTime, length.out=300), CONC=NA),
     regimen=regimen,
     covariates=covs,
     se=TRUE) %>% as.data.frame()
@@ -226,14 +229,15 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
 #'
 prepareTimelinePlot <- function(doses, xlim, model, now) {
   times <- dateAndTimeToPOSIX(doses$date, doses$time)
-  maxDose <- max(doses$dose)
+  maxDose <- if(nrow(doses) > 0) {max(doses$dose)} else {0}
   addSpace <- maxDose*0.15 # Add 15% margin for dose number
-  
+
   plot <- ggplot(doses, aes(x=times, y=dose)) +
     geom_text(aes(x=times, y=dose, label=dose), nudge_x=0, nudge_y=0, check_overlap=T, show.legend=F) +
     geom_linerange(ymin=0, aes(ymax=dose)) +
     coord_cartesian(xlim=xlim, ylim=c(0, maxDose + addSpace)) +
     labs(x="Time", y=getDoseColumnLabel(model, breakLine=F))
+
   return(plot)
 }
 
@@ -268,13 +272,15 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
 
   # Implementing the iterative process
   nextRegimen <- regimen %>% dplyr::select(-PAST)
+  doseMetadata <- getMetadataByName(model, "DOSE")
+  dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
   
   for (index in seq_along(doseRows)) {
     row <- regimen[doseRows[index],]
     last <- index == length(doseRows)
     
     if (last) {
-      nextTime <- row$TIME + 12 # By default, II
+      nextTime <- row$TIME + dosingInterval # By default, II
     } else {
       nextTime <- regimen[doseRows[index + 1],]$TIME
     }
@@ -288,18 +294,18 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   
   # Predict ipred without adapting the dose
   ipred <- fit %>% predict(
-            newdata = data.frame(TIME=seq(0, max(regimen$TIME) + 12, length.out=300), CONC=NA),
+            newdata = data.frame(TIME=seq(0, max(regimen$TIME) + dosingInterval, length.out=300), CONC=NA),
             regimen=regimen %>% dplyr::select(-PAST), se=F, covariates=covs)
-  ipred$TIME <- firstDoseDate + ipred$TIME*60*60 # Plotly able to plot POSIXct
+  ipred$TIME <- firstDoseDate + ipred$TIME*3600 # Plotly able to plot POSIXct
   
   # Predict ipred with the new recommendation
   ipredNew <- fit %>% predict(
-    newdata = data.frame(TIME=seq(firstDoseInFutureTime, max(regimen$TIME) + 12, length.out=300), CONC=NA),
+    newdata = data.frame(TIME=seq(firstDoseInFutureTime, max(regimen$TIME) + dosingInterval, length.out=300), CONC=NA),
     regimen=nextRegimen, se=TRUE, covariates=covs)
-  ipredNew$TIME <- firstDoseDate + ipredNew$TIME*60*60 # Plotly able to plot POSIXct
+  ipredNew$TIME <- firstDoseDate + ipredNew$TIME*3600 # Plotly able to plot POSIXct
   
   # Back compute to POSIXct
-  recommendedRegimen <- recommendation$regimen %>% mutate(TIME=firstDoseDate + TIME*60*60, PAST=regimen$PAST)
+  recommendedRegimen <- recommendation$regimen %>% mutate(TIME=firstDoseDate + TIME*3600, PAST=regimen$PAST)
 
   return(list(ipred=ipred, ipredNew=ipredNew, recommendedRegimen=recommendedRegimen, firstDoseDate=firstDoseDate))
 }

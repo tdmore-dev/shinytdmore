@@ -206,17 +206,19 @@ predictionTabServer <- function(input, output, session, val) {
   })
   
   observeEvent(input$addDose, {
+    doseMetadata <- getMetadataByName(val$model, "DOSE")
+    dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
+
     if(nrow(val$db_dose) > 0) {
       newdose <- val$db_dose[ nrow(val$db_dose), ]
       lastdose <- dateAndTimeToPOSIX(newdose$date, newdose$time)
-      lastdose <- lastdose + 12*60*60
+      lastdose <- lastdose + dosingInterval*3600
     } else {
-      newdose <- data.frame(date=NULL, time=NULL, dose=5)
-      lastdose <- now()
+      newdose <- data.frame(date="", time="", dose=if(is.null(doseMetadata)) {0} else {doseMetadata$default_value})
+      lastdose <- Sys.time()
     }
     newdose$date <- format(lastdose, "%Y-%m-%d")
     newdose$time <- format(lastdose, "%H:%M")
-    
     val$db_dose <- rbind(val$db_dose, newdose)
   })
   
@@ -236,7 +238,7 @@ predictionTabServer <- function(input, output, session, val) {
     if(nrow(val$db_obs) > 0) {
       newobs <- val$db_obs[ nrow(val$db_obs), ]
       lastobs <- dateAndTimeToPOSIX(newobs$date, newobs$time)
-      lastobs <- lastobs + 24*3600 # 24 hours is a good default value
+      lastobs <- lastobs + 24*3600 # 24 hours is a good default value if no metadata
     } else {
       output <- getModelOutput(val$model)
       outputMetadata <- getMetadataByName(val$model, output)
