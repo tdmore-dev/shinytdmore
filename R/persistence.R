@@ -176,14 +176,3 @@ getAllPatients <- function() {
   retValue <- db$find(fields = '{"id" : true, "firstname" : true, "lastname" : true, "model" : true,"created_at" : true, "modified_at" : true}', sort = '{"id": -1}')
   return(retValue)
 }
-
-#' Convert a posix date to a string. 
-#'
-#' @param posixDate a posix date
-#' @return a well formated string corresponding to the date, time zone included
-#' @export
-#'
-posixToString <- function(posixDate) {
-  str <- as.character(posixDate)
-  return(str)
-}

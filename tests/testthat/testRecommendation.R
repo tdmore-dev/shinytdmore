@@ -13,14 +13,14 @@ toConfig(key="shinytdmore_db_config", value = createDBConfig(collection="patient
 
 # Very useful to test the recommendation without running the shiny app
 
-patient <- getPatient(4)
+patient <- getPatient(5)
 doses <- patient$doses
 obs <- patient$measures
-envir < env
+obs$use <- T
 model <- get(patient$model)
 covs <- patient$covariates
 now <- patient$now_date
-target <- c(50,100)
+target <- list(min=2,max=5)
 
 
 debugonce(shinytdmore::prepareRecommendation)

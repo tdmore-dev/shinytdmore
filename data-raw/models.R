@@ -85,7 +85,7 @@ meropenem <- nlmixrUI(function(){
   metadata(covariate(name="WT", label="Weight", unit="kg", min=20, max=150)) %>%
   metadata(output(name="CONC", label="Meropenem concentration", unit="ng/mL", default_value=1)) %>%
   metadata(dose(unit="ug", dosing_interval=8, default_value=1000)) %>%
-  metadata(target(min=10, max=15))
+  metadata(target(min=2, max=5))
 usethis::use_data(meropenem, overwrite=TRUE)
 
 rxModel <- RxODE::RxODE('

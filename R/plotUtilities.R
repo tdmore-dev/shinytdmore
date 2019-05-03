@@ -206,7 +206,7 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
   obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
   xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
   
-  ggplotTarget <- data.frame(lower=target[1], upper=target[2])
+  ggplotTarget <- data.frame(lower=target$min, upper=target$max)
   
   plot <- ggplot(mapping=aes(x=TIME, y=CONC)) +
     geom_line(data=data, color=color) +
@@ -282,11 +282,10 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
     if (last) {
       nextTime <- row$TIME + dosingInterval # By default, II
     } else {
-      nextTime <- regimen[doseRows[index + 1],]$TIME
+      nextTime <- regimen[doseRows[index + 1],]$TIME - 0.001 # Just before the next dose
     }
-    
     recommendation <- findDose(fit, regimen=nextRegimen, doseRows=doseRows[(index:length(doseRows))],
-                               target=data.frame(TIME=nextTime, CONC=(target[1] + target[2])/2))
+                               target=data.frame(TIME=nextTime, CONC=(target$min + target$max)/2))
     nextRegimen <- recommendation$regimen
   }
   
@@ -339,7 +338,7 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
   obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
   xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
   
-  ggplotTarget <- data.frame(lower=target[1], upper=target[2])
+  ggplotTarget <- data.frame(lower=target$min, upper=target$max)
   
   p1 <- ggplot(mapping=aes(x=TIME, y=CONC)) +
     geom_line(data=ipred, color=ipredColor(), alpha=0.2) +

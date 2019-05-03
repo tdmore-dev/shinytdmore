@@ -84,6 +84,14 @@ setPatient <- function(patient, val) {
   # Copy now_date
   val$now_date <- patient$now_date
   
+  # Define target
+  target <- getMetadataByName(val$model, "TARGET")
+  if(!is.null(target)) {
+    val$target <- list(min=target$min, max=target$max)
+  } else {
+    val$target <- list(min=10, max=15) # Default values
+  }
+  
   # Set patient counter
   if(is.null(val$set_patient_counter)) {
     val$set_patient_counter <- 1

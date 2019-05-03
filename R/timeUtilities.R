@@ -4,9 +4,11 @@
 #' 
 #' @param date date vector
 #' @param time character vector with '\%H:\%M'-formatted times
+#' @return a POSIXct datetime, timezone included (e.g. CEST)
+#' @export
 #'
 dateAndTimeToPOSIX <- function(date, time) {
-  return(as.POSIXct(strptime(paste(date, time), format = "%Y-%m-%d %H:%M")))
+  return(as.POSIXct(strptime(paste(date, time), format = getDateTimeFormat())))
 }
 
 #'
@@ -34,8 +36,28 @@ pad <- function(integer) {
 #'
 #' @param posixDate a date
 #' @return the converted dates, in hours
-#' @importFrom lubridate ymd_hms
+#' @export
 #'
 posixToHours <- function(posixDate) {
-  return(as.integer(lubridate::ymd_hms(posixDate)) / (3600))
+  return(as.integer(as.POSIXct(posixDate)) / (3600))
+}
+
+#' Convert a posix date to a string. 
+#'
+#' @param posixDate a posix date
+#' @return a well formated string corresponding to the date, time zone included
+#' @export
+#'
+posixToString <- function(posixDate) {
+  str <- format(posixDate, format=getDateTimeFormat(), tz=Sys.timezone(), usetz=TRUE)
+  return(str)
+}
+
+#' Get the datetime format for this project. 
+#'
+#' @param posixDate a posix date
+#' @return a well formated string corresponding to the date, time zone included
+#'
+getDateTimeFormat <- function() {
+  return("%Y-%m-%d %H:%M")
 }
