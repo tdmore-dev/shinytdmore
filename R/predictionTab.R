@@ -28,7 +28,8 @@ getPredictionTabPanel <- function() {
         conditionalPanel(
           condition = "output.plot_type == 'recommendation'",
           fluidRow(
-            column(10, h4("Doses & Recommendations"))
+            column(10, h4("Doses & Recommendations")),
+            column(2, actionButton("addDoseFuture", "Add", style="float:right"))
           ),
           rHandsontableOutput('hotdosefuture')
         ),
@@ -219,37 +220,11 @@ predictionTabServer <- function(input, output, session, val) {
   # Update tab title according to patient's name
   output$tab_title <- renderText({return(paste(val$patient$firstname, val$patient$lastname))})
   
-  output$hotdose <- renderRHandsontable({
-    rhandsontable(val$db_dose, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
-      colHeaders = c("Date", "Time", getDoseColumnLabel(val$model))) %>%
-      hot_context_menu(allowRowEdit = TRUE, allowColEdit = FALSE) %>%
-      hot_col(col="Time", type="dropdown", source=hoursList())
-  })
-  observeEvent(input$hotdose, {
-    val$db_dose <- hot_to_r(input$hotdose)
-  })
-  
-  observeEvent(input$addDose, {
-    doseMetadata <- getMetadataByName(val$model, "DOSE")
-    dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
-
-    if(nrow(val$db_dose) > 0) {
-      newdose <- val$db_dose[ nrow(val$db_dose), ]
-      lastdose <- dateAndTimeToPOSIX(newdose$date, newdose$time)
-      lastdose <- lastdose + dosingInterval*3600
-    } else {
-      newdose <- data.frame(date="", time="", dose=if(is.null(doseMetadata)) {0} else {doseMetadata$default_value})
-      lastdose <- Sys.time()
-    }
-    newdose$date <- format(lastdose, "%Y-%m-%d")
-    newdose$time <- format(lastdose, "%H:%M")
-    val$db_dose <- rbind(val$db_dose, newdose)
-  })
-  
+  # Observations/Measures table logic
   output$hotobs <- renderRHandsontable({
     if (!is.null(val$db_obs))
       rhandsontable(val$db_obs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
-        colHeaders = c("Date", "Time", getMeasureColumnLabel(val$model), "Use")) %>% hot_col("Use", halign = "htCenter")
+                    colHeaders = c("Date", "Time", getMeasureColumnLabel(val$model), "Use")) %>% hot_col("Use", halign = "htCenter")
   })
   
   observeEvent(input$hotobs, {
@@ -272,6 +247,59 @@ predictionTabServer <- function(input, output, session, val) {
     newobs$date <- format(lastobs, "%Y-%m-%d")
     newobs$time <- format(lastobs, "%H:%M")
     val$db_obs <- rbind(val$db_obs, newobs)
+  })
+  
+  # Doses table logic
+  output$hotdose <- renderRHandsontable({
+    rhandsontable(val$db_dose, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
+                  colHeaders = c("Date", "Time", getDoseColumnLabel(val$model))) %>%
+      hot_context_menu(allowRowEdit = TRUE, allowColEdit = FALSE) %>%
+      hot_col(col="Time", type="dropdown", source=hoursList())
+  })
+  
+  observeEvent(input$hotdose, {
+    val$db_dose <- hot_to_r(input$hotdose)
+  })
+  
+  addDose <- function(val) {
+    doseMetadata <- getMetadataByName(val$model, "DOSE")
+    dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
+    
+    if(nrow(val$db_dose) > 0) {
+      newdose <- val$db_dose[ nrow(val$db_dose), ]
+      lastdose <- dateAndTimeToPOSIX(newdose$date, newdose$time)
+      lastdose <- lastdose + dosingInterval*3600
+    } else {
+      newdose <- data.frame(date="", time="", dose=if(is.null(doseMetadata)) {0} else {doseMetadata$default_value})
+      lastdose <- Sys.time()
+    }
+    newdose$date <- format(lastdose, "%Y-%m-%d")
+    newdose$time <- format(lastdose, "%H:%M")
+    val$db_dose <- rbind(val$db_dose, newdose)
+  }
+  
+  observeEvent(input$addDose, {
+    addDose(val)
+  })
+  
+  # Doses & Recommendations table logic
+  observeEvent(input$addDoseFuture, {
+    addDose(val)
+  })
+  
+  renderHotDoseFuture <- function(data) {
+    output$hotdosefuture <- renderRHandsontable({
+      recColumnLabel <- getRecommendedDoseColumnLabel(val$model)
+      rhandsontable(data, useTypes=TRUE, stretchH="all", rowHeaders=NULL, readOnly=FALSE,
+                    colHeaders = c("Date", "Time", getDoseColumnLabel(val$model), recColumnLabel)) %>%
+        hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE ) %>%
+        hot_col(col="Time", type="dropdown", source=hoursList()) %>%
+        hot_col(col=recColumnLabel, readOnly = TRUE)
+    })
+  }
+  
+  observeEvent(input$hotdosefuture, {
+    val$db_dose <- hot_to_r(input$hotdosefuture) %>% select(-rec)
   })
   
   # 1 - Population prediction
@@ -307,15 +335,9 @@ predictionTabServer <- function(input, output, session, val) {
     progress$set(message = "Preparing...", value = 0.5)
     recommendation <- prepareRecommendation(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=val$target, now=val$now_date)
     recommendedRegimen <- recommendation$recommendedRegimen
-    temp_df <- val$db_dose
-    temp_df$rec <- ifelse(recommendedRegimen$PAST, "/", round(recommendedRegimen$AMT, 2))
-
-    output$hotdosefuture <- renderRHandsontable({
-      rhandsontable(temp_df, useTypes=TRUE, stretchH="all", rowHeaders=NULL, readOnly=TRUE,
-                    colHeaders = c("Date", "Time", getDoseColumnLabel(val$model), getRecommendedDoseColumnLabel(val$model))) %>%
-        hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE ) %>%
-        hot_col(col="Time", type="dropdown", source=hoursList())
-    })
+    data <- val$db_dose
+    data$rec <- ifelse(recommendedRegimen$PAST, "/", round(recommendedRegimen$AMT, 2))
+    renderHotDoseFuture(data)
     
     plots <- prepareRecommendationPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=val$target, recommendation=recommendation, now=val$now_date)
     progress$set(message = "Rendering plot...", value = 1)
