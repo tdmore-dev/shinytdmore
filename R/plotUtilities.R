@@ -102,6 +102,34 @@ mergePlots <- function(p1, p2) {
   ) %>% layout(dragmode = "pan")
 }
 
+
+#'
+#' Add now label ('Past' and 'Future') and X intercept to an existing plot.
+#' 
+#' @param plot a plot
+#' @param now now date
+#' 
+#' @return a new plot with the X intercept and 'past' and 'future' labels
+#'
+addNowLabelAndIntercept <- function(plot, now) {
+  xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
+  
+  # Add X intercept (bug in plotly: as.numeric has to be called on the POSIX date)
+  plot <- plot +
+    geom_vline(xintercept=as.numeric(xintercept), color=nowColor(), size=0.5, alpha=0.3)
+  
+  # Add 'Past' and 'Future' label close to the X intercept
+  yUpperRange <- layer_scales(plot)$y$range$range[2]
+  shift <- 3600*8
+  
+  plot <- plot + 
+    geom_text(aes(x=xintercept, y=yUpperRange), label="Past", color=nowColor(), nudge_x=-shift, size=4) +
+    geom_text(aes(x=xintercept, y=yUpperRange), label="Future", color=nowColor(), nudge_x=shift, size=4)
+  
+  return(plot)
+}
+
+
 #' Convert main data to TDMore domain.
 #'
 #' @param doses doses
@@ -204,7 +232,6 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
   color <- if(population) {predColor()} else {ipredColor()}
   obs <- obs %>% filter(use==TRUE) # Plot only used observations
   obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
-  xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)
   
@@ -214,8 +241,9 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
     geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
-    geom_vline(xintercept=as.numeric(xintercept), color=nowColor(), size=0.5, alpha=0.3) +
     labs(y=getYAxisLabel(model))
+  plot <- addNowLabelAndIntercept(plot, now)
+  
   return(plot)
 }
 
@@ -336,7 +364,6 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
   
   obs <- obs %>% filter(use==TRUE) # Plot only used observations
   obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
-  xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)
   
@@ -347,8 +374,8 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
     geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
-    geom_vline(xintercept=as.numeric(xintercept), color=nowColor(), size=0.5, alpha=0.3) +
     labs(y=getYAxisLabel(model))
+  p1 <- addNowLabelAndIntercept(p1, now)
   
   # We have to be very careful with as.Date(), zone should be always taken into account
   newDoses <- recommendedRegimen %>% mutate(date=as.Date(TIME, tz=Sys.timezone()), time=strftime(TIME,"%H:%M"))
