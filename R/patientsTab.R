@@ -121,9 +121,21 @@ patientsTabServer <- function(input, output, session, val) {
   observeEvent(input$removePatientButton, {
     row <- as.numeric(strsplit(input$removePatientButton, "_")[[1]][2])
     patientRow <- DTtable$patients[row,]
+    patientName <- patientRow$NameNoHyperlink
+    showModal(removePatientConfirmationDialog(patientName))
+  })
+  
+  observeEvent(input$removePatientConfirmationDialogCancel, {
+    removeModal(session)
+  })
+  
+  observeEvent(input$removePatientConfirmationDialogOK, {
+    row <- as.numeric(strsplit(input$removePatientButton, "_")[[1]][2])
+    patientRow <- DTtable$patients[row,]
     print(paste0("Remove patient ", patientRow$NameNoHyperlink, " (ID=", patientRow$ID, ")"))
     removePatient(as.numeric(patientRow$ID))
-    output$DTtable <- renderTable(input)
+    removeModal(session)
+    output$patientTable <- renderPatientTable(input)
   })
   
   # View button
@@ -137,4 +149,22 @@ patientsTabServer <- function(input, output, session, val) {
   
   # Render the patients table
   output$patientTable <- renderPatientTable(input)
+}
+
+#'
+#' Remove patient confirmation dialog.
+#'
+#' @param patientName the patient name
+#' @return a modal dialog
+#'
+removePatientConfirmationDialog <- function(patientName) {
+  modalDialog(
+    h3("Confirmation"),
+    hr(),
+    h5(paste0("Are you sure to remove ", patientName, "?")),
+    footer = tagList(
+      actionButton("removePatientConfirmationDialogCancel", "Cancel"),
+      actionButton("removePatientConfirmationDialogOK", "OK")
+    )
+  )
 }

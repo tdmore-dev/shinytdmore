@@ -4,12 +4,14 @@
 \alias{getTableBorderIndex}
 \title{Utility function to know where the horizontal line corresponding to the now date should be.}
 \usage{
-getTableBorderIndex(data, now)
+getTableBorderIndex(data, now, dose)
 }
 \arguments{
 \item{data}{a data frame that has a date and time column}
 
 \item{now}{now date}
+
+\item{dose}{logical value, true if doses table, false if measures table}
 }
 \value{
 index of this horizontal line or integer(0) if not pertinent
