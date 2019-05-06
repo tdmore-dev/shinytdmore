@@ -96,8 +96,8 @@ getMeasureColumnLabel <- function(model, breakLine=T) {
 #'
 mergePlots <- function(p1, p2) {
   subplot(
-    ggplotly(p1) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-    ggplotly(p2) %>% config(scrollZoom=T, collaborate=F, displayModeBar=F, displaylogo=F),
+    ggplotly(p1) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F, collaborate=F),
+    ggplotly(p2) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F, collaborate=F),
     nrows = 2, heights = c(0.8, 0.2), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
   ) %>% layout(dragmode = "pan")
 }
