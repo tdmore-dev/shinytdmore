@@ -56,7 +56,6 @@ renderPatientTable <- function(input) {
 #'
 setPatient <- function(patient, val) {
   val$patient <- patient
-  val$plot_type <- "population" # default
   
   # Copy model
   modelId <- patient$model

@@ -117,8 +117,11 @@ previousNextLogic <- function(input, output, session, val) {
     }
   }
   
-  # Necessary call for the previous button (should be disabled already at the beginning)
-  session$sendCustomMessage("disableButton", "previous_plot")
+  # Logic initialisation (when a new patient is loaded)
+  observeEvent(val$set_patient_counter, {
+    val$plot_type <- "population"
+    enableDisableButtons(1)
+  })
   
   observeEvent(input$previous_plot, {
     plotTypeIndex <- which(plotTypes==val$plot_type) - 1
@@ -145,7 +148,7 @@ previousNextLogic <- function(input, output, session, val) {
     return(val$plot_type)
   })
   
-  outputOptions(output, "plot_type", suspendWhenHidden = FALSE)
+  outputOptions(output, "plot_type", suspendWhenHidden=F)
 }
 
 forceUpdateNowDate <- function(session, val, date) {
