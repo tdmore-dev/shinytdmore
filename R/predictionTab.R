@@ -235,7 +235,7 @@ predictionTabServer <- function(input, output, session, val) {
   
   observeEvent(input$hotobs, {
     if (!is.null(input$hotobs)) {
-      val$db_obs = autoSortByDate(hot_to_r(input$hotobs))
+      val$db_obs <- autoSortByDate(hot_to_r(input$hotobs))
     }
   })
   
