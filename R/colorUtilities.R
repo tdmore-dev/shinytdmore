@@ -60,3 +60,12 @@ recommendationColor <- function() {
 nowColor <- function() {
   return("gray48")
 }
+
+#'
+#' Now color (green) - HEX.
+#'
+#' @return a color string
+#'
+nowColorHex <- function() {
+  return("#aaa9a9")
+}

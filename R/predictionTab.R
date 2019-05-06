@@ -199,20 +199,6 @@ targetLogic <- function(input, output, session, val) {
 }
 
 #'
-#' Auto-sort table by date.
-#'
-#' @param data a data frame that has a date and time column
-#' @return the same dataframe, ordered by date
-#'
-autoSortByDate <- function(data) {
-  if (nrow(data)==0) {
-    return(data)
-  }
-  dates <- dateAndTimeToPOSIX(data$date, data$time)
-  return(data[order(dates),])
-}
-
-#'
 #' Prediction tab server.
 #'
 #' @param input shiny input
@@ -237,10 +223,14 @@ predictionTabServer <- function(input, output, session, val) {
   # Observations/Measures table logic
   output$hotobs <- renderRHandsontable({
     if (!is.null(val$db_obs))
+      borderRow <- getTableBorderIndex(val$db_obs, val$now_date)
       rhandsontable(val$db_obs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
                     colHeaders = c("Date", "Time", getMeasureColumnLabel(val$model), "Use")) %>%
                     hot_col("Use", halign = "htCenter") %>%
-                    hot_col(col="Time", type="dropdown", source=hoursList())
+                    hot_col(col="Time", type="dropdown", source=hoursList()) %>%
+                    hot_table(customBorders = list(list(
+                      range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(val$db_obs)-1)),
+                      top=list(width=2, color=nowColorHex()))))
   })
   
   observeEvent(input$hotobs, {
@@ -267,9 +257,13 @@ predictionTabServer <- function(input, output, session, val) {
   
   # Doses table logic
   output$hotdose <- renderRHandsontable({
+    borderRow <- getTableBorderIndex(val$db_dose, val$now_date)
     rhandsontable(val$db_dose, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
                   colHeaders = c("Date", "Time", getDoseColumnLabel(val$model))) %>%
-                  hot_col(col="Time", type="dropdown", source=hoursList())
+                  hot_col(col="Time", type="dropdown", source=hoursList()) %>%
+                  hot_table(customBorders = list(list(
+                    range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(val$db_dose)-1)),
+                    top=list(width=2, color=nowColorHex()))))
   })
   
   observeEvent(input$hotdose, {
@@ -303,13 +297,17 @@ predictionTabServer <- function(input, output, session, val) {
   })
   
   renderHotDoseFuture <- function(data) {
+    borderRow <- getTableBorderIndex(data, val$now_date)
     output$hotdosefuture <- renderRHandsontable({
       recColumnLabel <- getRecommendedDoseColumnLabel(val$model)
       rhandsontable(data, useTypes=TRUE, stretchH="all", rowHeaders=NULL, readOnly=FALSE,
                     colHeaders = c("Date", "Time", getDoseColumnLabel(val$model), recColumnLabel)) %>%
         hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE ) %>%
         hot_col(col="Time", type="dropdown", source=hoursList()) %>%
-        hot_col(col=recColumnLabel, readOnly = TRUE)
+        hot_col(col=recColumnLabel, readOnly = TRUE) %>%
+        hot_table(customBorders = list(list(
+          range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(data)-1)),
+          top=list(width=2, color=nowColorHex()))))
     })
   }
   
