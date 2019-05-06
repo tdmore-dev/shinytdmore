@@ -199,6 +199,20 @@ targetLogic <- function(input, output, session, val) {
 }
 
 #'
+#' Auto-sort table by date.
+#'
+#' @param data a data frame that has a date and time column
+#' @return the same dataframe, ordered by date
+#'
+autoSortByDate <- function(data) {
+  if (nrow(data)==0) {
+    return(data)
+  }
+  dates <- dateAndTimeToPOSIX(data$date, data$time)
+  return(data[order(dates),])
+}
+
+#'
 #' Prediction tab server.
 #'
 #' @param input shiny input
@@ -224,12 +238,14 @@ predictionTabServer <- function(input, output, session, val) {
   output$hotobs <- renderRHandsontable({
     if (!is.null(val$db_obs))
       rhandsontable(val$db_obs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
-                    colHeaders = c("Date", "Time", getMeasureColumnLabel(val$model), "Use")) %>% hot_col("Use", halign = "htCenter")
+                    colHeaders = c("Date", "Time", getMeasureColumnLabel(val$model), "Use")) %>%
+                    hot_col("Use", halign = "htCenter") %>%
+                    hot_col(col="Time", type="dropdown", source=hoursList())
   })
   
   observeEvent(input$hotobs, {
     if (!is.null(input$hotobs)) {
-      val$db_obs = hot_to_r(input$hotobs)
+      val$db_obs = autoSortByDate(hot_to_r(input$hotobs))
     }
   })
   
@@ -253,12 +269,11 @@ predictionTabServer <- function(input, output, session, val) {
   output$hotdose <- renderRHandsontable({
     rhandsontable(val$db_dose, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
                   colHeaders = c("Date", "Time", getDoseColumnLabel(val$model))) %>%
-      hot_context_menu(allowRowEdit = TRUE, allowColEdit = FALSE) %>%
-      hot_col(col="Time", type="dropdown", source=hoursList())
+                  hot_col(col="Time", type="dropdown", source=hoursList())
   })
   
   observeEvent(input$hotdose, {
-    val$db_dose <- hot_to_r(input$hotdose)
+    val$db_dose <- autoSortByDate(hot_to_r(input$hotdose))
   })
   
   addDose <- function(val) {
@@ -299,7 +314,7 @@ predictionTabServer <- function(input, output, session, val) {
   }
   
   observeEvent(input$hotdosefuture, {
-    val$db_dose <- hot_to_r(input$hotdosefuture) %>% select(-rec)
+    val$db_dose <- autoSortByDate(hot_to_r(input$hotdosefuture) %>% select(-rec))
   })
   
   # 1 - Population prediction

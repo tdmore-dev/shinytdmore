@@ -11,6 +11,9 @@ dateAndTimeToPOSIX(date, time)
 
 \item{time}{character vector with '\%H:\%M'-formatted times}
 }
+\value{
+a POSIXct datetime, timezone included (e.g. CEST)
+}
 \description{
 Convert date and time vectors to POSIX.
 }

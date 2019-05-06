@@ -70,7 +70,7 @@ setPatient <- function(patient, val) {
   
   # Copy doses
   db_dose <- patient$doses
-  val$db_dose <- db_dose
+  val$db_dose <- autoSortByDate(db_dose) # Auto-sort the first time
   
   # Copy measures
   db_obs <- val$patient$measures
@@ -79,7 +79,7 @@ setPatient <- function(patient, val) {
   } else {
     db_obs$use <- TRUE # All measures used by default
   }
-  val$db_obs <- db_obs
+  val$db_obs <- autoSortByDate(db_obs) # Auto-sort the first time
   
   # Copy now_date
   val$now_date <- patient$now_date
