@@ -223,7 +223,7 @@ predictionTabServer <- function(input, output, session, val) {
   # Observations/Measures table logic
   output$hotobs <- renderRHandsontable({
     if (!is.null(val$db_obs))
-      borderRow <- getTableBorderIndex(val$db_obs, val$now_date)
+      borderRow <- getTableBorderIndex(val$db_obs, val$now_date, F)
       rhandsontable(val$db_obs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
                     colHeaders = c("Date", "Time", getMeasureColumnLabel(val$model), "Use")) %>%
                     hot_col("Use", halign = "htCenter") %>%
@@ -257,7 +257,7 @@ predictionTabServer <- function(input, output, session, val) {
   
   # Doses table logic
   output$hotdose <- renderRHandsontable({
-    borderRow <- getTableBorderIndex(val$db_dose, val$now_date)
+    borderRow <- getTableBorderIndex(val$db_dose, val$now_date, T)
     rhandsontable(val$db_dose, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
                   colHeaders = c("Date", "Time", getDoseColumnLabel(val$model))) %>%
                   hot_col(col="Time", type="dropdown", source=hoursList()) %>%
@@ -297,7 +297,7 @@ predictionTabServer <- function(input, output, session, val) {
   })
   
   renderHotDoseFuture <- function(data) {
-    borderRow <- getTableBorderIndex(data, val$now_date)
+    borderRow <- getTableBorderIndex(data, val$now_date, T)
     output$hotdosefuture <- renderRHandsontable({
       recColumnLabel <- getRecommendedDoseColumnLabel(val$model)
       rhandsontable(data, useTypes=TRUE, stretchH="all", rowHeaders=NULL, readOnly=FALSE,

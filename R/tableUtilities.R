@@ -17,15 +17,22 @@ autoSortByDate <- function(data) {
 #'
 #' @param data a data frame that has a date and time column
 #' @param now now date
+#' @param dose logical value, true if doses table, false if measures table
 #' @return index of this horizontal line or integer(0) if not pertinent
 #'
-getTableBorderIndex <- function(data, now) {
+getTableBorderIndex <- function(data, now, dose) {
   length <- nrow(data)
   if (length==0) {
     return(integer())
   }
   dates <- dateAndTimeToPOSIX(data$date, data$time)
-  index <- which(dates > now)
+  
+  if (dose) {
+    index <- which(dates >= now)
+  } else {
+    index <- which(dates > now)
+  }
+  
   if (length(index)!=0) {
     if (length(index) > 1) {
       index <- index[1]
