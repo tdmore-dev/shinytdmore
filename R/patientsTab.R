@@ -25,7 +25,7 @@ initDB <- function() {
   nb <- nrow(patients)
   patients$Name <- shinyInput(FUN=actionLink, id="viewPatientButton", label=paste(patients$firstname, patients$lastname))
   patients$NameNoHyperlink <- paste(patients$firstname, patients$lastname)
-  patients$Admitted <- patients$created_at
+  patients$Admitted <- POSIXToPrettyString(stringToPOSIX(patients$created_at))
   patients$ID <- patients$id
   patients$Remove <- shinyInput(FUN=actionButton, id="removePatientButton", label=rep("",nb), icon=icon("trash-alt"))
   DTtable <<- reactiveValues(patients = patients %>% select(ID, NameNoHyperlink, Name, Admitted, Remove))

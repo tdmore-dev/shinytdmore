@@ -9,8 +9,8 @@ jsonToDoseModel <- function(doseJson) {
     return(tibble(date=date(), time=character(), dose=numeric()))
   }
   datePosix <- as.POSIXct(unlist(doseJson$date))
-  date <- as.Date(format(datePosix, format="%Y/%m/%d"))
-  time <- format(datePosix, format="%H:%M")
+  date <- POSIXToDate(datePosix)
+  time <- POSIXToTime(datePosix)
   return(tibble(date=date, time=time, dose=as.numeric(unlist(doseJson$amount))))
 }
 
@@ -21,11 +21,11 @@ jsonToDoseModel <- function(doseJson) {
 #' @return data frame with date column (full date) and amount column
 #' 
 doseModelToJson <- function(doseModel) {
-  assert_that(!is.null(doseModel))
-  date_tmp <- lubridate::ymd(doseModel$date)
-  time <- lubridate::hm(doseModel$time)
-  date <- date_tmp + time
-  return(data.frame(date=posixToString(date), amount=doseModel$dose))
+  if (is.null(doseModel)) {
+    return(data.frame(date=character(), amount=numeric()))
+  }
+  datePosix <- dateAndTimeToPOSIX(doseModel$date, doseModel$time)
+  return(data.frame(date=POSIXToString(datePosix), amount=doseModel$dose))
 }
 
 #' Convert measures (JSON) to dose model.
@@ -39,8 +39,8 @@ jsonToMeasureModel <- function(measureJson) {
     return(tibble(date=date(), time=character(), measure=numeric()))
   }
   datePosix <- as.POSIXct(unlist(measureJson$date))
-  date <- as.Date(format(datePosix, format="%Y/%m/%d"))
-  time <- format(datePosix, format="%H:%M")
+  date <- POSIXToDate(datePosix)
+  time <- POSIXToTime(datePosix)
   return(tibble(date=date, time=time, measure=as.numeric(unlist(measureJson$measure))))
 }
 
@@ -51,11 +51,11 @@ jsonToMeasureModel <- function(measureJson) {
 #' @return data frame with date column (full date) and measure column
 #' 
 measureModelToJson <- function(measureModel) {
-  assert_that(!is.null(measureModel))
-  date_tmp <- lubridate::ymd(measureModel$date)
-  time <- lubridate::hm(measureModel$time)
-  date <- date_tmp + time
-  return(data.frame(date=posixToString(date), measure=measureModel$measure))
+  if (is.null(measureModel)) {
+    return(data.frame(date=character(), measure=numeric()))
+  }
+  datePosix <- dateAndTimeToPOSIX(measureModel$date, measureModel$time)
+  return(data.frame(date=POSIXToString(datePosix), measure=measureModel$measure))
 }
 
 #' Convert patient model to JSON structure.
@@ -68,9 +68,9 @@ patientModelToJson <- function(patientModel) {
   patientJson <- patientModel
   patientJson$doses <- doseModelToJson(patientModel$doses)
   patientJson$measures <- measureModelToJson(patientModel$measures)
-  patientJson$created_at <- posixToString(patientModel$created_at)
-  patientJson$modified_at <- posixToString(patientModel$modified_at)
-  patientJson$now_date <- posixToString(patientModel$now_date)
+  patientJson$created_at <- POSIXToString(patientModel$created_at)
+  patientJson$modified_at <- POSIXToString(patientModel$modified_at)
+  patientJson$now_date <- POSIXToString(patientModel$now_date)
   json <- toJSON(patientJson)
   return(json)
 }
@@ -84,9 +84,9 @@ jsonToPatientModel <- function(patientJson) {
   patientModel <- patientJson
   patientModel$doses <- jsonToDoseModel(patientJson$doses)
   patientModel$measures <- jsonToMeasureModel(patientJson$measures)
-  patientModel$created_at <- as.POSIXlt(patientJson$created_at)
-  patientModel$modified_at <- as.POSIXlt(patientJson$modified_at)
-  patientModel$now_date <- if(is.null(patientJson$now_date)){Sys.time()} else {as.POSIXlt(patientJson$now_date)}
+  patientModel$created_at <- stringToPOSIX(patientJson$created_at)
+  patientModel$modified_at <- stringToPOSIX(patientJson$modified_at)
+  patientModel$now_date <- if(is.null(patientJson$now_date)){Sys.time()} else {stringToPOSIX(patientJson$now_date)}
   patientModel$covariates <- unlist(patientJson$covariates)
   return(patientModel)
 }

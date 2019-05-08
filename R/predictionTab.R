@@ -153,7 +153,7 @@ previousNextLogic <- function(input, output, session, val) {
 
 forceUpdateNowDate <- function(session, val, date) {
   minute <- lubridate::minute(date) %/% 5
-  value <- paste0(format(date, format = "%Y-%m-%d %H"), ":", pad(minute*5))
+  value <- paste0(format(date, format = paste(getDateFormat(), "%H"), tz=getAppTimeZone()), ":", pad(minute*5))
   updateTextInput(session=session, inputId="nowDate", value=value) # This updates the 'visual' text
   session$sendCustomMessage("nowDate", value) # This update the javascript value in the date picket
   val$now_date <- date
@@ -253,8 +253,8 @@ predictionTabServer <- function(input, output, session, val) {
       newobs <- data.frame(date="", time="", measure=if(is.null(outputMetadata)) {0} else {outputMetadata$default_value}, use=T)
       lastobs <- Sys.time()
     }
-    newobs$date <- format(lastobs, "%Y-%m-%d")
-    newobs$time <- format(lastobs, "%H:%M")
+    newobs$date <- POSIXToDate(lastobs)
+    newobs$time <- POSIXToTime(lastobs)
     val$db_obs <- rbind(val$db_obs, newobs)
   })
   
@@ -285,8 +285,8 @@ predictionTabServer <- function(input, output, session, val) {
       newdose <- data.frame(date="", time="", dose=if(is.null(doseMetadata)) {0} else {doseMetadata$default_value})
       lastdose <- Sys.time()
     }
-    newdose$date <- format(lastdose, "%Y-%m-%d")
-    newdose$time <- format(lastdose, "%H:%M")
+    newdose$date <- POSIXToDate(lastdose)
+    newdose$time <- POSIXToTime(lastdose)
     val$db_dose <- rbind(val$db_dose, newdose)
   }
   

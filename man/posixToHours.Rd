@@ -7,7 +7,7 @@
 posixToHours(posixDate)
 }
 \arguments{
-\item{posixDate}{a date}
+\item{posixDate}{a posix date}
 }
 \value{
 the converted dates, in hours

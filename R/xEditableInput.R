@@ -30,7 +30,7 @@ editableInput <- function(inputId, type, value = "", options = list()) {
 buildScript <- function(inputId, type, options) {
   if (type == "combodate") {
     # Hack: TODO not to implement that like this
-    optionsJson <- '{"type":"combodate","placement":"auto","format":"YYYY-MM-DD HH:mm","template":"YYYY-MM-DD HH:mm","viewformat":"YYYY-MM-DD HH:mm"}'
+    optionsJson <- '{"type":"combodate","placement":"auto","format":"YYYY-MM-DD HH:mm","template":"YYYY/MM/DD HH:mm","viewformat":"YYYY/MM/DD HH:mm"}'
   } else {
     options <- c(options, list(type = type, placement = "auto"))
     optionsJson <- jsonlite::toJSON(options, auto_unbox = TRUE, force = TRUE)

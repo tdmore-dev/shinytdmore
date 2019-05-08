@@ -2,7 +2,7 @@
 % Please edit documentation in R/tableUtilities.R
 \name{autoSortByDate}
 \alias{autoSortByDate}
-\title{Auto-sort table by date.}
+\title{Auto-sort table by date and convert to tibble.}
 \usage{
 autoSortByDate(data)
 }
@@ -10,8 +10,8 @@ autoSortByDate(data)
 \item{data}{a data frame that has a date and time column}
 }
 \value{
-the same dataframe, ordered by date
+a tibble, ordered by date
 }
 \description{
-Auto-sort table by date.
+Auto-sort table by date and convert to tibble.
 }
