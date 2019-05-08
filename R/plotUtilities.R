@@ -332,7 +332,7 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   ipredNew$TIME <- firstDoseDate + ipredNew$TIME*3600 # Plotly able to plot POSIXct
   
   # Back compute to POSIXct
-  recommendedRegimen <- recommendation$regimen %>% mutate(TIME=firstDoseDate + TIME*3600, PAST=regimen$PAST)
+  recommendedRegimen <- recommendation$regimen %>% dplyr::mutate(TIME=firstDoseDate + TIME*3600, PAST=regimen$PAST)
 
   return(list(ipred=ipred, ipredNew=ipredNew, recommendedRegimen=recommendedRegimen, firstDoseDate=firstDoseDate))
 }
