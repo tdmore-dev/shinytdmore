@@ -58,7 +58,7 @@ test_that("String to POSIX date, Belgian winter time, viewed in New-York", {
 
 Sys.setenv(TZ="America/New_York")
 
-test_that("dateAndTimeToPOSIX function works well, called in New-Yord", {
+test_that("dateAndTimeToPOSIX function works well, called in New-York", {
   date <- as.Date("2019-05-08")
   time <- "10:02"
   expect_equal(POSIXToPrettyString(dateAndTimeToPOSIX(date, time)), "2019-05-08 10:02 EDT") # Easter Daylight Time (summer)
@@ -70,4 +70,30 @@ test_that("dateAndTimeToPOSIX function works well, called in Paris", {
   date <- as.Date("2019-05-08")
   time <- "10:02"
   expect_equal(POSIXToPrettyString(dateAndTimeToPOSIX(date, time)), "2019-05-08 10:02 CEST")
+})
+
+Sys.setenv(TZ="America/New_York")
+
+test_that("POSIX to date/to time functions work well, called in New-York", {
+  dbDate <- "2019-05-08 01:00:00 +0200" # 1AM in Paris
+  posixDate <- stringToPOSIX(dbDate)
+  
+  date <- POSIXToDate(posixDate)
+  expect_equal(date, as.Date("2019-05-07"))
+  
+  time <- POSIXToTime(posixDate)
+  expect_equal(time, "19:00")
+})
+
+Sys.setenv(TZ="Europe/Paris")
+
+test_that("POSIX to date/to time functions work well, called in Paris", {
+  dbDate <- "2019-05-08 01:00:00 +0200" # 1AM in Paris
+  posixDate <- stringToPOSIX(dbDate)
+  
+  date <- POSIXToDate(posixDate)
+  expect_equal(date, as.Date("2019-05-08"))
+  
+  time <- POSIXToTime(posixDate)
+  expect_equal(time, "01:00")
 })

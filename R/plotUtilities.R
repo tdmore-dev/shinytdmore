@@ -144,7 +144,7 @@ convertDataToTdmore <- function(doses, obs, now) {
   firstDoseDate <- min(doseDates)
   
   # Now but in hours compared to the reference time
-  relativeNow <- posixToHours(now) - posixToHours(firstDoseDate)
+  relativeNow <- POSIXToHours(now) - POSIXToHours(firstDoseDate)
   
   # Make regimen and filtered regimen dataframes
   regimen <- data.frame(

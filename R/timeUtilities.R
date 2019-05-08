@@ -69,7 +69,7 @@ dateAndTimeToPOSIX <- function(date, time) {
 #' @return the converted dates, in hours
 #' @export
 #'
-posixToHours <- function(posixDate) {
+POSIXToHours <- function(posixDate) {
   return(as.integer(as.POSIXct(posixDate)) / (3600))
 }
 
@@ -111,6 +111,7 @@ stringToPOSIX <- function(stringDatetime) {
 #' 
 #' @param posixDatetime POSIX datetime
 #' @return a time string formatted according to getTimeFormat()
+#' @export
 #'
 POSIXToTime <- function(posixDatetime) {
   return(format(posixDatetime, format=getTimeFormat(), tz=getAppTimeZone()))
@@ -122,6 +123,7 @@ POSIXToTime <- function(posixDatetime) {
 #' 
 #' @param posixDatetime POSIX datetime
 #' @return a 'Date' object
+#' @export
 #'
 POSIXToDate <- function(posixDatetime) {
   return(as.Date(posixDatetime, tz=getAppTimeZone()))
