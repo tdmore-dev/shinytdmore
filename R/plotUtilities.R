@@ -196,7 +196,7 @@ convertDataToTdmore <- function(doses, obs, output, now) {
     observed <- data.frame(TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")), USE=obs$use)
     observed[, output] <- obs$measure
     observed <- observed %>% dplyr::mutate(PAST=TIME <= relativeNow) # sign '<=' used on purpose (through concentration can be used for recommendation dose at same time)
-    filteredObserved <- observed %>% dplyr::filter(PAST && USE) %>% dplyr::select(-c("PAST", "USE"))
+    filteredObserved <- observed %>% dplyr::filter(PAST & USE) %>% dplyr::select(-c("PAST", "USE"))
   } else {
     observed <- NULL
     filteredObserved <- NULL

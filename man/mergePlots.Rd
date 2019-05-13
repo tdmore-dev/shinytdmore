@@ -4,12 +4,14 @@
 \alias{mergePlots}
 \title{Merge plots.}
 \usage{
-mergePlots(p1, p2)
+mergePlots(p1, p2, output)
 }
 \arguments{
 \item{p1}{first plot}
 
 \item{p2}{second plot}
+
+\item{output}{main tdmore output}
 }
 \description{
 Merge plots.
