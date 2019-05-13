@@ -325,7 +325,7 @@ predictionTabServer <- function(input, output, session, val) {
     progress$set(message = "Preparing...", value = 0.5)
     plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=val$target, population=T, now=val$now_date)
     progress$set(message = "Rendering plot...", value = 1)
-    if(!is.null(plots)) mergePlots(plots$p1, plots$p2)
+    if(!is.null(plots)) mergePlots(plots$p1, plots$p2, getModelOutput(val$model))
   })
   output$populationPlot <- renderPlotly(populationPlot()) #renderPlotly(isolate(populationPlot()))
   # observe({
@@ -340,7 +340,7 @@ predictionTabServer <- function(input, output, session, val) {
     progress$set(message = "Preparing...", value = 0.5)
     plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=val$target, population=F, now=val$now_date)
     progress$set(message = "Rendering plot...", value = 1)
-    if(!is.null(plots)) mergePlots(plots$p1, plots$p2)
+    if(!is.null(plots)) mergePlots(plots$p1, plots$p2, getModelOutput(val$model))
   })
   output$fitPlot <- renderPlotly(fitPlot())
   
@@ -357,7 +357,7 @@ predictionTabServer <- function(input, output, session, val) {
     
     plots <- prepareRecommendationPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=val$target, recommendation=recommendation, now=val$now_date)
     progress$set(message = "Rendering plot...", value = 1)
-    if(!is.null(plots)) mergePlots(plots$p1, plots$p2)
+    if(!is.null(plots)) mergePlots(plots$p1, plots$p2, getModelOutput(val$model))
   })
   output$recommendationPlot <- renderPlotly(recommendationPlot())
 }

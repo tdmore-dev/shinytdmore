@@ -125,11 +125,14 @@ getNewdata <- function(start, stop, output) {
 #' 
 #' @param p1 first plot
 #' @param p2 second plot
+#' @param output main tdmore output
 #'
-mergePlots <- function(p1, p2) {
+mergePlots <- function(p1, p2, output) {
+  tooltip1 <- c("TIME", output, paste0(output, ".lower"), paste0(output, ".upper"))
+  tooltip2 <- c("TIME", "AMT")
   subplot(
-    ggplotly(p1) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F, collaborate=F),
-    ggplotly(p2) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F, collaborate=F),
+    ggplotly(p1, tooltip=tooltip1) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F, collaborate=F),
+    ggplotly(p2, tooltip=tooltip2) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F, collaborate=F),
     nrows = 2, heights = c(0.8, 0.2), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
   ) %>% layout(dragmode = "pan")
 }
@@ -155,8 +158,8 @@ addNowLabelAndIntercept <- function(plot, now) {
   shift <- 3600*8
   
   plot <- plot + 
-    geom_text(aes(x=xintercept, y=yUpperRange), label="Past", color=nowColor(), nudge_x=-shift, size=4) +
-    geom_text(aes(x=xintercept, y=yUpperRange), label="Future", color=nowColor(), nudge_x=shift, size=4)
+    geom_text(aes(x=xintercept, y=yUpperRange, label=c()), label="Past", color=nowColor(), nudge_x=-shift, size=4) +
+    geom_text(aes(x=xintercept, y=yUpperRange, label=c()), label="Future", color=nowColor(), nudge_x=shift, size=4)
   
   return(plot)
 }
@@ -265,6 +268,7 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
   color <- if(population) {predColor()} else {ipredColor()}
   obs <- obs %>% filter(use==TRUE) # Plot only 'used' observations
   obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
+  data <- data %>% mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)
   output <- getModelOutput(model)
@@ -295,13 +299,16 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
 #' @param now now date, currently not used here
 #'
 prepareTimelinePlot <- function(doses, xlim, model, now) {
-  times <- dateAndTimeToPOSIX(doses$date, doses$time)
+  doses_copy <- doses 
+  doses_copy$TIME <- dateAndTimeToPOSIX(doses$date, doses$time) # Hover same as in prediction plot
+  doses_copy$AMT <- doses$dose
+  doses_copy$DOSE <- doses$dose # Duplicated so that 'AMT' does not appear twice in tooltip
   maxDose <- if(nrow(doses) > 0) {max(doses$dose)} else {0}
   addSpace <- maxDose*0.15 # Add 15% margin for dose number
 
-  plot <- ggplot(doses, aes(x=times, y=dose)) +
-    geom_text(aes(x=times, y=dose, label=dose), nudge_x=0, nudge_y=0, check_overlap=T, show.legend=F) +
-    geom_linerange(ymin=0, aes(ymax=dose)) +
+  plot <- ggplot(doses_copy, aes(x=TIME, y=AMT)) +
+    geom_text(aes(x=TIME, y=AMT, label=AMT), nudge_x=0, nudge_y=0, check_overlap=T, show.legend=F) +
+    geom_linerange(ymin=0, aes(ymax=DOSE)) +
     coord_cartesian(xlim=xlim, ylim=c(0, maxDose + addSpace)) +
     labs(x="Time", y=getDoseColumnLabel(model, breakLine=F))
 
@@ -394,8 +401,8 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
 #'
 prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommendation, now) {
   firstDoseDate <- recommendation$firstDoseDate
-  ipred <- recommendation$ipred
-  ipredNew <- recommendation$ipredNew
+  ipred <- recommendation$ipred %>% mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
+  ipredNew <- recommendation$ipredNew %>% mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   recommendedRegimen <- recommendation$recommendedRegimen
   recommendedRegimen$dose <- round(recommendedRegimen$AMT, digits=2)
   
