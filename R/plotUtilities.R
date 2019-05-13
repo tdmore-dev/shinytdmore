@@ -75,6 +75,19 @@ getModelOutput <- function(model) {
 }
 
 #'
+#' Retrieve the dosing interval from the tdmore metadata.
+#' If no dose metadata is defined in the model, 24 hours is returned by default.
+#' 
+#' @param model tdmore model
+#' @return the dosing interval
+#'
+getDosingInterval <- function(model) {
+  doseMetadata <- getMetadataByName(model, "DOSE")
+  dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
+  return(dosingInterval)
+}
+
+#'
 #' Get measure column label.
 #' 
 #' @param model tdmore model
@@ -203,9 +216,9 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
     object <- estimate(model, observed=filteredObserved, regimen=regimen, covariates=covs)
   }
   
-  
   # Predictions
-  maxTime <- if(nrow(regimen)==0){24} else {max(regimen$TIME)+24}
+  dosingInterval <- getDosingInterval(model)
+  maxTime <- if(nrow(regimen)==0){dosingInterval} else {max(regimen$TIME)+dosingInterval}
   data <- predict(
     object,
     newdata = data.frame(TIME=seq(0, maxTime, length.out=300), CONC=NA),
@@ -213,6 +226,17 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
     covariates=covs,
     se=TRUE) %>% as.data.frame()
   data$TIME <- firstDoseDate + data$TIME*60*60
+  
+  # In case of fit, compute pred median as well
+  if (!population) {
+    pred <- predict(
+      model,
+      newdata = data.frame(TIME=seq(0, maxTime, length.out=300), CONC=NA),
+      regimen=regimen,
+      covariates=covs,
+      se=FALSE) %>% as.data.frame()
+    data$PRED <- pred$CONC
+  }
   
   return(list(p1=preparePredictionPlot(data=data, obs=obs, target=target, population=population, model=model, now=now),
               p2=prepareTimelinePlot(doses=doses, xlim=c(firstDoseDate, max(data$TIME)), model=model, now=now)))
@@ -235,13 +259,18 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)
   
-  plot <- ggplot(mapping=aes(x=TIME, y=CONC)) +
+  plot <- ggplot(mapping=aes(x=TIME, y=CONC))
+  if (!population) {
+    plot <- plot + geom_line(data=data, mapping=aes(y=PRED), color=predColor(), alpha=0.25)
+  }
+  plot <- plot +
     geom_line(data=data, color=color) +
     geom_ribbon(fill=color, aes(ymin=CONC.lower, ymax=CONC.upper), data=data, alpha=0.1) +
     geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
     labs(y=getYAxisLabel(model))
+  
   plot <- addNowLabelAndIntercept(plot, now)
   
   return(plot)
@@ -300,8 +329,7 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
 
   # Implementing the iterative process
   nextRegimen <- regimen %>% dplyr::select(-PAST)
-  doseMetadata <- getMetadataByName(model, "DOSE")
-  dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
+  dosingInterval <- getDosingInterval(model)
   
   for (index in seq_along(doseRows)) {
     row <- regimen[doseRows[index],]
