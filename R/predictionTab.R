@@ -11,12 +11,6 @@ getPredictionTabPanel <- function() {
     fluidRow(
       column(
         3,
-        fluidRow(
-          column(10, h4("Measures")),
-          column(2, actionButton("addObs", "Add", style="float:right"))
-        ),
-        rHandsontableOutput('hotobs'),
-        hr(),
         conditionalPanel(
           condition = "output.plot_type == 'population' || output.plot_type == 'fit'",
           fluidRow(
@@ -37,6 +31,12 @@ getPredictionTabPanel <- function() {
           column(2, h5("Now:")),
           column(10, editableInput(inputId="nowDate", type = "combodate", value="2000-01-01 00:00"), style="margin-top: 6px;")
         ),
+        hr(),
+        fluidRow(
+          column(10, h4("Measures")),
+          column(2, actionButton("addObs", "Add", style="float:right"))
+        ),
+        rHandsontableOutput('hotobs'),
         hr(),
         h4("Target"),
         numericInput("targetDown", "Lower limit", 0),
