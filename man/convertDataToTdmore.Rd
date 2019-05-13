@@ -4,12 +4,14 @@
 \alias{convertDataToTdmore}
 \title{Convert main data to TDMore domain.}
 \usage{
-convertDataToTdmore(doses, obs, now)
+convertDataToTdmore(doses, obs, output, now)
 }
 \arguments{
 \item{doses}{doses}
 
 \item{obs}{observations}
+
+\item{output}{output name (e.g. 'CONC')}
 
 \item{now}{now date, POSIXlt date}
 }

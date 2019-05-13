@@ -102,6 +102,25 @@ getMeasureColumnLabel <- function(model, breakLine=T) {
 }
 
 #'
+#' Get 'newdata' dataframe for tdmore predictions.
+#' 
+#' @param start start time of 'TIME' column
+#' @param stop stop time of 'TIME' column
+#' @param output output name (e.g. 'CONC')
+#' @return a dataframe for tdmore
+#'
+getNewdata <- function(start, stop, output) {
+  times <- seq(start, stop, by=0.5)
+  minSamples <- 300
+  if (length(times) < minSamples) {
+    times <- seq(start, stop, length.out=minSamples)
+  }
+  newdata <- data.frame(TIME=times)
+  newdata[,output] <- NA
+  return(newdata)
+}
+
+#'
 #' Merge plots.
 #' 
 #' @param p1 first plot
@@ -147,11 +166,12 @@ addNowLabelAndIntercept <- function(plot, now) {
 #'
 #' @param doses doses
 #' @param obs observations
+#' @param output output name (e.g. 'CONC')
 #' @param now now date, POSIXlt date
 #' 
 #' @return to be described
 #'
-convertDataToTdmore <- function(doses, obs, now) {
+convertDataToTdmore <- function(doses, obs, output, now) {
   # Important dates
   doseDates <- dateAndTimeToPOSIX(doses$date, doses$time)
   firstDoseDate <- min(doseDates)
@@ -170,11 +190,8 @@ convertDataToTdmore <- function(doses, obs, now) {
   # Make observed and filtered observed dataframes
   if (nrow(obs) > 0) {
     obsDates <- dateAndTimeToPOSIX(obs$date, obs$time)
-    observed <- data.frame(
-      TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")),
-      CONC=obs$measure,
-      USE=obs$use
-    )
+    observed <- data.frame(TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")), USE=obs$use)
+    observed[, output] <- obs$measure
     observed <- observed %>% dplyr::mutate(PAST=TIME <= relativeNow) # sign '<=' used on purpose (through concentration can be used for recommendation dose at same time)
     filteredObserved <- observed %>% dplyr::filter(PAST && USE) %>% dplyr::select(-c("PAST", "USE"))
   } else {
@@ -205,7 +222,7 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
     stop("Please add a dose in the left panel")
   }
   
-  data <- convertDataToTdmore(doses, obs, now)
+  data <- convertDataToTdmore(doses, obs, getModelOutput(model), now)
   regimen <- data$regimen %>% select(-PAST)
   filteredObserved <- data$filteredObserved
   firstDoseDate <- data$firstDoseDate
@@ -219,23 +236,15 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
   # Predictions
   dosingInterval <- getDosingInterval(model)
   maxTime <- if(nrow(regimen)==0){dosingInterval} else {max(regimen$TIME)+dosingInterval}
-  data <- predict(
-    object,
-    newdata = data.frame(TIME=seq(0, maxTime, length.out=300), CONC=NA),
-    regimen=regimen,
-    covariates=covs,
-    se=TRUE) %>% as.data.frame()
+  newdata <- getNewdata(0, maxTime, getModelOutput(model))
+  
+  data <- predict(object, newdata=newdata, regimen=regimen, covariates=covs, se=T)
   data$TIME <- firstDoseDate + data$TIME*60*60
   
-  # In case of fit, compute pred median as well
+  # In case of fit, compute PRED median as well
   if (!population) {
-    pred <- predict(
-      model,
-      newdata = data.frame(TIME=seq(0, maxTime, length.out=300), CONC=NA),
-      regimen=regimen,
-      covariates=covs,
-      se=FALSE) %>% as.data.frame()
-    data$PRED <- pred$CONC
+    pred <- predict(model, newdata=newdata, regimen=regimen, covariates=covs, se=F)
+    data$PRED <- pred[, getModelOutput(model)]
   }
   
   return(list(p1=preparePredictionPlot(data=data, obs=obs, target=target, population=population, model=model, now=now),
@@ -254,18 +263,19 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
 #'
 preparePredictionPlot <- function(data, obs, target, population, model, now) {
   color <- if(population) {predColor()} else {ipredColor()}
-  obs <- obs %>% filter(use==TRUE) # Plot only used observations
+  obs <- obs %>% filter(use==TRUE) # Plot only 'used' observations
   obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)
+  output <- getModelOutput(model)
   
-  plot <- ggplot(mapping=aes(x=TIME, y=CONC))
+  plot <- ggplot(mapping=aes_string(x="TIME", y=output))
   if (!population) {
     plot <- plot + geom_line(data=data, mapping=aes(y=PRED), color=predColor(), alpha=0.25)
   }
   plot <- plot +
     geom_line(data=data, color=color) +
-    geom_ribbon(fill=color, aes(ymin=CONC.lower, ymax=CONC.upper), data=data, alpha=0.1) +
+    geom_ribbon(fill=color, aes_string(ymin=paste0(output, ".lower"), ymax=paste0(output, ".upper")), data=data, alpha=0.1) +
     geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
@@ -312,7 +322,10 @@ prepareTimelinePlot <- function(doses, xlim, model, now) {
 #' @export
 #'
 prepareRecommendation <- function(doses, obs, model, covs, target, now) {
-  data <- convertDataToTdmore(doses, obs, now)
+  if (nrow(doses)==0) {
+    stop("Please add a dose in the left panel")
+  }
+  data <- convertDataToTdmore(doses, obs, getModelOutput(model), now)
   regimen <- data$regimen
   filteredRegimen <- data$filteredRegimen
   filteredObserved <- data$filteredObserved
@@ -320,16 +333,17 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   
   # Find dose rows to be adapted
   doseRows <- which(!regimen$PAST)
-  if(length(doseRows)==0) {
+  if (length(doseRows)==0) {
     stop("There is no dose in the future")
   }
 
   # Compute fit
-  fit <- estimate(model, observed = filteredObserved, regimen = filteredRegimen, covariates = covs)
+  fit <- estimate(model, observed=filteredObserved, regimen=filteredRegimen, covariates=covs)
 
   # Implementing the iterative process
   nextRegimen <- regimen %>% dplyr::select(-PAST)
   dosingInterval <- getDosingInterval(model)
+  output <- getModelOutput(model)
   
   for (index in seq_along(doseRows)) {
     row <- regimen[doseRows[index],]
@@ -340,23 +354,22 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
     } else {
       nextTime <- regimen[doseRows[index + 1],]$TIME - 0.001 # Just before the next dose
     }
-    recommendation <- findDose(fit, regimen=nextRegimen, doseRows=doseRows[(index:length(doseRows))],
-                               target=data.frame(TIME=nextTime, CONC=(target$min + target$max)/2))
+    targetDf <- data.frame(TIME=nextTime)
+    targetDf[, output] <- (target$min + target$max)/2
+    recommendation <- findDose(fit, regimen=nextRegimen, doseRows=doseRows[(index:length(doseRows))], target=targetDf)
     nextRegimen <- recommendation$regimen
   }
   
   firstDoseInFutureTime <- regimen$TIME[doseRows[1]]
   
   # Predict ipred without adapting the dose
-  ipred <- fit %>% predict(
-            newdata = data.frame(TIME=seq(0, max(regimen$TIME) + dosingInterval, length.out=300), CONC=NA),
-            regimen=regimen %>% dplyr::select(-PAST), se=F, covariates=covs)
+  newdata <- getNewdata(0, max(regimen$TIME) + dosingInterval, output)
+  ipred <-  predict(fit, newdata = newdata, regimen=regimen %>% dplyr::select(-PAST), covariates=covs, se=F)
   ipred$TIME <- firstDoseDate + ipred$TIME*3600 # Plotly able to plot POSIXct
   
   # Predict ipred with the new recommendation
-  ipredNew <- fit %>% predict(
-    newdata = data.frame(TIME=seq(firstDoseInFutureTime, max(regimen$TIME) + dosingInterval, length.out=300), CONC=NA),
-    regimen=nextRegimen, se=TRUE, covariates=covs)
+  newdata <- getNewdata(firstDoseInFutureTime, max(regimen$TIME) + dosingInterval, output)
+  ipredNew <- predict(fit, newdata=newdata, regimen=nextRegimen, covariates=covs, se=T)
   ipredNew$TIME <- firstDoseDate + ipredNew$TIME*3600 # Plotly able to plot POSIXct
   
   # Back compute to POSIXct
@@ -380,10 +393,6 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
 #' @return a list of two plots
 #'
 prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommendation, now) {
-  if (is.null(doses)) {
-    return(NULL)
-  }
-
   firstDoseDate <- recommendation$firstDoseDate
   ipred <- recommendation$ipred
   ipredNew <- recommendation$ipredNew
@@ -394,11 +403,12 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
   obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)
+  output <- getModelOutput(model)
   
-  p1 <- ggplot(mapping=aes(x=TIME, y=CONC)) +
+  p1 <- ggplot(mapping=aes_string(x="TIME", y=output)) +
     geom_line(data=ipred, color=ipredColor(), alpha=0.2) +
     geom_line(data=ipredNew, color=recommendationColor()) +
-    geom_ribbon(fill=recommendationColor(), aes(ymin=CONC.lower, ymax=CONC.upper), data=ipredNew, alpha=0.2) +
+    geom_ribbon(fill=recommendationColor(), aes_string(ymin=paste0(output, ".lower"), ymax=paste0(output, ".upper")), data=ipredNew, alpha=0.2) +
     geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
