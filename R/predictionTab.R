@@ -7,64 +7,69 @@ getPredictionTabPanel <- function() {
   panel <- tabPanel(
     "Prediction",
     icon = icon("address-card"),
-    textOutput(outputId="tab_title"),
-    fluidRow(
-      column(
-        3,
-        conditionalPanel(
+    div(
+      actionButton("sidebarCollapse", icon=icon("minus-square"), label="", style="display: inline-block; vertical-align: middle; font-size:120%;"),
+      span(textOutput(outputId="tab_title"), style="display: inline-block; vertical-align: middle; margin-left: 10px;")
+    ),
+    fluidRow(class="wrapper",
+        div(id="sidebar",
+          conditionalPanel(
           condition = "output.plot_type == 'population' || output.plot_type == 'fit'",
           fluidRow(
             column(10, h4("Doses")),
             column(2, actionButton("addDose", "Add", style="float:right"))
           ),
           rHandsontableOutput('hotdose')
-        ),
-        conditionalPanel(
-          condition = "output.plot_type == 'recommendation'",
-          fluidRow(
-            column(10, h4("Doses & Recommendations")),
-            column(2, actionButton("addDoseFuture", "Add", style="float:right"))
           ),
-          rHandsontableOutput('hotdosefuture')
+          conditionalPanel(
+            condition = "output.plot_type == 'recommendation'",
+            fluidRow(
+              column(10, h4("Doses & Recommendations")),
+              column(2, actionButton("addDoseFuture", "Add", style="float:right"))
+            ),
+            rHandsontableOutput('hotdosefuture')
+          ),
+          fluidRow(
+            column(2, h5("Now:")),
+            column(10, editableInput(inputId="nowDate", type = "combodate", value="2000-01-01 00:00"), style="margin-top: 6px;")
+          ),
+          hr(),
+          fluidRow(
+            column(10, h4("Measures")),
+            column(2, actionButton("addObs", "Add", style="float:right"))
+          ),
+          rHandsontableOutput('hotobs'),
+          hr(),
+          h4("Target"),
+          numericInput("targetDown", "Lower limit", 0),
+          numericInput("targetUp", "Upper limit", 0)
         ),
-        fluidRow(
-          column(2, h5("Now:")),
-          column(10, editableInput(inputId="nowDate", type = "combodate", value="2000-01-01 00:00"), style="margin-top: 6px;")
-        ),
-        hr(),
-        fluidRow(
-          column(10, h4("Measures")),
-          column(2, actionButton("addObs", "Add", style="float:right"))
-        ),
-        rHandsontableOutput('hotobs'),
-        hr(),
-        h4("Target"),
-        numericInput("targetDown", "Lower limit", 0),
-        numericInput("targetUp", "Upper limit", 0)
+        div(id="content",
+          fluidRow(
+           column(1, actionButton("previous_plot", label="Previous", icon=icon("backward"))),
+           tags$head(tags$style(HTML('#previous_plot{background-color:#dde5eb}'), '#previous_plot.attr("disabled", "true")')),
+           
+           column(10, textOutput(outputId="plot_title"),
+                  tags$head(tags$style("#plot_title{font-size: 20px;text-align: center;justify-content: center;}"))),
+           
+           column(1, actionButton("next_plot", label="Next", icon=icon("forward"), style="float:right")),
+           tags$head(tags$style(HTML('#next_plot{background-color:#dde5eb}')))
+         ),
+         conditionalPanel(condition = "output.plot_type == 'population'",
+                          plotlyOutput('populationPlot', height="600px", width="100%")),
+
+         conditionalPanel(condition = "output.plot_type == 'fit'",
+                          plotlyOutput('fitPlot', height="600px", width="100%")),
+
+         conditionalPanel(condition = "output.plot_type == 'recommendation'",
+                          plotlyOutput('recommendationPlot', height="600px", width="100%"))
+        )
       ),
-      column(
-        9,
-        fluidRow(
-          column(1, actionButton("previous_plot", label="Previous", icon=icon("backward"))),
-          tags$head(tags$style(HTML('#previous_plot{background-color:#dde5eb}'), '#previous_plot.attr("disabled", "true")')),
-          
-          column(10, textOutput(outputId="plot_title"),
-          tags$head(tags$style("#plot_title{font-size: 20px;text-align: center;justify-content: center;}"))),
-          
-          column(1, actionButton("next_plot", label="Next", icon=icon("forward"), style="float:right")),
-          tags$head(tags$style(HTML('#next_plot{background-color:#dde5eb}')))
-        ),
-        conditionalPanel(condition = "output.plot_type == 'population'",
-                         plotlyOutput('populationPlot', height = "600px")),
-        
-        conditionalPanel(condition = "output.plot_type == 'fit'",
-                         plotlyOutput('fitPlot', height = "600px")),
-        
-        conditionalPanel(condition = "output.plot_type == 'recommendation'",
-                         plotlyOutput('recommendationPlot', height = "600px"))
-      )
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "sidebar.css"),
+      #tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap.min.css"),
+      tags$style(HTML(".handsontable {overflow-x:hidden;}"), "#tab_title{font-size: 30px; margin-top: 10px; margin-bottom: 10px;}")
     ),
-    tags$head(tags$style(HTML(".handsontable {overflow-x:hidden;}"), "#tab_title{font-size: 30px; margin-top: 10px; margin-bottom: 10px;}")),
     singleton(tags$head(HTML(
       '
     <script type="text/javascript">
@@ -82,6 +87,11 @@ getPredictionTabPanel <- function() {
 
       Shiny.addCustomMessageHandler("nowDate", function(message) {
       $("#nowDate").editable("setValue", message);
+      });
+
+      $("#sidebarCollapse").on("click", function() {
+      $("#sidebar").toggleClass("active");
+      $(this).toggleClass("active");
       });
 
       })
@@ -360,4 +370,23 @@ predictionTabServer <- function(input, output, session, val) {
     if(!is.null(plots)) mergePlots(plots$p1, plots$p2, getModelOutput(val$model))
   })
   output$recommendationPlot <- renderPlotly(recommendationPlot())
+  
+  
+  # Refresh plot when sidebar is collapsed/opened (make sure there is no transition time in CSS, otherwise not working)
+  observeEvent(input$sidebarCollapse, {
+    if (val$plot_type == "population") {
+      output$populationPlot <- renderPlotly(populationPlot())
+    } else if(val$plot_type == "fit") {
+      output$fitPlot <- renderPlotly(fitPlot())
+    } else if(val$plot_type == "recommendation") {
+      output$recommendationPlot <- renderPlotly(recommendationPlot())
+    }
+    if (is.null(val$collapsed) || val$collapsed==F) {
+      updateActionButton(session, "sidebarCollapse", label=NULL, icon=icon("plus-square"))
+      val$collapsed <- T
+    } else {
+      updateActionButton(session, "sidebarCollapse", label=NULL, icon=icon("minus-square"))
+      val$collapsed <- F
+    }
+  })
 }
