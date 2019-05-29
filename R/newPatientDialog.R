@@ -55,7 +55,7 @@ createCovariateForm <- function(input) {
     return()
   }
   model <- get(input$modelCombobox)
-  covariates <- model$covariates
+  covariates <- getCovariateNames(model)
   retValue <- NULL
   for (covariate in covariates) {
     metadata <- getMetadataByName(model, covariate)
@@ -140,7 +140,7 @@ newPatientDialogServer <- function(input, output, session) {
       # Retrieve covariate form data
       covariateFormData <- reactive({
         model <- get(input$modelCombobox)
-        covariates <- model$covariates
+        covariates <- getCovariateNames(model)
         data <- sapply(covariates, function(x) {
           str <- input[[x]]
         })
@@ -151,7 +151,11 @@ newPatientDialogServer <- function(input, output, session) {
       covariateData <- covariateFormData()
       valuesAllNumeric <- length(which(is.na(suppressWarnings(as.numeric(covariateData))))) == 0
       
-      if(valuesAllNumeric) {
+      if (valuesAllNumeric) {
+        model <- get(input$modelCombobox)
+        if (inherits(model, "tdmore_mpc")) {
+          covariateData <- c(covariateData, model$mpc_theta)
+        }
         saveData(userData, input$modelCombobox, covariateData)
         
         # Render the patients table
@@ -189,4 +193,14 @@ newPatientDialogServer <- function(input, output, session) {
       ui = tags$div(createCovariateForm(input), id="my_cov_form")
     )
   })
+}
+
+getCovariateNames <- function(model) {
+  covariates <- model$covariates
+  if (inherits(model, "tdmore_mpc")) {
+    includedCovariates <- names(model$mpc_theta)
+    return(covariates[!(covariates %in% includedCovariates)])
+  } else {
+    return(covariates)
+  }
 }

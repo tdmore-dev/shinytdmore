@@ -38,3 +38,8 @@
 #'
 #' @format RxODE model
 "mpcDefaultModel"
+
+#' MPC Tacro model - 2 cpt.
+#'
+#' @format RxODE model
+"tacro_2cpt_mpc"
