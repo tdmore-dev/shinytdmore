@@ -17,8 +17,9 @@
 ## Models were all selected based on a review paper by Brooks et al. 2016
 ##
 ## ---------------------------
+
+library(nlmixr)
 library(tdmore)
-library(tidyverse)
 
 #Bergmann, Troels K., et al. "Population pharmacokinetics of tacrolimus in adult kidney transplant patients: impact of CYP3A5 genotype on starting dose." Therapeutic drug monitoring 36.1 (2014): 62-70.
 omega <- c(ECL=0.486, EV1=1.136, EV2=0.914, EKA=0.549)**2
@@ -56,37 +57,40 @@ CONC = center / V1
   metadata(target(min=10, max=15))
 usethis::use_data(bergmann2014_base, overwrite=TRUE)
 
-#------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------
 
-omega <- c(ECL=0.44, EV1=0.54)**2
-meropenem <- RxODE::RxODE("
-                          TVV1=24.4;
-                          TVV2=7.01;
-                          TVQ=4.97;
-                          TVCL=9.87;
-                          
-                          CL=TVCL*(WT/70)^0.75*exp(ECL);
-                          V1=TVV1*(WT/70)*exp(EV1);
-                          V2=TVV2*(WT/70);
-                          Q=TVQ*(WT/70)^0.75;
-                          K12=Q/V1;
-                          K21=Q/V2;
-                          
-                          d/dt(center)=-CL/V1*center-K12*center+K21*periph;
-                          d/dt(periph)=K12*center-K21*periph;
-                          
-                          CONC=center/V1;
-                          ") %>% tdmore(
-                            parameters=names(omega),
-                            omega=omega,
-                            res_var=list(errorModel(prop=0.371))) %>% 
+meropenem <- nlmixrUI(function(){
+  ini({
+    TVV1 <- 24.4;
+    TVV2 <- 7.01;
+    TVQ <- 4.97;
+    TVCL <- 9.87;
+    ECL ~ 0.194 # This value corresponds to OMEGA_CL (44% SD)
+    EV1 ~ 0.287 # This value corresponds to OMEGA_V1 (54% SD)
+    EPS_PROP <- 0.371 # Proportional error (37% SD)
+  })
+  model({
+    CL <- TVCL * (WT/70)^0.75 * exp(ECL)
+    V1 <- TVV1 * (WT/70) * exp(EV1)
+    V2 <- TVV2 * (WT/70)
+    Q <- TVQ * (WT/70)^0.75
+    K12 <- Q/V1
+    K21 <- Q/V2
+    
+    d/dt(center) = - CL/V1 * center - K12*center + K21 * periph
+    d/dt(periph) = K12*center - K21 * periph
+    
+    CONC = center / V1
+    CONC ~ prop(EPS_PROP) # Proportional error linked to the PK model
+  })
+}) %>% tdmore() %>% 
   metadata(covariate(name="WT", label="Weight", unit="kg", min=20, max=150)) %>%
   metadata(output(name="CONC", label="Meropenem concentration", unit="ng/mL", default_value=1)) %>%
   metadata(dose(unit="ug", dosing_interval=8, default_value=1000)) %>%
   metadata(target(min=2, max=5))
 usethis::use_data(meropenem, overwrite=TRUE)
 
-#------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------
 
 rxModel <- RxODE::RxODE('
 #Holford model
@@ -119,3 +123,39 @@ tacrolimuskidney <- tdmore(rxModel, omega=omegas, res_var=list(errorModel("CONC"
   metadata(dose(unit="ug", dosing_interval=12, default_value=8)) %>%
   metadata(target(min=10, max=15))
 usethis::use_data(tacrolimuskidney, overwrite=TRUE)
+
+# ---------------------------------------------------------------------------------------
+
+mpcDefaultModel <- nlmixrUI(function(){
+  ini({
+    TVKA <- 3.7
+    TVQ <- 10
+    ECL ~ 0.0784 #ETA1, 28%
+    EV1 ~ 0.0361 #ETA2, 19%
+    EPS_PROP <- 0.23 # Proportional error, 23% SD
+  })
+  model({
+    TVV1_next <- TVV1 * exp(EV1)
+    TVCL_next <- TVCL * exp(ECL)
+    
+    KA <- TVKA
+    CL <- TVCL_next * (WT/70)^0.75
+    V1 <- TVV1_next
+    V2 <- V1
+    Q <- TVQ
+    K12 <- Q/V1
+    K21 <- Q/V2
+    
+    d/dt(depot) = -KA*depot
+    d/dt(center) = KA*depot - CL/V1 * center - K12*center + K21 * periph
+    d/dt(periph) = K12*center - K21 * periph
+    
+    CONC = (center / V1) * 100
+    CONC ~ prop(EPS_PROP)
+  })
+}) %>% tdmore(iov=c("EV1", "ECL")) %>% 
+  metadata(output(name="CONC", label="Drug concentration", unit="mg/mL", default_value=5)) %>%
+  metadata(dose(unit="mg", dosing_interval=24, default_value=5)) %>%
+  metadata(target(min=4, max=8)) %>% 
+  mpc(theta=c(TVCL=3.7, TVV1=61), suffix="_next")
+usethis::use_data(mpcDefaultModel, overwrite=TRUE)

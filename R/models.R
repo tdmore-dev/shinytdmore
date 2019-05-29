@@ -34,4 +34,7 @@
 #' @format RxODE model
 "meropenem"
 
-
+#' MPC default model.
+#'
+#' @format RxODE model
+"mpcDefaultModel"

@@ -171,10 +171,11 @@ addNowLabelAndIntercept <- function(plot, now) {
 #' @param obs observations
 #' @param output output name (e.g. 'CONC')
 #' @param now now date, POSIXlt date
+#' @param iov iov present in the model, logical value
 #' 
 #' @return to be described
 #'
-convertDataToTdmore <- function(doses, obs, output, now) {
+convertDataToTdmore <- function(doses, obs, output, now, iov) {
   # Important dates
   doseDates <- dateAndTimeToPOSIX(doses$date, doses$time)
   firstDoseDate <- min(doseDates)
@@ -187,8 +188,10 @@ convertDataToTdmore <- function(doses, obs, output, now) {
     TIME=as.numeric(difftime(doseDates, firstDoseDate, units="hour")),
     AMT=doses$dose
   )
+  if (iov) {
+    regimen$OCC <- seq_len(nrow(regimen))
+  }
   regimen <- regimen %>% dplyr::mutate(PAST=TIME < relativeNow) # sign '<' used on purpose
-  filteredRegimen <- regimen %>% dplyr::filter(PAST) %>% dplyr::select(-PAST)
   
   # Make observed and filtered observed dataframes
   if (nrow(obs) > 0) {
@@ -202,9 +205,7 @@ convertDataToTdmore <- function(doses, obs, output, now) {
     filteredObserved <- NULL
   }
 
-  return(list(regimen=regimen, filteredRegimen=filteredRegimen,
-              observed=observed, filteredObserved=filteredObserved,
-              firstDoseDate=firstDoseDate))
+  return(list(regimen=regimen, observed=observed, filteredObserved=filteredObserved, firstDoseDate=firstDoseDate))
 }
 
 #'
@@ -213,7 +214,7 @@ convertDataToTdmore <- function(doses, obs, output, now) {
 #' 
 #' @param doses doses
 #' @param obs observations
-#' @param model tdmore model
+#' @param model tdmore/tdmore_mpc model
 #' @param covs covariates
 #' @param target numeric vector of size 2, min and max value
 #' @param population logical value, true for population, false for individual
@@ -225,11 +226,12 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
     stop("Please add a dose in the left panel")
   }
   
-  data <- convertDataToTdmore(doses, obs, getModelOutput(model), now)
+  data <- convertDataToTdmore(doses, obs, getModelOutput(model), now, !is.null(model$iov))
   regimen <- data$regimen %>% select(-PAST)
   filteredObserved <- data$filteredObserved
   firstDoseDate <- data$firstDoseDate
-  
+  isMpc <- inherits(model, "tdmore_mpc")
+
   # Compute fit if individual prediction is asked
   object <- model
   if (!population) {
@@ -241,9 +243,13 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
   maxTime <- if(nrow(regimen)==0){dosingInterval} else {max(regimen$TIME)+dosingInterval}
   newdata <- getNewdata(0, maxTime, getModelOutput(model))
   
-  data <- predict(object, newdata=newdata, regimen=regimen, covariates=covs, se=T)
+  if (isMpc && !population) {
+    data <- predict(object, newdata=newdata, regimen=regimen, covariates=object$covariates, se=F)
+  } else {
+    data <- predict(object, newdata=newdata, regimen=regimen, covariates=covs, se=T)
+  }
   data$TIME <- firstDoseDate + data$TIME*60*60
-  
+
   # In case of fit, compute PRED median as well
   if (!population) {
     pred <- predict(model, newdata=newdata, regimen=regimen, covariates=covs, se=F)
@@ -279,11 +285,16 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
   }
   plot <- plot +
     geom_line(data=data, color=color) +
-    geom_ribbon(fill=color, aes_string(ymin=paste0(output, ".lower"), ymax=paste0(output, ".upper")), data=data, alpha=0.1) +
     geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
     labs(y=getYAxisLabel(model))
+  
+  ribbonLower <- paste0(output, ".lower") # Not there in MPC fit
+  ribbonUpper <- paste0(output, ".upper") # Not there in MPC fit
+  if ((ribbonLower %in% colnames(data)) && (ribbonUpper %in% colnames(data))) {
+    plot <- plot + geom_ribbon(fill=color, aes_string(ymin=ribbonLower, ymax=ribbonUpper), data=data, alpha=0.1)
+  }
   
   plot <- addNowLabelAndIntercept(plot, now)
   
@@ -332,11 +343,11 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   if (nrow(doses)==0) {
     stop("Please add a dose in the left panel")
   }
-  data <- convertDataToTdmore(doses, obs, getModelOutput(model), now)
+  data <- convertDataToTdmore(doses, obs, getModelOutput(model), now, !is.null(model$iov))
   regimen <- data$regimen
-  filteredRegimen <- data$filteredRegimen
   filteredObserved <- data$filteredObserved
   firstDoseDate <- data$firstDoseDate
+  isMpc <- inherits(model, "tdmore_mpc")
   
   # Find dose rows to be adapted
   doseRows <- which(!regimen$PAST)
@@ -345,7 +356,7 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   }
 
   # Compute fit
-  fit <- estimate(model, observed=filteredObserved, regimen=filteredRegimen, covariates=covs)
+  fit <- estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST), covariates=covs)
 
   # Implementing the iterative process
   nextRegimen <- regimen %>% dplyr::select(-PAST)
@@ -368,15 +379,16 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   }
   
   firstDoseInFutureTime <- regimen$TIME[doseRows[1]]
+  covsToUse <- if(isMpc){fit$covariates}else{covs}
   
   # Predict ipred without adapting the dose
   newdata <- getNewdata(0, max(regimen$TIME) + dosingInterval, output)
-  ipred <-  predict(fit, newdata = newdata, regimen=regimen %>% dplyr::select(-PAST), covariates=covs, se=F)
+  ipred <-  predict(fit, newdata = newdata, regimen=regimen %>% dplyr::select(-PAST), covariates=covsToUse, se=F)
   ipred$TIME <- firstDoseDate + ipred$TIME*3600 # Plotly able to plot POSIXct
   
   # Predict ipred with the new recommendation
   newdata <- getNewdata(firstDoseInFutureTime, max(regimen$TIME) + dosingInterval, output)
-  ipredNew <- predict(fit, newdata=newdata, regimen=nextRegimen, covariates=covs, se=T)
+  ipredNew <- predict(fit, newdata=newdata, regimen=nextRegimen, covariates=covsToUse, se=!isMpc) # se disabled if MPC model
   ipredNew$TIME <- firstDoseDate + ipredNew$TIME*3600 # Plotly able to plot POSIXct
   
   # Back compute to POSIXct
@@ -415,12 +427,17 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
   p1 <- ggplot(mapping=aes_string(x="TIME", y=output)) +
     geom_line(data=ipred, color=ipredColor(), alpha=0.2) +
     geom_line(data=ipredNew, color=recommendationColor()) +
-    geom_ribbon(fill=recommendationColor(), aes_string(ymin=paste0(output, ".lower"), ymax=paste0(output, ".upper")), data=ipredNew, alpha=0.2) +
     geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
     labs(y=getYAxisLabel(model))
   p1 <- addNowLabelAndIntercept(p1, now)
+  
+  ribbonLower <- paste0(output, ".lower") # Not there in MPC fit
+  ribbonUpper <- paste0(output, ".upper") # Not there in MPC fit
+  if ((ribbonLower %in% colnames(data)) && (ribbonUpper %in% colnames(data))) {
+    p1 <- p1 + geom_ribbon(fill=recommendationColor(), aes_string(ymin=ribbonLower, ymax=ribbonUpper), data=ipredNew, alpha=0.2)
+  }
   
   # We have to be very careful with as.Date(), zone should be always taken into account
   newDoses <- recommendedRegimen %>% mutate(date=as.Date(TIME, tz=Sys.timezone()), time=strftime(TIME,"%H:%M"))
