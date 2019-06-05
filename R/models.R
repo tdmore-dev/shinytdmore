@@ -48,3 +48,13 @@
 #'
 #' @format RxODE model
 "D7_AUC_2cpt_Tlag_CYP3A5_alloWT"
+
+#' Tacro model - 1 cpt.
+#'
+#' @format RxODE model
+"D0_14_Troughs_1cpt_BASE_TSFD"
+
+#' MPC Tacro model - 1 cpt.
+#'
+#' @format RxODE model
+"D0_14_Troughs_1cpt_BASE_TSFD_MPC"
