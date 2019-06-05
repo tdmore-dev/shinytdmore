@@ -26,20 +26,25 @@
 #' Tacrolimus kidney model.
 #'
 #' @format RxODE model
-"tacrolimuskidney"
+"holdford_base"
 
 
 #' Meropenem model.
 #'
 #' @format RxODE model
-"meropenem"
+"meropenem_alloWT"
 
 #' MPC default model.
 #'
 #' @format RxODE model
-"mpcDefaultModel"
+"default_alloWT_MPC"
 
 #' MPC Tacro model - 2 cpt.
 #'
 #' @format RxODE model
-"tacro_2cpt_mpc"
+"D7_AUC_2cpt_Tlag_CYP3A5_alloWT_MPC"
+
+#' Tacro model - 2 cpt.
+#'
+#' @format RxODE model
+"D7_AUC_2cpt_Tlag_CYP3A5_alloWT"

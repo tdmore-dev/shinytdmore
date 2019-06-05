@@ -231,10 +231,12 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
   filteredObserved <- data$filteredObserved
   firstDoseDate <- data$firstDoseDate
   isMpc <- inherits(model, "tdmore_mpc")
-
-  # Compute fit if individual prediction is asked
-  object <- model
-  if (!population) {
+  
+  if (population) {
+    # Population 'fit'
+    object <- estimate(model, regimen=regimen, covariates=covs)
+  } else {
+    # Fit
     object <- estimate(model, observed=filteredObserved, regimen=regimen, covariates=covs)
   }
   
@@ -244,9 +246,9 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
   newdata <- getNewdata(0, maxTime, getModelOutput(model))
   
   if (isMpc && !population) {
-    data <- predict(object, newdata=newdata, regimen=regimen, covariates=object$covariates, se=F)
+    data <- predict(object, newdata=newdata, regimen=regimen, covariates=object$covariates, se.fit=F)
   } else {
-    data <- predict(object, newdata=newdata, regimen=regimen, covariates=covs, se=T)
+    data <- predict(object, newdata=newdata, regimen=regimen, covariates=covs, se.fit=T, level=0.95) # 95% CI by default
   }
   data$TIME <- firstDoseDate + data$TIME*60*60
 
@@ -383,12 +385,12 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   
   # Predict ipred without adapting the dose
   newdata <- getNewdata(0, max(regimen$TIME) + dosingInterval, output)
-  ipred <-  predict(fit, newdata = newdata, regimen=regimen %>% dplyr::select(-PAST), covariates=covsToUse, se=F)
+  ipred <-  predict(fit, newdata = newdata, regimen=regimen %>% dplyr::select(-PAST), covariates=covsToUse, se.fit=F)
   ipred$TIME <- firstDoseDate + ipred$TIME*3600 # Plotly able to plot POSIXct
   
   # Predict ipred with the new recommendation
   newdata <- getNewdata(firstDoseInFutureTime, max(regimen$TIME) + dosingInterval, output)
-  ipredNew <- predict(fit, newdata=newdata, regimen=nextRegimen, covariates=covsToUse, se=!isMpc) # se disabled if MPC model
+  ipredNew <- predict(fit, newdata=newdata, regimen=nextRegimen, covariates=covsToUse, se.fit=!isMpc, level=0.95) # se.fit disabled if MPC model
   ipredNew$TIME <- firstDoseDate + ipredNew$TIME*3600 # Plotly able to plot POSIXct
   
   # Back compute to POSIXct
@@ -435,7 +437,7 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
   
   ribbonLower <- paste0(output, ".lower") # Not there in MPC fit
   ribbonUpper <- paste0(output, ".upper") # Not there in MPC fit
-  if ((ribbonLower %in% colnames(data)) && (ribbonUpper %in% colnames(data))) {
+  if ((ribbonLower %in% colnames(ipredNew)) && (ribbonUpper %in% colnames(ipredNew))) {
     p1 <- p1 + geom_ribbon(fill=recommendationColor(), aes_string(ymin=ribbonLower, ymax=ribbonUpper), data=ipredNew, alpha=0.2)
   }
   
