@@ -8,10 +8,7 @@ COPY . /app
 # prepare for installation of packages via apt-get
 RUN apt-get update
 
-# Install dev version of RxODE
-RUN apt-get install -y libudunits2-dev
-RUN R -e 'devtools::install_github("nlmixrdevelopment/RxODE@937597db213208ccef737f2bb532a88416ea139e")'
-
+# install dependent packages
 RUN apt-get install -y libv8-dev
 RUN apt-get install -y libssl-dev
 RUN apt-get install -y libsasl2-dev
