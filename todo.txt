@@ -1,9 +1,0 @@
-To be implemented:
-  - Recommendation !!
-      The dose that maximizes the probability of being in the window ?
-      The dose that hits 13.5 ?
-  
-  - Starting dose: always 0.2mg/kg
-  - Is the timing of target window fixed?
-  - Is the timing of the formulation fixed?
-  

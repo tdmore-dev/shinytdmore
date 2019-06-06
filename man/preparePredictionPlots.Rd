@@ -12,7 +12,7 @@ preparePredictionPlots(doses, obs, model, covs, target, population, now)
 
 \item{obs}{observations}
 
-\item{model}{tdmore model}
+\item{model}{tdmore/tdmore_mpc model}
 
 \item{covs}{covariates}
 

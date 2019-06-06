@@ -20,6 +20,8 @@
 
 library(nlmixr)
 library(tdmore)
+library(dplyr)
+library(stringr)
 
 #________________________________________________________________________________________
 #----                         Model: bergmann2014_base                               ----

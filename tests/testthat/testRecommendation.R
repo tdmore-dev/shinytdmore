@@ -22,6 +22,4 @@ covs <- patient$covariates
 now <- patient$now_date
 target <- list(min=2,max=5)
 
-
-debugonce(shinytdmore::prepareRecommendation)
 recommendation <- prepareRecommendation(doses, obs, model, covs, target, now)

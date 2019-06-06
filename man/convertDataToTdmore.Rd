@@ -4,7 +4,7 @@
 \alias{convertDataToTdmore}
 \title{Convert main data to TDMore domain.}
 \usage{
-convertDataToTdmore(doses, obs, output, now)
+convertDataToTdmore(doses, obs, output, now, iov)
 }
 \arguments{
 \item{doses}{doses}
@@ -14,6 +14,8 @@ convertDataToTdmore(doses, obs, output, now)
 \item{output}{output name (e.g. 'CONC')}
 
 \item{now}{now date, POSIXlt date}
+
+\item{iov}{iov present in the model, logical value}
 }
 \value{
 to be described
