@@ -61,7 +61,7 @@ CONC = center / V1
 ) %>% metadata(covariate("CYP3A5", label="CYP3A5 expressor", choices=list(Fast=0, Slow=1))) %>%
   metadata(output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
   metadata(dose(unit="ug", dosing_interval=12, default_value=8000)) %>%
-  metadata(target(min=10, max=15))
+  metadata(target(min=12, max=15))
 usethis::use_data(bergmann2014_base, overwrite=TRUE)
 
 #________________________________________________________________________________________
@@ -133,7 +133,7 @@ omegas=c(ECL=0.40^2, EV1=0.54^2, EQ=0.63^2, EFDay2=0.57^2)
 holdford_base <- tdmore(rxModel, omega=omegas, res_var=list(errorModel("CONC", prop=0.149))) %>% 
   metadata(output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
   metadata(dose(unit="ug", dosing_interval=12, default_value=8)) %>%
-  metadata(target(min=10, max=15))
+  metadata(target(min=12, max=15))
 usethis::use_data(holdford_base, overwrite=TRUE)
 
 #________________________________________________________________________________________
@@ -306,7 +306,7 @@ D7_AUC_2cpt_Tlag_CYP3A5_alloWT <- RxODE::RxODE(m1Code) %>% tdmore(
 ) %>% metadata(covariate("CYP3A5", label="CYP3A5 expressor", choices=list(Fast=0, Slow=1))) %>%
   metadata(output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
   metadata(dose(unit="mg", dosing_interval=12, default_value=8)) %>%
-  metadata(target(min=10, max=15))
+  metadata(target(min=12, max=15))
 usethis::use_data(D7_AUC_2cpt_Tlag_CYP3A5_alloWT, overwrite=TRUE)
 
 #________________________________________________________________________________________
@@ -434,7 +434,7 @@ tacro_2cpt <- RxODE::RxODE(m1Code) %>% tdmore(
 ) %>% metadata(covariate("CYP3A5", label="CYP3A5 expressor", choices=list(Fast=0, Slow=1))) %>%
   metadata(output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
   metadata(dose(unit="mg", dosing_interval=12, default_value=8)) %>%
-  metadata(target(min=10, max=15))
+  metadata(target(min=12, max=15))
 D7_AUC_2cpt_Tlag_CYP3A5_alloWT_MPC <- tacro_2cpt %>% mpc(theta=theta, suffix="_next")
 usethis::use_data(D7_AUC_2cpt_Tlag_CYP3A5_alloWT_MPC, overwrite=TRUE)
 
@@ -524,7 +524,7 @@ D0_14_Troughs_1cpt_BASE_TSFD <- RxODE::RxODE(m1Code) %>% tdmore(
   )
 ) %>% metadata(output(name="Cwb", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
   metadata(dose(unit="mg", dosing_interval=12, default_value=8)) %>%
-  metadata(target(min=10, max=15))
+  metadata(target(min=12, max=15))
 usethis::use_data(D0_14_Troughs_1cpt_BASE_TSFD, overwrite=TRUE)
 
 #________________________________________________________________________________________
@@ -623,6 +623,6 @@ D0_14_Troughs_1cpt_BASE_TSFD_MPC <- RxODE::RxODE(m1Code) %>% tdmore(
   )
 ) %>% metadata(output(name="Cwb", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
   metadata(dose(unit="mg", dosing_interval=12, default_value=8)) %>%
-  metadata(target(min=10, max=15)) %>% mpc(theta=theta, suffix="_next")
+  metadata(target(min=12, max=15)) %>% mpc(theta=theta, suffix="_next")
 usethis::use_data(D0_14_Troughs_1cpt_BASE_TSFD_MPC, overwrite=TRUE)
 
