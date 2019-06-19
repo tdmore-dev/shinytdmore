@@ -102,7 +102,7 @@ patientFormModalDialog <- function(failed=FALSE) {
 #' @return a list of all model names
 #'
 getModelList <- function() {
-  models <- data(package = "shinytdmore", envir = envir)$results[, "Item"]
+  models <- modelLibrary
   toDelete <- c()
   return(models[!(models %in% toDelete)])
 }

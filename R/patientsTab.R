@@ -59,10 +59,9 @@ setPatient <- function(patient, val) {
   
   # Copy model
   modelId <- patient$model
-  envir <- new.env()
-  data(list=modelId, package="shinytdmore", envir=envir)
-  if(is.null(envir[[modelId]])) stop("Model ", modelId, " not available...")
-  val$model <- envir[[modelId]]
+  model <- get(modelId)
+  if(is.null(model)) stop("Model ", modelId, " not available...")
+  val$model <- model
   
   # Copy covariates
   val$covs <- patient$covariates
