@@ -4,9 +4,11 @@
 \alias{createCovariateForm}
 \title{Create the covariate form.}
 \usage{
-createCovariateForm(input)
+createCovariateForm(ns, input)
 }
 \arguments{
+\item{ns}{namespace}
+
 \item{input}{shiny input}
 }
 \description{

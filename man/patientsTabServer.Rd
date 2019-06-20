@@ -4,7 +4,7 @@
 \alias{patientsTabServer}
 \title{Patients tab server.}
 \usage{
-patientsTabServer(input, output, session, val)
+patientsTabServer(input, output, session, val, onNewPatientAdded)
 }
 \arguments{
 \item{input}{shiny input}
@@ -14,6 +14,8 @@ patientsTabServer(input, output, session, val)
 \item{session}{shiny session}
 
 \item{val}{main reactive container}
+
+\item{onNewPatientAdded}{reactive value}
 }
 \description{
 Patients tab server.

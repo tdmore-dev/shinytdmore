@@ -105,14 +105,15 @@ setPatient <- function(patient, val) {
 #' @param output shiny output
 #' @param session shiny session
 #' @param val main reactive container
+#' @param onNewPatientAdded reactive value
 #'
-patientsTabServer <- function(input, output, session, val) {
+patientsTabServer <- function(input, output, session, val, onNewPatientAdded) {
   # Unnecessary call but currently needed to have at least 1 patient in the table
   initDB()
   
   # Open patient form dialog if new patient button is clicked
   observeEvent(input$newPatientButton, {
-    showModal(patientFormModalDialog())
+    showModal(newPatientDialogUI(id="newPatientDialogId"))
   })
   
   # Remove patient button
@@ -133,6 +134,10 @@ patientsTabServer <- function(input, output, session, val) {
     print(paste0("Remove patient ", patientRow$NameNoHyperlink, " (ID=", patientRow$ID, ")"))
     removePatient(as.numeric(patientRow$ID))
     removeModal(session)
+    output$patientTable <- renderPatientTable(input)
+  })
+  
+  observeEvent(onNewPatientAdded$trigger, {
     output$patientTable <- renderPatientTable(input)
   })
   

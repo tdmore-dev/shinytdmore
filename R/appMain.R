@@ -9,7 +9,7 @@ shinyTdmoreUI <- function() {
                    getPatientsTabPanel(),
                    getPredictionTabPanel(),
                    getReportsTabPanel(),
-                   getAboutTabPanel(),
+                   aboutTabUI("aboutTabId"),
                    inverse=TRUE,
                    collapsible = TRUE)
 }
@@ -23,14 +23,16 @@ shinyTdmoreUI <- function() {
 #' @export
 #' 
 shinyTdmoreServer <- function(input, output, session) {
-  # Patient form dialog server
-  newPatientDialogServer(input, output, session)
   
-  # Main reactive container
+  # Call module new patient dialog
+  onNewPatientAdded <- reactiveValues()  
+  callModule(module=newPatientDialog, id="newPatientDialogId", nsId="newPatientDialogId", onNewPatientAdded)
+  
+  # Create the main reactive container
   val <- reactiveValues()
   
   # Patients tab server
-  patientsTabServer(input, output, session, val)
+  patientsTabServer(input, output, session, val, onNewPatientAdded)
   
   # Select first patient by default, needed for predictions tab
   isolate({
@@ -45,4 +47,7 @@ shinyTdmoreServer <- function(input, output, session) {
   
   # Save project server
   saveProjectServer(input, val)
+  
+  # Call module about tab (currently no logic)
+  callModule(module=aboutTab, id="aboutTabId")
 }
