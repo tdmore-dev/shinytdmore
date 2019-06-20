@@ -7,7 +7,7 @@
 aboutTabUI(id)
 }
 \arguments{
-\item{id}{id}
+\item{id}{namespace id}
 }
 \value{
 the about tab panel

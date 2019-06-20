@@ -139,7 +139,6 @@ newPatientDialog <- function(input, output, session, nsId, onNewPatientAdded) {
   
   # Modal form OK button
   observeEvent(input$modalFormOK, {
-      print("OK CLICKED")
       # Retrieve user form data
       userFormData <- reactive({
         fields <- c("firstname", "lastname")

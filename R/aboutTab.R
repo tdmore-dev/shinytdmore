@@ -1,6 +1,6 @@
 #' About tab user interface.
 #'
-#' @param id id
+#' @param id namespace id
 #' 
 #' @return the about tab panel
 #' @export

@@ -4,10 +4,12 @@
 \alias{removePatientConfirmationDialog}
 \title{Remove patient confirmation dialog.}
 \usage{
-removePatientConfirmationDialog(patientName)
+removePatientConfirmationDialog(patientName, ns)
 }
 \arguments{
 \item{patientName}{the patient name}
+
+\item{ns}{namespace}
 }
 \value{
 a modal dialog
