@@ -4,7 +4,7 @@
 \alias{targetLogic}
 \title{Target logic.}
 \usage{
-targetLogic(input, output, session, val)
+targetLogic(input, output, session, val, ns)
 }
 \arguments{
 \item{input}{shiny input}
@@ -14,6 +14,8 @@ targetLogic(input, output, session, val)
 \item{session}{shiny session}
 
 \item{val}{main reactive container}
+
+\item{ns}{namespace}
 }
 \description{
 Target logic.

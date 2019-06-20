@@ -1,74 +1,80 @@
 #'
-#' Get the prediction tab panel.
+#' Prediction tab user interface.
 #'
+#' @param id namespace id
 #' @return a panel
+#' 
+#' @export
 #'
-getPredictionTabPanel <- function() {
+predictionTabUI <- function(id) {
+  ns <- NS(id)
   panel <- tabPanel(
     "Prediction",
     icon = icon("address-card"),
     div(
-      actionButton("sidebarCollapse", icon=icon("minus-square"), label="", style="display: inline-block; vertical-align: middle; font-size:120%;"),
-      span(textOutput(outputId="tab_title"), style="display: inline-block; vertical-align: middle; margin-left: 10px;")
+      actionButton(ns("sidebarCollapse"), icon=icon("minus-square"), label="", style="display: inline-block; vertical-align: middle; font-size:120%;"),
+      span(textOutput(outputId=ns("tab_title")), style="display: inline-block; vertical-align: middle; margin-left: 10px;")
     ),
     fluidRow(class="wrapper",
         div(id="sidebar",
           conditionalPanel(
-          condition = "output.plot_type == 'population' || output.plot_type == 'fit'",
-          fluidRow(
-            column(10, h4("Doses")),
-            column(2, actionButton("addDose", "Add", style="float:right"))
-          ),
-          rHandsontableOutput('hotdose')
+            condition = "output.plot_type == 'population' || output.plot_type == 'fit'",
+            fluidRow(
+              column(10, h4("Doses")),
+              column(2, actionButton(ns("addDose"), "Add", style="float:right"))
+            ),
+            rHandsontableOutput(ns("hotdose")),
+            ns=ns
           ),
           conditionalPanel(
             condition = "output.plot_type == 'recommendation'",
             fluidRow(
               column(10, h4("Doses & Recommendations")),
-              column(2, actionButton("addDoseFuture", "Add", style="float:right"))
+              column(2, actionButton(ns("addDoseFuture"), "Add", style="float:right"))
             ),
-            rHandsontableOutput('hotdosefuture')
+            rHandsontableOutput(ns("hotdosefuture")),
+            ns=ns
           ),
           fluidRow(
             column(2, h5("Now:")),
-            column(10, editableInput(inputId="nowDate", type = "combodate", value="2000-01-01 00:00"), style="margin-top: 6px;")
+            column(10, editableInput(inputId=ns("nowDate"), type = "combodate", value="2000-01-01 00:00"), style="margin-top: 6px;")
           ),
           hr(),
           fluidRow(
             column(10, h4("Measures")),
-            column(2, actionButton("addObs", "Add", style="float:right"))
+            column(2, actionButton(ns("addObs"), "Add", style="float:right"))
           ),
-          rHandsontableOutput('hotobs'),
+          rHandsontableOutput(ns("hotobs")),
           hr(),
           h4("Target"),
-          numericInput("targetDown", "Lower limit", 0),
-          numericInput("targetUp", "Upper limit", 0)
+          numericInput(ns("targetDown"), "Lower limit", 0),
+          numericInput(ns("targetUp"), "Upper limit", 0)
         ),
         div(id="content",
           fluidRow(
-           column(1, actionButton("previous_plot", label="Previous", icon=icon("backward"))),
-           tags$head(tags$style(HTML('#previous_plot{background-color:#dde5eb}'), '#previous_plot.attr("disabled", "true")')),
+           column(1, actionButton(ns("previous_plot"), label="Previous", icon=icon("backward"))),
+           tags$head(tags$style(HTML('#predictionTabId-previous_plot{background-color:#dde5eb}'), '#predictionTabId-previous_plot.attr("disabled", "true")')),
            
-           column(10, textOutput(outputId="plot_title"),
-                  tags$head(tags$style("#plot_title{font-size: 20px;text-align: center;justify-content: center;}"))),
+           column(10, textOutput(outputId=ns("plot_title")),
+                  tags$head(tags$style("#predictionTabId-plot_title{font-size: 20px;text-align: center;justify-content: center;}"))),
            
-           column(1, actionButton("next_plot", label="Next", icon=icon("forward"), style="float:right")),
-           tags$head(tags$style(HTML('#next_plot{background-color:#dde5eb}')))
+           column(1, actionButton(ns("next_plot"), label="Next", icon=icon("forward"), style="float:right")),
+           tags$head(tags$style(HTML('#predictionTabId-next_plot{background-color:#dde5eb}')))
          ),
          conditionalPanel(condition = "output.plot_type == 'population'",
-                          plotlyOutput('populationPlot', height="600px", width="100%")),
+                          plotlyOutput(ns("populationPlot"), height="600px", width="100%"), ns=ns),
 
          conditionalPanel(condition = "output.plot_type == 'fit'",
-                          plotlyOutput('fitPlot', height="600px", width="100%")),
+                          plotlyOutput(ns("fitPlot"), height="600px", width="100%"), ns=ns),
 
          conditionalPanel(condition = "output.plot_type == 'recommendation'",
-                          plotlyOutput('recommendationPlot', height="600px", width="100%"))
+                          plotlyOutput(ns("recommendationPlot"), height="600px", width="100%"), ns=ns)
         )
       ),
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "sidebar.css"),
       #tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap.min.css"),
-      tags$style(HTML(".handsontable {overflow-x:hidden;}"), "#tab_title{font-size: 30px; margin-top: 10px; margin-bottom: 10px;}")
+      tags$style(HTML(".handsontable {overflow-x:hidden;}"), "#predictionTabId-tab_title{font-size: 30px; margin-top: 10px; margin-bottom: 10px;}")
     ),
     singleton(tags$head(HTML(
       '
@@ -86,10 +92,10 @@ getPredictionTabPanel <- function() {
       });
 
       Shiny.addCustomMessageHandler("nowDate", function(message) {
-      $("#nowDate").editable("setValue", message);
+      $("#predictionTabId-nowDate").editable("setValue", message);
       });
 
-      $("#sidebarCollapse").on("click", function() {
+      $("#predictionTabId-sidebarCollapse").on("click", function() {
       $("#sidebar").toggleClass("active");
       $(this).toggleClass("active");
       });
@@ -109,21 +115,22 @@ getPredictionTabPanel <- function() {
 #' @param output shiny output
 #' @param session shiny session
 #' @param val main reactive container
+#' @param ns namespace
 #'
-previousNextLogic <- function(input, output, session, val) {
+previousNextLogic <- function(input, output, session, val, ns) {
   plotTypes <- c("population", "fit", "recommendation")
   plotTitles <- c("Population prediction", "Individual prediction", "Recommendation")
 
   enableDisableButtons <- function(plotTypeIndex) {
     if (plotTypeIndex <= 1) {
-      session$sendCustomMessage("disableButton", "previous_plot")
+      session$sendCustomMessage("disableButton", ns("previous_plot"))
     } else {
-      session$sendCustomMessage("enableButton", "previous_plot")
+      session$sendCustomMessage("enableButton", ns("previous_plot"))
     }
     if (plotTypeIndex >= 3) {
-      session$sendCustomMessage("disableButton", "next_plot")
+      session$sendCustomMessage("disableButton", ns("next_plot"))
     } else {
-      session$sendCustomMessage("enableButton", "next_plot")
+      session$sendCustomMessage("enableButton", ns("next_plot"))
     }
   }
   
@@ -161,7 +168,7 @@ previousNextLogic <- function(input, output, session, val) {
   outputOptions(output, "plot_type", suspendWhenHidden=F)
 }
 
-forceUpdateNowDate <- function(session, val, date) {
+forceUpdateNowDate <- function(session, val, date, ns) {
   minute <- lubridate::minute(date) %/% 5
   value <- paste0(format(date, format = paste(getDateFormat(), "%H"), tz=getAppTimeZone()), ":", pad(minute*5))
   updateTextInput(session=session, inputId="nowDate", value=value) # This updates the 'visual' text
@@ -176,17 +183,18 @@ forceUpdateNowDate <- function(session, val, date) {
 #' @param output shiny output
 #' @param session shiny session
 #' @param val main reactive container
+#' @param ns namespace
 #' @importFrom lubridate ymd_hm
 #'
-nowDateLogic <- function(input, output, session, val) {
+nowDateLogic <- function(input, output, session, val, ns) {
   observeEvent(input$nowDate, {
     defaultDateInUI <- "2000-01-01 00:00"
     if (input$nowDate != val$now_date && input$nowDate != defaultDateInUI) {
-      forceUpdateNowDate(session, val, lubridate::ymd_hm(input$nowDate, tz = Sys.timezone()))
+      forceUpdateNowDate(session, val, lubridate::ymd_hm(input$nowDate, tz = Sys.timezone()), ns)
     }
   })
   observeEvent(val$set_patient_counter, {
-    forceUpdateNowDate(session, val, val$now_date)
+    forceUpdateNowDate(session, val, val$now_date, ns)
   })
 }
 
@@ -197,8 +205,9 @@ nowDateLogic <- function(input, output, session, val) {
 #' @param output shiny output
 #' @param session shiny session
 #' @param val main reactive container
+#' @param ns namespace
 #'
-targetLogic <- function(input, output, session, val) {
+targetLogic <- function(input, output, session, val, ns) {
   observeEvent(input$targetDown, {
     val$target$min <- input$targetDown
   })
@@ -206,8 +215,8 @@ targetLogic <- function(input, output, session, val) {
     val$target$max <- input$targetUp
   })
   observeEvent(val$set_patient_counter, {
-    updateNumericInput(session=session, inputId="targetDown", value=val$target$min)
-    updateNumericInput(session=session, inputId="targetUp", value=val$target$max)
+    updateNumericInput(session=session, inputId="targetDown", value=val$target$min) # No need to ns()?
+    updateNumericInput(session=session, inputId="targetUp", value=val$target$max) # No need to ns()?
   })
 }
 
@@ -217,18 +226,22 @@ targetLogic <- function(input, output, session, val) {
 #' @param input shiny input
 #' @param output shiny output
 #' @param session shiny session
+#' @param nsId namespace id
 #' @param val main reactive container
+#' 
+#' @export
 #'
-predictionTabServer <- function(input, output, session, val) {
-
+predictionTab <- function(input, output, session, nsId, val) {
+  ns <- NS(nsId)
+  
   # Previous/Next button logic
-  previousNextLogic(input, output, session, val)
+  previousNextLogic(input, output, session, val, ns)
   
   # Now date logic
-  nowDateLogic(input, output, session, val)
+  nowDateLogic(input, output, session, val, ns)
   
   # Target logic
-  targetLogic(input, output, session, val)
+  targetLogic(input, output, session, val, ns)
   
   # Update tab title according to patient's name
   output$tab_title <- renderText({return(paste(val$patient$firstname, val$patient$lastname))})
@@ -382,10 +395,10 @@ predictionTabServer <- function(input, output, session, val) {
       output$recommendationPlot <- renderPlotly(recommendationPlot())
     }
     if (is.null(val$collapsed) || val$collapsed==F) {
-      updateActionButton(session, "sidebarCollapse", label=NULL, icon=icon("plus-square"))
+      updateActionButton(session, ns("sidebarCollapse"), label=NULL, icon=icon("plus-square"))
       val$collapsed <- T
     } else {
-      updateActionButton(session, "sidebarCollapse", label=NULL, icon=icon("minus-square"))
+      updateActionButton(session, ns("sidebarCollapse"), label=NULL, icon=icon("minus-square"))
       val$collapsed <- F
     }
   })

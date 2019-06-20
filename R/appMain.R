@@ -7,7 +7,7 @@ shinyTdmoreUI <- function() {
   ui <- navbarPage("TDMore mockup", 
                    id="tabs",
                    patientsTabUI(id="patientsTabId"),
-                   getPredictionTabPanel(),
+                   predictionTabUI(id="predictionTabId"),
                    reportsTabUI(id="reportsTabId"),
                    aboutTabUI(id="aboutTabId"),
                    inverse=TRUE,
@@ -44,8 +44,9 @@ shinyTdmoreServer <- function(input, output, session) {
     }
   })
   
-  # Prediction tab server
-  predictionTabServer(input, output, session, val)
+  # Call module prediction tab
+  nsId = "predictionTabId"
+  callModule(module=predictionTab, id=nsId, nsId=nsId, val)
   
   # Save project server
   saveProjectServer(input, val)
