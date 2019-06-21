@@ -82,6 +82,8 @@ createCovariateForm <- function(ns, input) {
 #' 
 #' @param id namespace id
 #' @param failed logical value, can be true if there was an error in the form
+#' 
+#' @export
 #'
 newPatientDialogUI <- function(id, failed=FALSE) {
   ns <- NS(id)
@@ -132,6 +134,8 @@ hackSelectInput <- function(session) {
 #' @param output shiny output
 #' @param session shiny session
 #' @param onNewPatientAdded reactive value
+#' 
+#' @export
 #'
 newPatientDialog <- function(input, output, session, onNewPatientAdded) {
   # Modal form OK button
