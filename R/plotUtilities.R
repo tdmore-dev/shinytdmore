@@ -433,13 +433,13 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
     labs(y=getYAxisLabel(model))
-  p1 <- addNowLabelAndIntercept(p1, now)
   
   ribbonLower <- paste0(output, ".lower") # Not there in MPC fit
   ribbonUpper <- paste0(output, ".upper") # Not there in MPC fit
   if ((ribbonLower %in% colnames(ipredNew)) && (ribbonUpper %in% colnames(ipredNew))) {
     p1 <- p1 + geom_ribbon(fill=recommendationColor(), aes_string(ymin=ribbonLower, ymax=ribbonUpper), data=ipredNew, alpha=0.2)
   }
+  p1 <- addNowLabelAndIntercept(p1, now)
   
   # We have to be very careful with as.Date(), zone should be always taken into account
   newDoses <- recommendedRegimen %>% mutate(date=as.Date(TIME, tz=Sys.timezone()), time=strftime(TIME,"%H:%M"))
