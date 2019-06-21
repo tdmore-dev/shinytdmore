@@ -57,4 +57,29 @@ shinyTdmore <- function(input, output, session, conf) {
   
   # Call module about tab (currently no logic)
   callModule(module=conf$about$module, id=conf$about$id)
+  
+  # Select a patient from the URL
+  selectPatientFromURL(session, val)
+}
+
+#' Select patient from URL logic.
+#'
+#' @param session shiny session
+#' @param val main reactive container
+#' 
+selectPatientFromURL <- function(session, val) {
+  observeEvent(session$clientData$url_search, {
+    query <- parseQueryString(session$clientData$url_search)
+    value <- query[["patient"]]
+    if (!is.null(value)) {
+      patientId <- as.numeric(value)
+      if (!is.na(patientId)) {
+        patient <- getPatient(patientId)
+        if (!is.null(patient)) {
+          setPatient(patient, val)
+          updateTabsetPanel(session, "tabs", selected="Prediction")
+        }
+      }
+    }
+  })
 }
