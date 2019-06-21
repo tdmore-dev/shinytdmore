@@ -329,6 +329,42 @@ prepareTimelinePlot <- function(doses, xlim, model, now) {
 }
 
 #'
+#' Prepare the timeline with both original and recommended doses.
+#' 
+#' @param originalDoses dataframe containing the original entered doses
+#' @param recommendedDoses dataframe containing the recommended doses calculated by the computer
+#' @param xlim ggplot xlim argument
+#' @param model tdmore model
+#' @param now now date, currently not used here
+#'
+prepareRecommendedTimelinePlot <- function(originalDoses, recommendedDoses, xlim, model, now) {
+  doses_copy <- recommendedDoses 
+  doses_copy$TIME <- dateAndTimeToPOSIX(recommendedDoses$date, recommendedDoses$time) # Hover same as in prediction plot
+  doses_copy$AMT <- recommendedDoses$dose
+  doses_copy$TYPE <- "Recommended"
+  doses_copy$DOSE <- recommendedDoses$dose # Duplicated so that 'AMT' does not appear twice in tooltip
+  doses_copy2 <- originalDoses 
+  doses_copy2$TIME <- dateAndTimeToPOSIX(originalDoses$date, originalDoses$time) # Hover same as in prediction plot
+  doses_copy2$AMT <- originalDoses$dose
+  doses_copy2$TYPE <- "Original"
+  doses_copy2$DOSE <- originalDoses$dose # Duplicated so that 'AMT' does not appear twice in tooltip
+  #all_doses <- merge(doses_copy ,doses_copy2,all=TRUE)
+  #all_doses <- dcast(setDT(all_doses), TIME ~ TYPE, value.var = c("DOSE", "AMT")) 
+  maxDose <- if(nrow(recommendedDoses) > 0) {max(c(originalDoses$dose,recommendedDoses$dose))} else {0}
+  addSpace <- maxDose*0.15 # Add 15% margin for dose number
+  
+  plot <- ggplot(doses_copy, aes(x=TIME,y=AMT)) +
+    geom_text(data=doses_copy,aes(x=TIME, y=AMT, label=AMT), nudge_x=1800, nudge_y=0, check_overlap=T, show.legend=F,color=recommendationColor()) +
+    geom_linerange(data=doses_copy,ymin=0, aes(ymax=DOSE), position = position_nudge(x = 1800),color=recommendationColor()) +
+    geom_text(data=doses_copy2,aes(x=TIME, y=AMT, label=AMT), nudge_x=-1800, nudge_y=0, check_overlap=T, show.legend=F, color=ipredColor(), alpha=0.2) +
+    geom_linerange(data=doses_copy2,ymin=0, aes(ymax=DOSE), position = position_nudge(x = -1800), color=ipredColor(), alpha=0.2) +
+    coord_cartesian(xlim=c(xlim[1]-1800,xlim[2]), ylim=c(0, maxDose + addSpace)) +
+    labs(x="Time", y=getDoseColumnLabel(model, breakLine=F))
+  
+  return(plot)
+}
+
+#'
 #' Prepare recommendation.
 #' 
 #' @param doses doses
@@ -443,7 +479,7 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
   
   # We have to be very careful with as.Date(), zone should be always taken into account
   newDoses <- recommendedRegimen %>% mutate(date=as.Date(TIME, tz=Sys.timezone()), time=strftime(TIME,"%H:%M"))
-  p2 <- prepareTimelinePlot(doses=newDoses, xlim=c(firstDoseDate, max(ipredNew$TIME)), model=model, now=now)
+  p2 <- prepareRecommendedTimelinePlot(recommendedDoses=newDoses, originalDoses= doses, xlim=c(firstDoseDate, max(ipredNew$TIME)), model=model, now=now)
   
   return(list(p1=p1, p2=p2))
 }
