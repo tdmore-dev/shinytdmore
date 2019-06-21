@@ -4,12 +4,12 @@
 \alias{tabHasChanged}
 \title{Say if the user went out of the 'Prediction' tab.}
 \usage{
-tabHasChanged(input, val)
+tabHasChanged(onTabChanged)
 }
 \arguments{
-\item{input}{shiny input object}
+\item{onTabChanged}{onTabChanged reactive values}
 
-\item{val}{main reactive container}
+\item{input}{shiny input object}
 }
 \value{
 a logical value

@@ -23,18 +23,23 @@ shinyTdmoreUI <- function() {
 #' @export
 #' 
 shinyTdmoreServer <- function(input, output, session) {
+  # Change last tab
+  onTabChanged <- reactiveValues()
+  observe({
+    isolate({onTabChanged$lastTab <- onTabChanged$currentTab})
+    onTabChanged$currentTab <- input$tabs
+  })
+  callModule(module=saveProject, id="saveProjectId", onTabChanged, val)
   
   # Call module new patient dialog
   onNewPatientAdded <- reactiveValues()
-  nsId = "newPatientDialogId"
-  callModule(module=newPatientDialog, id=nsId, nsId=nsId, onNewPatientAdded)
+  callModule(module=newPatientDialog, id="newPatientDialogId", onNewPatientAdded)
   
   # Create the main reactive container
   val <- reactiveValues()
   
   # Call module patients tab
-  nsId = "patientsTabId"
-  callModule(module=patientsTab, id=nsId, parentSession=session, nsId=nsId, val, onNewPatientAdded)
+  callModule(module=patientsTab, id="patientsTabId", parentSession=session, val, onNewPatientAdded)
   
   # Select first patient by default, needed for predictions tab
   isolate({
@@ -45,12 +50,8 @@ shinyTdmoreServer <- function(input, output, session) {
   })
   
   # Call module prediction tab
-  nsId = "predictionTabId"
-  callModule(module=predictionTab, id=nsId, nsId=nsId, val)
-  
-  # Save project server
-  saveProjectServer(input, val)
-  
+  callModule(module=predictionTab, id="predictionTabId", val)
+
   # Call module reports tab (currently no logic)
   callModule(module=reportsTab, id="reportsTabId")
   

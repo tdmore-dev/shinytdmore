@@ -4,7 +4,7 @@
 \alias{predictionTab}
 \title{Prediction tab server.}
 \usage{
-predictionTab(input, output, session, nsId, val)
+predictionTab(input, output, session, val)
 }
 \arguments{
 \item{input}{shiny input}
@@ -12,8 +12,6 @@ predictionTab(input, output, session, nsId, val)
 \item{output}{shiny output}
 
 \item{session}{shiny session}
-
-\item{nsId}{namespace id}
 
 \item{val}{main reactive container}
 }

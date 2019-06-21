@@ -116,8 +116,8 @@ setPatient <- function(patient, val) {
 #' 
 #' @export
 #'
-patientsTab <- function(input, output, session, parentSession, nsId, val, onNewPatientAdded) {
-  ns <- NS(nsId)
+patientsTab <- function(input, output, session, parentSession, val, onNewPatientAdded) {
+  ns <- session$ns
   
   # Unnecessary call but currently needed to have at least 1 patient in the table
   initDB(ns)

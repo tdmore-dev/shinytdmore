@@ -2,13 +2,21 @@
 % Please edit documentation in R/saveProject.R
 \name{saveProject}
 \alias{saveProject}
-\title{Save project into DB (measures and doses from shiny are saved).}
+\title{Save project server}
 \usage{
-saveProject(val)
+saveProject(input, output, session, onTabChanged, val)
 }
 \arguments{
+\item{input}{shiny input}
+
+\item{output}{shiny output}
+
+\item{session}{shiny session}
+
+\item{onTabChanged}{onTabChanged reactive values}
+
 \item{val}{main reactive container}
 }
 \description{
-Save project into DB (measures and doses from shiny are saved).
+Save project server
 }

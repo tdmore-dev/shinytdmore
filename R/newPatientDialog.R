@@ -131,12 +131,9 @@ hackSelectInput <- function(session) {
 #' @param input shiny input
 #' @param output shiny output
 #' @param session shiny session
-#' @param nsId namespace id
 #' @param onNewPatientAdded reactive value
 #'
-newPatientDialog <- function(input, output, session, nsId, onNewPatientAdded) {
-  ns <- NS(nsId)
-  
+newPatientDialog <- function(input, output, session, onNewPatientAdded) {
   # Modal form OK button
   observeEvent(input$modalFormOK, {
       # Retrieve user form data
@@ -202,7 +199,7 @@ newPatientDialog <- function(input, output, session, nsId, onNewPatientAdded) {
     insertUI(
       selector = "#placeholder",
       where = "afterEnd",
-      ui = tags$div(createCovariateForm(ns, input), id="my_cov_form")
+      ui = tags$div(createCovariateForm(session$ns, input), id="my_cov_form")
     )
   })
 }

@@ -226,13 +226,12 @@ targetLogic <- function(input, output, session, val, ns) {
 #' @param input shiny input
 #' @param output shiny output
 #' @param session shiny session
-#' @param nsId namespace id
 #' @param val main reactive container
 #' 
 #' @export
 #'
-predictionTab <- function(input, output, session, nsId, val) {
-  ns <- NS(nsId)
+predictionTab <- function(input, output, session, val) {
+  ns <- session$ns
   
   # Previous/Next button logic
   previousNextLogic(input, output, session, val, ns)

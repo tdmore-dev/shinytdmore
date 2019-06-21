@@ -4,7 +4,7 @@
 \alias{newPatientDialog}
 \title{New patient dialog server.}
 \usage{
-newPatientDialog(input, output, session, nsId, onNewPatientAdded)
+newPatientDialog(input, output, session, onNewPatientAdded)
 }
 \arguments{
 \item{input}{shiny input}
@@ -12,8 +12,6 @@ newPatientDialog(input, output, session, nsId, onNewPatientAdded)
 \item{output}{shiny output}
 
 \item{session}{shiny session}
-
-\item{nsId}{namespace id}
 
 \item{onNewPatientAdded}{reactive value}
 }
