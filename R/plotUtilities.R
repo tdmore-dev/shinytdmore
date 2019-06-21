@@ -338,7 +338,7 @@ prepareTimelinePlot <- function(doses, xlim, model, now) {
 #' @param now now date, currently not used here
 #'
 prepareRecommendedTimelinePlot <- function(originalDoses, recommendedDoses, xlim, model, now) {
-  doses_copy <- recommendedDoses 
+  doses_copy <- recommendedDoses
   doses_copy$TIME <- dateAndTimeToPOSIX(recommendedDoses$date, recommendedDoses$time) # Hover same as in prediction plot
   doses_copy$AMT <- recommendedDoses$dose
   doses_copy$TYPE <- "Recommended"
@@ -352,13 +352,15 @@ prepareRecommendedTimelinePlot <- function(originalDoses, recommendedDoses, xlim
   #all_doses <- dcast(setDT(all_doses), TIME ~ TYPE, value.var = c("DOSE", "AMT")) 
   maxDose <- if(nrow(recommendedDoses) > 0) {max(c(originalDoses$dose,recommendedDoses$dose))} else {0}
   addSpace <- maxDose*0.15 # Add 15% margin for dose number
+  II <- getDosingInterval(model)
+  nudge_II <- II/24*60*60 #empirical ratio
   
   plot <- ggplot(doses_copy, aes(x=TIME,y=AMT)) +
-    geom_text(data=doses_copy,aes(x=TIME, y=AMT, label=AMT), nudge_x=1800, nudge_y=0, check_overlap=T, show.legend=F,color=recommendationColor()) +
-    geom_linerange(data=doses_copy,ymin=0, aes(ymax=DOSE), position = position_nudge(x = 1800),color=recommendationColor()) +
-    geom_text(data=doses_copy2,aes(x=TIME, y=AMT, label=AMT), nudge_x=-1800, nudge_y=0, check_overlap=T, show.legend=F, color=ipredColor(), alpha=0.2) +
-    geom_linerange(data=doses_copy2,ymin=0, aes(ymax=DOSE), position = position_nudge(x = -1800), color=ipredColor(), alpha=0.2) +
-    coord_cartesian(xlim=c(xlim[1]-1800,xlim[2]), ylim=c(0, maxDose + addSpace)) +
+    geom_text(data=doses_copy %>% filter(TIME>now),aes(x=TIME, y=AMT, label=AMT), nudge_x=nudge_II, nudge_y=0, check_overlap=T, show.legend=F,color=recommendationColor()) +
+    geom_linerange(data=doses_copy %>% filter(TIME>now),ymin=0, aes(ymax=DOSE), position = position_nudge(x = nudge_II),color=recommendationColor()) +
+    geom_text(data=doses_copy2,aes(x=TIME, y=AMT, label=AMT), nudge_x=-nudge_II, nudge_y=0, check_overlap=T, show.legend=F, alpha=0.2) +
+    geom_linerange(data=doses_copy2,ymin=0, aes(ymax=DOSE), position = position_nudge(x = -nudge_II), alpha=0.2) +
+    coord_cartesian(xlim=c(xlim[1]-nudge_II,xlim[2]), ylim=c(0, maxDose + addSpace)) +
     labs(x="Time", y=getDoseColumnLabel(model, breakLine=F))
   
   return(plot)
