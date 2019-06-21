@@ -26,6 +26,7 @@ library(rhandsontable)
 library(tdmore)
 library(shinytdmore)
 library(assertthat)
+library(data.table)
 
 # Default config added to environment
 toConfig(key="shinytdmore_db_config", value=defaultDBConfig())
