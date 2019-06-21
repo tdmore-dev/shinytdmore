@@ -4,7 +4,10 @@
 \alias{createUserForm}
 \title{Create the user form.}
 \usage{
-createUserForm()
+createUserForm(ns)
+}
+\arguments{
+\item{ns}{namespace}
 }
 \description{
 Create the user form.

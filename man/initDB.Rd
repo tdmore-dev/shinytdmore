@@ -4,7 +4,10 @@
 \alias{initDB}
 \title{Collect data from the mongoDB.}
 \usage{
-initDB()
+initDB(ns)
+}
+\arguments{
+\item{ns}{namespace}
 }
 \description{
 Collect data from the mongoDB.

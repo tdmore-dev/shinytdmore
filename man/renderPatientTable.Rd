@@ -4,10 +4,12 @@
 \alias{renderPatientTable}
 \title{Render the patients table.}
 \usage{
-renderPatientTable(input)
+renderPatientTable(input, ns)
 }
 \arguments{
 \item{input}{the shiny input object}
+
+\item{ns}{namespace}
 }
 \description{
 Render the patients table.

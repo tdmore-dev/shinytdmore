@@ -4,7 +4,7 @@
 \alias{previousNextLogic}
 \title{Previous/Next button logic.}
 \usage{
-previousNextLogic(input, output, session, val)
+previousNextLogic(input, output, session, val, ns)
 }
 \arguments{
 \item{input}{shiny input}
@@ -14,6 +14,8 @@ previousNextLogic(input, output, session, val)
 \item{session}{shiny session}
 
 \item{val}{main reactive container}
+
+\item{ns}{namespace}
 }
 \description{
 Previous/Next button logic.

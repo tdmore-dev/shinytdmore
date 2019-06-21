@@ -40,17 +40,20 @@ saveData <- function(userData, modelName, covariateData) {
 #' 
 #' Create the user form.
 #' 
-createUserForm <- function() {
-  list(textInput(inputId = "firstname", label = "Firstname", value = ""),
-       textInput(inputId = "lastname", label = "Lastname", value = ""))
+#' @param ns namespace
+#' 
+createUserForm <- function(ns) {
+  list(textInput(inputId = ns("firstname"), label = "Firstname", value = ""),
+       textInput(inputId = ns("lastname"), label = "Lastname", value = ""))
 }
 
 #' 
 #' Create the covariate form.
 #' 
+#' @param ns namespace
 #' @param input shiny input
 #'
-createCovariateForm <- function(input) {
+createCovariateForm <- function(ns, input) {
   if (!(input$modelCombobox %in% getModelList())) {
     return()
   }
@@ -62,12 +65,12 @@ createCovariateForm <- function(input) {
     if (inherits(metadata, "tdmore_covariate")) {
       choices <- metadata$choices
       if (is.null(choices)) {
-        component <- sliderInput(inputId=covariate, label=metadata$label, min=metadata$min, max=metadata$max, value=(metadata$min+metadata$max)/2)
+        component <- sliderInput(inputId=ns(covariate), label=metadata$label, min=metadata$min, max=metadata$max, value=(metadata$min+metadata$max)/2)
       } else {
-        component <- selectInput(inputId=covariate, label=metadata$label, choices=choices)
+        component <- selectInput(inputId=ns(covariate), label=metadata$label, choices=choices)
       }
     } else {
-      component <- textInput(inputId=covariate, label=covariate, value="")
+      component <- textInput(inputId=ns(covariate), label=covariate, value="")
     }
     retValue <- list(retValue, covariate=component)
   }
@@ -77,21 +80,25 @@ createCovariateForm <- function(input) {
 #' 
 #' Create a patient form in a modal dialog.
 #' 
+#' @param id namespace id
 #' @param failed logical value, can be true if there was an error in the form
+#' 
+#' @export
 #'
-patientFormModalDialog <- function(failed=FALSE) {
+newPatientDialogUI <- function(id, failed=FALSE) {
+  ns <- NS(id)
   modalDialog(
     h4("Patient"),
-    createUserForm(),
+    createUserForm(ns),
     h4("Model"),
-    selectInput("modelCombobox", "Choose your model", getModelList()),
+    selectInput(ns("modelCombobox"), "Choose your model", getModelList()),
     h4("Covariates"),
     tags$div(id="placeholder"),
     if (failed)
       div(tags$b("Some covariates are missing or not numeric", style = "color: red;")),
     footer = tagList(
-      actionButton("modalFormCancel", "Cancel"),
-      actionButton("modalFormOK", "OK")
+      actionButton(ns("modalFormCancel"), "Cancel"),
+      actionButton(ns("modalFormOK"), "OK")
     )
   )
 }
@@ -102,7 +109,7 @@ patientFormModalDialog <- function(failed=FALSE) {
 #' @return a list of all model names
 #'
 getModelList <- function() {
-  models <- data(package = "shinytdmore", envir = envir)$results[, "Item"]
+  models <- modelLibrary
   toDelete <- c()
   return(models[!(models %in% toDelete)])
 }
@@ -126,9 +133,11 @@ hackSelectInput <- function(session) {
 #' @param input shiny input
 #' @param output shiny output
 #' @param session shiny session
+#' @param onNewPatientAdded reactive value
+#' 
+#' @export
 #'
-newPatientDialogServer <- function(input, output, session) {
-  
+newPatientDialog <- function(input, output, session, onNewPatientAdded) {
   # Modal form OK button
   observeEvent(input$modalFormOK, {
       # Retrieve user form data
@@ -158,15 +167,19 @@ newPatientDialogServer <- function(input, output, session) {
         }
         saveData(userData, input$modelCombobox, covariateData)
         
-        # Render the patients table
-        output$patientTable <- renderPatientTable(input) # Added this to force rendering
+        # Use of a reactive value to trigger patients table refresh in patientsTab
+        if (is.null(onNewPatientAdded$trigger)) {
+          onNewPatientAdded$trigger <- 1
+        } else {
+          onNewPatientAdded$trigger <- onNewPatientAdded$trigger + 1
+        }
         
         # Close modal dialog
         hackSelectInput(session)
         removeModal(session)
       } else {
         selectedModel <- input$modelCombobox
-        showModal(patientFormModalDialog(failed = TRUE))
+        showModal(newPatientDialogUI(id="newPatientDialogId", failed = TRUE))
         hackSelectInput(session)
         updateSelectInput(session, "modelCombobox",
                           label = "Choose your model",
@@ -190,7 +203,7 @@ newPatientDialogServer <- function(input, output, session) {
     insertUI(
       selector = "#placeholder",
       where = "afterEnd",
-      ui = tags$div(createCovariateForm(input), id="my_cov_form")
+      ui = tags$div(createCovariateForm(session$ns, input), id="my_cov_form")
     )
   })
 }

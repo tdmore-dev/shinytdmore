@@ -2,13 +2,13 @@
 #' Say if the user went out of the 'Prediction' tab.
 #'
 #' @param input shiny input object
-#' @param val main reactive container
+#' @param onTabChanged onTabChanged reactive values
 #' @return a logical value
 #'
-tabHasChanged <- function(input, val) {
-  currentTab <- input$tabs
-  lastTab <- val$lastTab
-  if(length(lastTab) == 0) {
+tabHasChanged <- function(onTabChanged) {
+  currentTab <- onTabChanged$currentTab
+  lastTab <- onTabChanged$lastTab
+  if (is.null(lastTab)) {
     return(FALSE) 
   } else {
     return(currentTab != lastTab && lastTab == "Prediction")
@@ -34,7 +34,7 @@ dataHasChanged <- function(val) {
 #'
 #' @param val main reactive container
 #'
-saveProject <- function(val) {
+saveProjectToDB <- function(val) {
   val$patient <- updatePatientDoses(val$patient, val$db_dose)
   val$patient <- updatePatientMeasures(val$patient, val$db_obs %>% select(-use))
   val$patient <- updateNowDate(val$patient, val$now_date)
@@ -44,28 +44,32 @@ saveProject <- function(val) {
 #'
 #' Save project server
 #'
-#' @param input shiny input object
+#' @param input shiny input
+#' @param output shiny output
+#' @param session shiny session
+#' @param onTabChanged onTabChanged reactive values
 #' @param val main reactive container
+#' 
+#' @export
 #'
-saveProjectServer <- function(input, val) {
+saveProject <- function(input, output, session, onTabChanged, val) {
   # Save project button observer
   observeEvent(input$saveProject, {
-    saveProject(val)
+    saveProjectToDB(val)
     removeModal()
   })
   
   # Save project logic
-  observe({
-    if (tabHasChanged(input, val) && dataHasChanged(val)) {
+  observeEvent(onTabChanged$currentTab, {
+    if (tabHasChanged(onTabChanged) && dataHasChanged(val)) {
       showModal(
         modalDialog(
           title = "Save project",
           "Do you want to save the changes?",
           footer = tagList(modalButton("Cancel"),
-                           actionButton("saveProject", "OK"))
+                           actionButton(session$ns("saveProject"), "OK"))
         )
       )
     }
-    val$lastTab <- input$tabs
   })
 }

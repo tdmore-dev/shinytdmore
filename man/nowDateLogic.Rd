@@ -4,7 +4,7 @@
 \alias{nowDateLogic}
 \title{Now date logic.}
 \usage{
-nowDateLogic(input, output, session, val)
+nowDateLogic(input, output, session, val, ns)
 }
 \arguments{
 \item{input}{shiny input}
@@ -14,6 +14,8 @@ nowDateLogic(input, output, session, val)
 \item{session}{shiny session}
 
 \item{val}{main reactive container}
+
+\item{ns}{namespace}
 }
 \description{
 Now date logic.
