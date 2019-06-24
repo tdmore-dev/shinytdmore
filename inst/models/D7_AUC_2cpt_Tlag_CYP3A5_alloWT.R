@@ -44,7 +44,7 @@ thetaValues = monolixValues %>%
   paste(collapse="\n")
 
 m1Code <- thetaValues %>% paste("
-allo_WT = log( Weight / 70 );
+allo_WT = log( WT / 70 );
 
 CYP3A5Expressor=0;
 if(CYP3A5 > 1) {
