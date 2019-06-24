@@ -29,5 +29,5 @@ d/dt(PERIP) = K12*CENTR - K21*PERIP;
 omegas=c(ECL=0.40^2, EV1=0.54^2, EQ=0.63^2, EFDay2=0.57^2)
 holdford_base <- tdmore(rxModel, omega=omegas, res_var=list(errorModel("CONC", prop=0.149))) %>% 
   metadata(output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
-  metadata(dose(unit="ug", dosing_interval=12, default_value=8)) %>%
+  metadata(dose(unit="mg", dosing_interval=12, default_value=8)) %>%
   metadata(target(min=12, max=15))
