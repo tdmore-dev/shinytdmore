@@ -33,5 +33,8 @@ createFakePatient <- function() {
   patient <- updatePatientMeasures(patient, measureModel)
   
   patient <- updateNowDate(patient, Sys.time())
+  
+  patient <- toReadOnlyPatient(patient)
+  
   return(patient)
 }

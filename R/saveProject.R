@@ -62,14 +62,25 @@ saveProject <- function(input, output, session, onTabChanged, val) {
   # Save project logic
   observeEvent(onTabChanged$currentTab, {
     if (tabHasChanged(onTabChanged) && dataHasChanged(val)) {
-      showModal(
-        modalDialog(
-          title = "Save project",
-          "Do you want to save the changes?",
-          footer = tagList(modalButton("Cancel"),
-                           actionButton(session$ns("saveProject"), "OK"))
+      # Make sure the patient is not read-only
+      if (isReadOnlyPatient(val$patient)) {
+        showModal(
+          modalDialog(
+            title = "Save project",
+            "This is a read-only patient, it cannot be saved.",
+            footer = tagList(modalButton("OK"))
+          )
         )
-      )
+      } else {
+        showModal(
+          modalDialog(
+            title = "Save project",
+            "Do you want to save the changes?",
+            footer = tagList(modalButton("Cancel"),
+                             actionButton(session$ns("saveProject"), "OK"))
+          )
+        )
+      }
     }
   })
 }

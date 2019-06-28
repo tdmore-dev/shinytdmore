@@ -66,6 +66,7 @@ measureModelToJson <- function(measureModel) {
 #' 
 patientModelToJson <- function(patientModel) {
   patientJson <- patientModel
+  patientJson$read_only <- patientModel$read_only
   patientJson$doses <- doseModelToJson(patientModel$doses)
   patientJson$measures <- measureModelToJson(patientModel$measures)
   patientJson$created_at <- POSIXToString(patientModel$created_at)
@@ -90,5 +91,31 @@ jsonToPatientModel <- function(patientJson) {
   patientModel$covariates <- unlist(patientJson$covariates)
   return(patientModel)
 }
+
+#' Make a patient read-only.
+#'
+#' @param patientModel the patient model
+#' @return the patient model
+#' @export
+#' 
+toReadOnlyPatient <- function(patientModel) {
+  patientModel$read_only <- T
+  return(patientModel)
+}
+
+#' Say if the given patient is read-only.
+#'
+#' @param patientModel the patient model
+#' @return a logical value
+#' @export
+#' 
+isReadOnlyPatient <- function(patientModel) {
+  if (is.null(patientModel$read_only)) {
+    return(FALSE)  
+  }
+  return(patientModel$read_only)
+}
+
+
 
 
