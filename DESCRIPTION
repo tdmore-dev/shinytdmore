@@ -14,7 +14,7 @@ Authors@R: c(
   )
 Description: The functions in this package allow you to quickly create a shiny application for dose adaptation.
 Depends: R (>= 3.5.0)
-Imports: assertthat, plyr, dplyr, tdmore, rjson, jsonlite, lubridate, mongolite, shiny, DT, tidyverse, plotly, crosstalk
+Imports: assertthat, plyr, dplyr, tdmore, rjson, jsonlite, lubridate, mongolite, shiny, shinyBS, DT, tidyverse, plotly, crosstalk
 Remotes: tdmore-dev/shinytdmore
 License: file LICENSE
 Encoding: UTF-8

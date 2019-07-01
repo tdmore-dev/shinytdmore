@@ -16,61 +16,56 @@ predictionTabUI <- function(id) {
       span(textOutput(outputId=ns("tab_title")), style="display: inline-block; vertical-align: middle; margin-left: 10px;")
     ),
     fluidRow(class="wrapper",
-        div(id="sidebar",
-          conditionalPanel(
-            condition = "output.plot_type == 'population' || output.plot_type == 'fit'",
-            fluidRow(
-              column(10, h4("Doses")),
-              column(2, actionButton(ns("addDose"), "Add", style="float:right"))
+      div(id="sidebar",
+        bsCollapse(id=ns("bsCollapse"), multiple=T, open=c("Doses", "Measures", "Now"),
+          bsCollapsePanel(title="Doses",
+            conditionalPanel(
+              condition = "output.plot_type == 'population' || output.plot_type == 'fit'",
+              rHandsontableOutput(ns("hotdose")),
+              actionButton(ns("addDose"), "Add dose", style="margin-top: 5px;"),
+              ns=ns
             ),
-            rHandsontableOutput(ns("hotdose")),
-            ns=ns
+            conditionalPanel(
+              condition = "output.plot_type == 'recommendation'",
+              rHandsontableOutput(ns("hotdosefuture")),
+              actionButton(ns("addDoseFuture"), "Add dose", style="margin-top: 5px;"),
+              ns=ns
+            )
           ),
-          conditionalPanel(
-            condition = "output.plot_type == 'recommendation'",
-            fluidRow(
-              column(10, h4("Doses & Recommendations")),
-              column(2, actionButton(ns("addDoseFuture"), "Add", style="float:right"))
-            ),
-            rHandsontableOutput(ns("hotdosefuture")),
-            ns=ns
+          bsCollapsePanel(title="Measures",
+            rHandsontableOutput(ns("hotobs")),
+            actionButton(ns("addObs"), "Add measure", style="margin-top: 5px;")
           ),
-          fluidRow(
-            column(2, h5("Now:")),
-            column(10, editableInput(inputId=ns("nowDate"), type = "combodate", value="2000-01-01 00:00"), style="margin-top: 6px;")
+          bsCollapsePanel(title="Now",
+            editableInput(inputId=ns("nowDate"), type = "combodate", value="2000-01-01 00:00")
           ),
-          hr(),
-          fluidRow(
-            column(10, h4("Measures")),
-            column(2, actionButton(ns("addObs"), "Add", style="float:right"))
-          ),
-          rHandsontableOutput(ns("hotobs")),
-          hr(),
-          h4("Target"),
-          numericInput(ns("targetDown"), "Lower limit", 0),
-          numericInput(ns("targetUp"), "Upper limit", 0)
-        ),
-        div(id="content",
-          fluidRow(
-           column(1, actionButton(ns("previous_plot"), label="Previous", icon=icon("backward"))),
-           tags$head(tags$style(HTML('#predictionTabId-previous_plot{background-color:#dde5eb}'), '#predictionTabId-previous_plot.attr("disabled", "true")')),
-           
-           column(10, textOutput(outputId=ns("plot_title")),
-                  tags$head(tags$style("#predictionTabId-plot_title{font-size: 20px;text-align: center;justify-content: center;}"))),
-           
-           column(1, actionButton(ns("next_plot"), label="Next", icon=icon("forward"), style="float:right")),
-           tags$head(tags$style(HTML('#predictionTabId-next_plot{background-color:#dde5eb}')))
-         ),
-         conditionalPanel(condition = "output.plot_type == 'population'",
-                          plotlyOutput(ns("populationPlot"), height="600px", width="100%"), ns=ns),
-
-         conditionalPanel(condition = "output.plot_type == 'fit'",
-                          plotlyOutput(ns("fitPlot"), height="600px", width="100%"), ns=ns),
-
-         conditionalPanel(condition = "output.plot_type == 'recommendation'",
-                          plotlyOutput(ns("recommendationPlot"), height="600px", width="100%"), ns=ns)
+          bsCollapsePanel(title="Target",
+            numericInput(ns("targetDown"), "Lower limit", 0),
+            numericInput(ns("targetUp"), "Upper limit", 0)
+          )
         )
       ),
+      div(id="content",
+        fluidRow(
+         column(1, actionButton(ns("previous_plot"), label="Previous", icon=icon("backward"))),
+         tags$head(tags$style(HTML('#predictionTabId-previous_plot{background-color:#dde5eb}'), '#predictionTabId-previous_plot.attr("disabled", "true")')),
+         
+         column(10, textOutput(outputId=ns("plot_title")),
+                tags$head(tags$style("#predictionTabId-plot_title{font-size: 20px;text-align: center;justify-content: center;}"))),
+         
+         column(1, actionButton(ns("next_plot"), label="Next", icon=icon("forward"), style="float:right")),
+         tags$head(tags$style(HTML('#predictionTabId-next_plot{background-color:#dde5eb}')))
+       ),
+       conditionalPanel(condition = "output.plot_type == 'population'",
+                        plotlyOutput(ns("populationPlot"), height="600px", width="100%"), ns=ns),
+
+       conditionalPanel(condition = "output.plot_type == 'fit'",
+                        plotlyOutput(ns("fitPlot"), height="600px", width="100%"), ns=ns),
+
+       conditionalPanel(condition = "output.plot_type == 'recommendation'",
+                        plotlyOutput(ns("recommendationPlot"), height="600px", width="100%"), ns=ns)
+      )
+    ),
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "sidebar.css"),
       #tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap.min.css"),

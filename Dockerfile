@@ -21,6 +21,7 @@ RUN R -e 'install.packages("mongolite")'
 RUN R -e 'install.packages("DT")'
 RUN R -e 'install.packages("plotly")'
 RUN R -e 'install.packages("rhandsontable")'
+RUN R -e 'install.packages("shinyBS")'
 
 # Do not consider dependencies here
 # This solves the issue that tdmore-dev/tdmore is a private repository,
