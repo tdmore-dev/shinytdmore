@@ -18,7 +18,7 @@ predictionTabUI <- function(id) {
     fluidRow(class="wrapper",
       div(id="sidebar",
         bsCollapse(id=ns("bsCollapse"), multiple=T, open=c("Doses", "Measures", "Now"),
-          bsCollapsePanel(title="Doses",
+          bsCollapsePanel(title="Doses", style="info",
             conditionalPanel(
               condition = "output.plot_type == 'population' || output.plot_type == 'fit'",
               rHandsontableOutput(ns("hotdose")),
@@ -32,18 +32,27 @@ predictionTabUI <- function(id) {
               ns=ns
             )
           ),
-          bsCollapsePanel(title="Measures",
+          bsCollapsePanel(title="Measures", style="info",
             rHandsontableOutput(ns("hotobs")),
             actionButton(ns("addObs"), "Add measure", style="margin-top: 5px;")
           ),
-          bsCollapsePanel(title="Now",
+          bsCollapsePanel(title="Now", style="info",
             editableInput(inputId=ns("nowDate"), type = "combodate", value="2000-01-01 00:00")
           ),
-          bsCollapsePanel(title="Covariates",
-            rHandsontableOutput(ns("hotcov")),
-            actionButton(ns("addCovariate"), "Add covariate", style="margin-top: 5px;")
+          bsCollapsePanel(title="Covariates", style="info",
+            conditionalPanel(
+              condition = "output.display_covariates == true",
+              rHandsontableOutput(ns("hotcov")),
+              actionButton(ns("addCovariate"), "Add covariate", style="margin-top: 5px;"),
+              ns=ns
+            ),
+            conditionalPanel(
+              condition = "output.display_covariates == false",
+              h5("No covariate in model"),
+              ns=ns
+            )
           ),
-          bsCollapsePanel(title="Target",
+          bsCollapsePanel(title="Target", style="info",
             numericInput(ns("targetDown"), "Lower limit", 0),
             numericInput(ns("targetUp"), "Upper limit", 0)
           )
@@ -72,7 +81,7 @@ predictionTabUI <- function(id) {
     ),
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "sidebar.css"),
-      #tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap.min.css"),
+      tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap.css"),
       tags$style(HTML(".handsontable {overflow-x:hidden;}"), "#predictionTabId-tab_title{font-size: 30px; margin-top: 10px; margin-bottom: 10px;}")
     ),
     singleton(tags$head(HTML(
@@ -231,6 +240,12 @@ targetLogic <- function(input, output, session, val, ns) {
 #'
 predictionTab <- function(input, output, session, val) {
   ns <- session$ns
+  
+  output$display_covariates <- reactive({
+    return(length(val$model$covariates) > 0)
+  })
+  
+  outputOptions(output, "display_covariates", suspendWhenHidden=F)
   
   # Previous/Next button logic
   previousNextLogic(input, output, session, val, ns)

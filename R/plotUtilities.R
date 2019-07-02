@@ -188,8 +188,12 @@ convertDataToTdmore <- function(doses, obs, covs, output, now, iov) {
   # Covariates dataframe
   covsNames <- colnames(covs)
   covsNames <- covsNames[!(covsNames %in% c("date", "time"))]
-  covariates <- bind_cols(data.frame(TIME=as.numeric(difftime(covsDates, firstDoseDate, units="hour"))),
-                          covs %>% select(covsNames))
+  if (length(covsNames) > 0) {
+    covariates <- bind_cols(data.frame(TIME=as.numeric(difftime(covsDates, firstDoseDate, units="hour"))),
+                            covs %>% select(covsNames))
+  } else {
+    covariates <- NULL
+  }
   
   # Make regimen and filtered regimen dataframes
   regimen <- data.frame(
