@@ -39,6 +39,10 @@ predictionTabUI <- function(id) {
           bsCollapsePanel(title="Now",
             editableInput(inputId=ns("nowDate"), type = "combodate", value="2000-01-01 00:00")
           ),
+          bsCollapsePanel(title="Covariates",
+            rHandsontableOutput(ns("hotcov")),
+            actionButton(ns("addCovariate"), "Add covariate", style="margin-top: 5px;")
+          ),
           bsCollapsePanel(title="Target",
             numericInput(ns("targetDown"), "Lower limit", 0),
             numericInput(ns("targetUp"), "Upper limit", 0)
@@ -335,12 +339,50 @@ predictionTab <- function(input, output, session, val) {
     val$db_dose <- autoSortByDate(hot_to_r(input$hotdosefuture) %>% select(-rec))
   })
   
+  # Covariates table logic
+  output$hotcov <- renderRHandsontable({
+    covsNames <- colnames(val$db_covs)
+    covsNames <- covsNames[!(covsNames %in% c("date", "time"))]
+    borderRow <- getTableBorderIndex(val$db_covs, val$now_date, T)
+    rhandsontable(val$db_covs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
+                  colHeaders = c("Date", "Time", covsNames)) %>%
+      hot_col(col="Time", type="dropdown", source=hoursList()) %>%
+      hot_table(customBorders = list(list(
+        range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(val$db_covs)-1)),
+        top=list(width=2, color=nowColorHex()))))
+  })
+  
+  observeEvent(input$hotcov, {
+    val$db_covs <- autoSortByDate(hot_to_r(input$hotcov))
+  })
+  
+  addCovariate <- function(val) {
+    doseMetadata <- getMetadataByName(val$model, "DOSE")
+    dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
+    
+    if(nrow(val$db_covs) > 0) {
+      newRow <- val$db_covs[ nrow(val$db_covs), ]
+      lastRow <- dateAndTimeToPOSIX(newRow$date, newRow$time)
+      lastRow <- lastRow + dosingInterval*3600
+    } else {
+      newRow <- data.frame(date="", time="")
+      lastRow <- Sys.time()
+    }
+    newRow$date <- POSIXToDate(lastRow)
+    newRow$time <- POSIXToTime(lastRow)
+    val$db_covs <- rbind(val$db_covs, newRow)
+  }
+  
+  observeEvent(input$addCovariate, {
+    addCovariate(val)
+  })
+  
   # 1 - Population prediction
   populationPlot <- reactive({
     progress <- shiny::Progress$new(max = 2)
     on.exit(progress$close())
     progress$set(message = "Preparing...", value = 0.5)
-    plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=val$target, population=T, now=val$now_date)
+    plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$db_covs, target=val$target, population=T, now=val$now_date)
     progress$set(message = "Rendering plot...", value = 1)
     if(!is.null(plots)) mergePlots(plots$p1, plots$p2, getModelOutput(val$model))
   })
@@ -355,7 +397,7 @@ predictionTab <- function(input, output, session, val) {
     progress <- shiny::Progress$new(max = 2)
     on.exit(progress$close())
     progress$set(message = "Preparing...", value = 0.5)
-    plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=val$target, population=F, now=val$now_date)
+    plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$db_covs, target=val$target, population=F, now=val$now_date)
     progress$set(message = "Rendering plot...", value = 1)
     if(!is.null(plots)) mergePlots(plots$p1, plots$p2, getModelOutput(val$model))
   })
@@ -366,13 +408,13 @@ predictionTab <- function(input, output, session, val) {
     progress <- shiny::Progress$new(max = 2)
     on.exit(progress$close())
     progress$set(message = "Preparing...", value = 0.5)
-    recommendation <- prepareRecommendation(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=val$target, now=val$now_date)
+    recommendation <- prepareRecommendation(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$db_covs, target=val$target, now=val$now_date)
     recommendedRegimen <- recommendation$recommendedRegimen
     data <- val$db_dose
     data$rec <- ifelse(recommendedRegimen$PAST, "/", round(recommendedRegimen$AMT, 2))
     renderHotDoseFuture(data)
     
-    plots <- prepareRecommendationPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$covs, target=val$target, recommendation=recommendation, now=val$now_date)
+    plots <- prepareRecommendationPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$db_covs, target=val$target, recommendation=recommendation, now=val$now_date)
     progress$set(message = "Rendering plot...", value = 1)
     if(!is.null(plots)) mergePlots(plots$p1, plots$p2, getModelOutput(val$model))
   })

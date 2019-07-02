@@ -70,7 +70,8 @@ setPatient <- function(patient, val) {
   val$model <- model
   
   # Copy covariates
-  val$covs <- patient$covariates
+  db_covs <- patient$covariates
+  val$db_covs <- autoSortByDate(db_covs) # Auto-sort the first time
   
   # Copy doses
   db_dose <- patient$doses

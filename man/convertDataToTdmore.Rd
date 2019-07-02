@@ -4,12 +4,14 @@
 \alias{convertDataToTdmore}
 \title{Convert main data to TDMore domain.}
 \usage{
-convertDataToTdmore(doses, obs, output, now, iov)
+convertDataToTdmore(doses, obs, covs, output, now, iov)
 }
 \arguments{
 \item{doses}{doses}
 
 \item{obs}{observations}
+
+\item{covs}{covariates}
 
 \item{output}{output name (e.g. 'CONC')}
 

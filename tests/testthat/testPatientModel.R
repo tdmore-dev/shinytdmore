@@ -11,26 +11,50 @@ toConfig(key="shinytdmore_db_config", value=testDBConfig()) # Make sure the test
 # Remove everything from the database
 getDB()$remove("{}")
 
-# Doses test
+# Create a patient and update the TDM model
+patientModel <- createPatient("Nicolas", "Luyckx")
+patientModel <- updatePatientModel(patientModel, "")
+
+# Add doses
 doseModel <- tibble(
   date=as.Date(c("2018/06/25","2018/06/25","2018/06/26","2018/06/26", "2018/06/27")),
   time=c("08:00", "20:00","08:00", "20:00", "08:00"),
   dose=c(6, 6, 7, 7, 7)
 )
-patientModel <- createPatient("Nicolas", "Luyckx")
-patientModel <- updatePatientModel(patientModel, "", c(AGE=30, WT=60))
 patientModel <- updatePatientDoses(patientModel, doseModel)
-retrievedPatient <- getPatient(addPatient(patientModel))
-expect_equal(doseModel, retrievedPatient$doses)
 
-patientModel <- retrievedPatient
-
-# Measures test
+# Add measures
 measureModel <- tibble(
   date=as.Date(c("2018/06/26","2018/06/27")),
   time=c("08:00", "08:00"),
   measure=c(3.1, 5.3)
 )
 patientModel <- updatePatientMeasures(patientModel, measureModel)
-retrievedPatient <- getPatient(updatePatient(patientModel$id, patientModel))
+
+# Add covariates
+covariateModel <- tibble(
+  date=as.Date(c("2018/06/25", "2018/06/25")),
+  time=c("08:00", "09:00"),
+  WT=c(60, 61),
+  AGE=c(30, 30)
+)
+patientModel <- updatePatientCovariates(patientModel, covariateModel)
+
+# Add patient to the database
+#debugonce(shinytdmore:::jsonToCovariateModel)
+idInDB <- addPatient(patientModel)
+expect_equal(idInDB, 1)
+
+# Add patient to DB and find it back from DB
+retrievedPatient <- getPatient(idInDB)
+
+# Check doses can be retrieved correctly
+expect_equal(doseModel, retrievedPatient$doses)
+
+# Check measures can be retrieved correctly
 expect_equal(measureModel, retrievedPatient$measures)
+
+# Check covariates can be retrieved correctly
+expect_equal(covariateModel, retrievedPatient$covariates)
+
+

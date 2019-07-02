@@ -169,19 +169,27 @@ addNowLabelAndIntercept <- function(plot, now) {
 #'
 #' @param doses doses
 #' @param obs observations
+#' @param covs covariates
 #' @param output output name (e.g. 'CONC')
 #' @param now now date, POSIXlt date
 #' @param iov iov present in the model, logical value
 #' 
 #' @return to be described
 #'
-convertDataToTdmore <- function(doses, obs, output, now, iov) {
+convertDataToTdmore <- function(doses, obs, covs, output, now, iov) {
   # Important dates
   doseDates <- dateAndTimeToPOSIX(doses$date, doses$time)
   firstDoseDate <- min(doseDates)
-  
+  covsDates <- dateAndTimeToPOSIX(covs$date, covs$time)
+
   # Now but in hours compared to the reference time
   relativeNow <- POSIXToHours(now) - POSIXToHours(firstDoseDate)
+  
+  # Covariates dataframe
+  covsNames <- colnames(covs)
+  covsNames <- covsNames[!(covsNames %in% c("date", "time"))]
+  covariates <- bind_cols(data.frame(TIME=as.numeric(difftime(covsDates, firstDoseDate, units="hour"))),
+                          covs %>% select(covsNames))
   
   # Make regimen and filtered regimen dataframes
   regimen <- data.frame(
@@ -205,7 +213,7 @@ convertDataToTdmore <- function(doses, obs, output, now, iov) {
     filteredObserved <- NULL
   }
 
-  return(list(regimen=regimen, observed=observed, filteredObserved=filteredObserved, firstDoseDate=firstDoseDate))
+  return(list(regimen=regimen, observed=observed, filteredObserved=filteredObserved, firstDoseDate=firstDoseDate, covariates=covariates))
 }
 
 #'
@@ -226,18 +234,19 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
     stop("Please add a dose in the left panel")
   }
   
-  data <- convertDataToTdmore(doses, obs, getModelOutput(model), now, !is.null(model$iov))
+  data <- convertDataToTdmore(doses, obs, covs, getModelOutput(model), now, !is.null(model$iov))
   regimen <- data$regimen %>% select(-PAST)
+  covariates <- data$covariates
   filteredObserved <- data$filteredObserved
   firstDoseDate <- data$firstDoseDate
   isMpc <- inherits(model, "tdmore_mpc")
   
   if (population) {
     # Population 'fit'
-    object <- estimate(model, regimen=regimen, covariates=covs)
+    object <- estimate(model, regimen=regimen, covariates=covariates)
   } else {
     # Fit
-    object <- estimate(model, observed=filteredObserved, regimen=regimen, covariates=covs)
+    object <- estimate(model, observed=filteredObserved, regimen=regimen, covariates=covariates)
   }
   
   # Predictions
@@ -248,13 +257,13 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
   if (isMpc && !population) {
     data <- predict(object, newdata=newdata, regimen=regimen, covariates=object$covariates, se.fit=F)
   } else {
-    data <- predict(object, newdata=newdata, regimen=regimen, covariates=covs, se.fit=T, level=0.95) # 95% CI by default
+    data <- predict(object, newdata=newdata, regimen=regimen, covariates=covariates, se.fit=T, level=0.95) # 95% CI by default
   }
   data$TIME <- firstDoseDate + data$TIME*60*60
 
   # In case of fit, compute PRED median as well
   if (!population) {
-    pred <- predict(model, newdata=newdata, regimen=regimen, covariates=covs, se=F)
+    pred <- predict(model, newdata=newdata, regimen=regimen, covariates=covariates, se=F)
     data$PRED <- pred[, getModelOutput(model)]
   }
   
@@ -383,8 +392,9 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   if (nrow(doses)==0) {
     stop("Please add a dose in the left panel")
   }
-  data <- convertDataToTdmore(doses, obs, getModelOutput(model), now, !is.null(model$iov))
+  data <- convertDataToTdmore(doses, obs, covs, getModelOutput(model), now, !is.null(model$iov))
   regimen <- data$regimen
+  covariates <- data$covariates
   filteredObserved <- data$filteredObserved
   firstDoseDate <- data$firstDoseDate
   isMpc <- inherits(model, "tdmore_mpc")
@@ -396,7 +406,7 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   }
 
   # Compute fit
-  fit <- estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST), covariates=covs)
+  fit <- estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST), covariates=covariates)
 
   # Implementing the iterative process
   nextRegimen <- regimen %>% dplyr::select(-PAST)
@@ -419,7 +429,7 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   }
   
   firstDoseInFutureTime <- regimen$TIME[doseRows[1]]
-  covsToUse <- if(isMpc){fit$covariates}else{covs}
+  covsToUse <- if(isMpc){fit$covariates}else{covariates}
   
   # Predict ipred without adapting the dose
   newdata <- getNewdata(0, max(regimen$TIME) + dosingInterval, output)
