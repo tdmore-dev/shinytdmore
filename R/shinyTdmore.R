@@ -10,7 +10,8 @@ shinyTdmoreUI <- function(title, ...) {
                    id="tabs",
                    ...,
                    inverse=TRUE,
-                   collapsible = TRUE)
+                   collapsible = TRUE,
+                   theme="bootstrap.css")
 }
 
 #' Get server component of Shiny TDMore.

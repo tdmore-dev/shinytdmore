@@ -18,7 +18,7 @@ predictionTabUI <- function(id) {
     fluidRow(class="wrapper",
       div(id="sidebar",
         bsCollapse(id=ns("bsCollapse"), multiple=T, open=c("Doses", "Measures", "Now"),
-          bsCollapsePanel(title="Doses", style="info",
+          bsCollapsePanel(title="Doses", style="primary",
             conditionalPanel(
               condition = "output.plot_type == 'population' || output.plot_type == 'fit'",
               rHandsontableOutput(ns("hotdose")),
@@ -32,14 +32,14 @@ predictionTabUI <- function(id) {
               ns=ns
             )
           ),
-          bsCollapsePanel(title="Measures", style="info",
+          bsCollapsePanel(title="Measures", style="primary",
             rHandsontableOutput(ns("hotobs")),
             actionButton(ns("addObs"), "Add measure", style="margin-top: 5px;")
           ),
-          bsCollapsePanel(title="Now", style="info",
+          bsCollapsePanel(title="Now", style="primary",
             editableInput(inputId=ns("nowDate"), type = "combodate", value="2000-01-01 00:00")
           ),
-          bsCollapsePanel(title="Covariates", style="info",
+          bsCollapsePanel(title="Covariates", style="primary",
             conditionalPanel(
               condition = "output.display_covariates == true",
               rHandsontableOutput(ns("hotcov")),
@@ -52,7 +52,7 @@ predictionTabUI <- function(id) {
               ns=ns
             )
           ),
-          bsCollapsePanel(title="Target", style="info",
+          bsCollapsePanel(title="Target", style="primary",
             numericInput(ns("targetDown"), "Lower limit", 0),
             numericInput(ns("targetUp"), "Upper limit", 0)
           )
