@@ -371,6 +371,10 @@ predictionTab <- function(input, output, session, val) {
     val$db_covs <- autoSortByDate(hot_to_r(input$hotcov))
   })
   
+  observeEvent(val$db_covs, {
+    print(val$db_covs)
+  })
+  
   addCovariate <- function(val) {
     doseMetadata <- getMetadataByName(val$model, "DOSE")
     dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}

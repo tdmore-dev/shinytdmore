@@ -188,9 +188,6 @@ newPatientDialog <- function(input, output, session, onNewPatientAdded) {
       
       if (valuesAllNumeric) {
         model <- get(input$modelCombobox)
-        if (inherits(model, "tdmore_mpc")) {
-          covariateData <- c(covariateData, model$mpc_theta)
-        }
         saveData(userData, input$modelCombobox, covariateData)
         
         # Use of a reactive value to trigger patients table refresh in patientsTab
@@ -232,14 +229,4 @@ newPatientDialog <- function(input, output, session, onNewPatientAdded) {
       ui = tags$div(createCovariateForm(session$ns, input), id="my_cov_form")
     )
   })
-}
-
-getCovariateNames <- function(model) {
-  covariates <- model$covariates
-  if (inherits(model, "tdmore_mpc")) {
-    includedCovariates <- names(model$mpc_theta)
-    return(covariates[!(covariates %in% includedCovariates)])
-  } else {
-    return(covariates)
-  }
 }
