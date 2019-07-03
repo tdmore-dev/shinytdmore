@@ -33,14 +33,14 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
   if (iov) {
     regimen$OCC <- seq_len(nrow(regimen))
   }
-  regimen <- regimen %>% dplyr::mutate(PAST=TIME < relativeNow) # sign '<' used on purpose
+  regimen <- regimen %>% dplyr::mutate(PAST=nearEqual(TIME, relativeNow, mode="lt")) # sign '<' used on purpose
   
   # Make observed and filtered observed dataframes
   if (nrow(obs) > 0) {
     obsDates <- dateAndTimeToPOSIX(obs$date, obs$time)
     observed <- data.frame(TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")), USE=obs$use)
     observed[, output] <- obs$measure
-    observed <- observed %>% dplyr::mutate(PAST=TIME <= relativeNow) # sign '<=' used on purpose (through concentration can be used for recommendation dose at same time)
+    observed <- observed %>% dplyr::mutate(PAST=nearEqual(TIME, relativeNow, mode="ne.lt")) # sign '<=' used on purpose (through concentration can be used for recommendation dose at same time)
     filteredObserved <- observed %>% dplyr::filter(PAST & USE) %>% dplyr::select(-c("PAST", "USE"))
   } else {
     observed <- NULL
@@ -89,4 +89,35 @@ getNewdata <- function(start, stop, output) {
   newdata <- data.frame(TIME=times)
   newdata[,output] <- NA
   return(newdata)
+}
+
+#'
+#' Near (in)equality function.
+#' Different modes:
+#' 'ae' : almost equal
+#' 'gt' : greater than
+#' 'lt' : less than
+#' 'ne.gt' : greater than (near equality)
+#' 'ne.lt' : less than (near equality)
+#' 
+#' @param x first vector
+#' @param y second vector
+#' @param mode comparison mode
+#' @param tol tolerance
+#' @return logical vector
+#'
+nearEqual <- function(x, y, mode="ae", tol=1e-8) {
+  ae <- mapply(function(x,y) isTRUE(all.equal(x, y, tolerance=tol)), x, y)    
+  gt <- x > y
+  lt <- x < y
+  if (mode == "ae")
+    return(ae)
+  if (mode == "gt")
+    return(gt)
+  if (mode == "lt" )
+    return(lt)
+  if (mode == "ne.gt")
+    return(ae | gt)
+  if (mode == "ne.lt")
+    return(ae | lt)
 }

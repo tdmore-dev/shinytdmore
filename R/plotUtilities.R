@@ -162,7 +162,6 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
   if(nrow(doses)==0) {
     stop("Please add a dose in the left panel")
   }
-  
   data <- convertDataToTdmore(model, doses, obs, covs, now)
   regimen <- data$regimen %>% select(-PAST)
   covariates <- data$covariates
