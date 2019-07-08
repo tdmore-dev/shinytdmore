@@ -25,6 +25,5 @@ loadModel <- function(modName, Rfile) {
                   eval.env=e1,
                   assign.env=parent.env(environment()))
   }
-  cat(modelLibrary)
   assign(x="modelLibrary", value=modelLibrary, envir=parent.env(environment()))
 }

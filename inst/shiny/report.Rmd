@@ -1,0 +1,45 @@
+---
+title: "ShinyTDMore report"
+output: html_document
+params:
+    id: NA
+---
+
+```{r, echo=F, message=F}
+# Loading all necessary libraries
+library(tdmore)
+library(shinytdmore)
+library(knitr)
+library(tidyverse)
+library(assertthat)
+```
+
+```{r, echo=F}
+patient <- getPatient(params$id)
+```
+
+## Patient data
+Name: `r paste(patient$firstname, patient$lastname)`
+
+### Doses history
+```{r, echo=F}
+kable(patient$doses)
+```
+
+### Measures history
+```{r, echo=F}
+kable(patient$measures)
+```
+
+### Covariates
+```{r, echo=F}
+kable(patient$covariates)
+```
+
+## Recommendation
+
+## Model
+Name: `r patient$model`
+```{r, echo=F, comment=NA}
+summary(get(patient$model))
+```
