@@ -84,4 +84,5 @@ D0_14_Troughs_1cpt_BASE_TSFD <- RxODE::RxODE(m1Code) %>% tdmore(
   )
 ) %>% metadata(output(name="Cwb", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
   metadata(dose(unit="mg", dosing_interval=12, default_value=8)) %>%
-  metadata(target(min=12, max=15))
+  metadata(target(min=12, max=15)) %>%
+  metadata(observed_variables(c("V", "k0", "kplus", "kk")))

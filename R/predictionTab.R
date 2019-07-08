@@ -70,13 +70,13 @@ predictionTabUI <- function(id) {
          tags$head(tags$style(HTML('#predictionTabId-next_plot{background-color:#dde5eb}')))
        ),
        conditionalPanel(condition = "output.plot_type == 'population'",
-                        plotlyOutput(ns("populationPlot"), height="600px", width="100%"), ns=ns),
+                        plotlyOutput(ns("populationPlot"), height="680px", width="100%"), ns=ns),
 
        conditionalPanel(condition = "output.plot_type == 'fit'",
-                        plotlyOutput(ns("fitPlot"), height="600px", width="100%"), ns=ns),
+                        plotlyOutput(ns("fitPlot"), height="800px", width="100%"), ns=ns),
 
        conditionalPanel(condition = "output.plot_type == 'recommendation'",
-                        plotlyOutput(ns("recommendationPlot"), height="600px", width="100%"), ns=ns)
+                        plotlyOutput(ns("recommendationPlot"), height="680px", width="100%"), ns=ns)
       )
     ),
     tags$head(
@@ -371,10 +371,6 @@ predictionTab <- function(input, output, session, val) {
     val$db_covs <- autoSortByDate(hot_to_r(input$hotcov))
   })
   
-  observeEvent(val$db_covs, {
-    print(val$db_covs)
-  })
-  
   addCovariate <- function(val) {
     doseMetadata <- getMetadataByName(val$model, "DOSE")
     dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
@@ -403,7 +399,7 @@ predictionTab <- function(input, output, session, val) {
     progress$set(message = "Preparing...", value = 0.5)
     plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$db_covs, target=val$target, population=T, now=val$now_date)
     progress$set(message = "Rendering plot...", value = 1)
-    if(!is.null(plots)) mergePlots(plots$p1, plots$p2, getModelOutput(val$model))
+    if(!is.null(plots)) mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(val$model))
   })
   output$populationPlot <- renderPlotly(populationPlot()) #renderPlotly(isolate(populationPlot()))
   # observe({
@@ -418,7 +414,7 @@ predictionTab <- function(input, output, session, val) {
     progress$set(message = "Preparing...", value = 0.5)
     plots <- preparePredictionPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$db_covs, target=val$target, population=F, now=val$now_date)
     progress$set(message = "Rendering plot...", value = 1)
-    if(!is.null(plots)) mergePlots(plots$p1, plots$p2, getModelOutput(val$model))
+    if(!is.null(plots)) mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(val$model))
   })
   output$fitPlot <- renderPlotly(fitPlot())
   
@@ -435,7 +431,7 @@ predictionTab <- function(input, output, session, val) {
     
     plots <- prepareRecommendationPlots(doses=val$db_dose, obs=val$db_obs, model=val$model, covs=val$db_covs, target=val$target, recommendation=recommendation, now=val$now_date)
     progress$set(message = "Rendering plot...", value = 1)
-    if(!is.null(plots)) mergePlots(plots$p1, plots$p2, getModelOutput(val$model))
+    if(!is.null(plots)) mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(val$model))
   })
   output$recommendationPlot <- renderPlotly(recommendationPlot())
   

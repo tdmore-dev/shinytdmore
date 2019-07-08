@@ -4,7 +4,7 @@
 \alias{getNewdata}
 \title{Get 'newdata' dataframe for tdmore predictions.}
 \usage{
-getNewdata(start, stop, output)
+getNewdata(start, stop, output, observedVariables = NULL)
 }
 \arguments{
 \item{start}{start time of 'TIME' column}
@@ -12,6 +12,8 @@ getNewdata(start, stop, output)
 \item{stop}{stop time of 'TIME' column}
 
 \item{output}{output name (e.g. 'CONC')}
+
+\item{observedVariables}{additional observed variables}
 }
 \value{
 a dataframe for tdmore

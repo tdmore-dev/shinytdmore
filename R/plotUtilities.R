@@ -106,16 +106,30 @@ getMeasureColumnLabel <- function(model, breakLine=T) {
 #' 
 #' @param p1 first plot
 #' @param p2 second plot
+#' @param p3 third plot
 #' @param output main tdmore output
 #'
-mergePlots <- function(p1, p2, output) {
+mergePlots <- function(p1, p2, p3, output) {
   tooltip1 <- c("TIME", output, paste0(output, ".lower"), paste0(output, ".upper"))
   tooltip2 <- c("TIME", "AMT")
-  subplot(
-    ggplotly(p1, tooltip=tooltip1) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F, collaborate=F),
-    ggplotly(p2, tooltip=tooltip2) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F, collaborate=F),
-    nrows = 2, heights = c(0.8, 0.2), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
-  ) %>% plotly::layout(dragmode = "pan")
+  #tooltip3 <- c("TIME", "Parameter", "Population", "Individual", "Change")
+
+  if (is.null(p3)) {
+    plot <- subplot(
+      ggplotly(p1, tooltip=tooltip1) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+      ggplotly(p2, tooltip=tooltip2) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+      nrows = 2, heights = c(0.8, 0.2), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
+    ) %>% plotly::layout(dragmode = "pan")
+  } else {
+    plot <- subplot(
+      ggplotly(p1, tooltip=tooltip1) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+      ggplotly(p2, tooltip=tooltip2) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+      ggplotly(p3) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+      nrows = 3, heights = c(0.7, 0.15, 0.15), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
+    ) %>% plotly::layout(dragmode = "pan", legend = list(orientation = "h", y=-250))
+  }
+  
+  return(plot)
 }
 
 
@@ -168,7 +182,8 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
   filteredObserved <- data$filteredObserved
   firstDoseDate <- data$firstDoseDate
   isMpc <- inherits(model, "tdmore_mpc")
-  
+  observedVariables <- getObservedVariables(model)
+
   if (population) {
     # Population 'fit'
     object <- estimate(model, regimen=regimen, covariates=covariates)
@@ -180,7 +195,7 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
   # Predictions
   dosingInterval <- getDosingInterval(model)
   maxTime <- if(nrow(regimen)==0){dosingInterval} else {max(regimen$TIME)+dosingInterval}
-  newdata <- getNewdata(0, maxTime, getModelOutput(model))
+  newdata <- getNewdata(start=0, stop=maxTime, output=getModelOutput(model), observedVariables=observedVariables)
   
   if (isMpc && !population) {
     data <- predict(object, newdata=newdata, regimen=regimen, covariates=object$covariates, se.fit=F)
@@ -193,10 +208,14 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
   if (!population) {
     pred <- predict(model, newdata=newdata, regimen=regimen, covariates=covariates, se=F)
     data$PRED <- pred[, getModelOutput(model)]
+    for (parameter in observedVariables) {
+      data[, paste0("PRED_", parameter)] <- pred[, parameter]
+    }
   }
   
   return(list(p1=preparePredictionPlot(data=data, obs=obs, target=target, population=population, model=model, now=now),
-              p2=prepareTimelinePlot(doses=doses, xlim=c(firstDoseDate, max(data$TIME)), model=model, now=now)))
+              p2=prepareTimelinePlot(doses=doses, xlim=c(firstDoseDate, max(data$TIME)), model=model, now=now),
+              p3=prepareParametersPlot(data=data, parameters=observedVariables, population=population)))
 }
 
 #'
@@ -262,6 +281,43 @@ prepareTimelinePlot <- function(doses, xlim, model, now) {
     coord_cartesian(xlim=xlim, ylim=c(0, maxDose + addSpace)) +
     labs(x="Time", y=getDoseColumnLabel(model, breakLine=F))
 
+  return(plot)
+}
+
+#'
+#' Prepare the parameters plot.
+#' 
+#' @param data dataframe containing the prediction data
+#' @param parameters parameters
+#' @param population logical value, true for population, false for individual prediction
+#'
+prepareParametersPlot <- function(data, parameters, population) {
+  if (population) {
+    return(NULL) # makes no sense to prepare this plot for population
+  }
+  
+  # Keep useful parameters and melt data (ids: TIME and PRED_ columns)
+  data <- data %>% select(c("TIME", parameters, paste0("PRED_", parameters))) %>% melt(c("TIME", paste0("PRED_", parameters)))
+  
+  # As data is molten, only 1 population column is needed (get rid of all PRED_ columns)
+  data$Population <- 0
+  data$Parameter <- data$variable
+  for (parameter in parameters) {
+    data[data$Parameter==parameter, "Population"] <- data[data$Parameter==parameter, paste0("PRED_", parameter)]
+  }
+  
+  # Compute percentage change
+  data$Individual <- data$value
+  data$Change <- (data$Individual - data$Population) / data$Population * 100
+
+  # Get rid of other columns, round data
+  data <- data %>% select("TIME", "Parameter", "Population", "Individual", "Change")
+  data <- data %>% mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
+
+  plot <- ggplot(data=data, mapping=aes(x=TIME, y=Change, linetype=Parameter)) +
+    geom_line(color="slategray3", mapping=aes(text=sprintf("Population: %.2f<br>Individual: %.2f", Population, Individual))) +
+    labs(x="Time", y="Change (%)")
+  #print(plot)
   return(plot)
 }
 
@@ -360,12 +416,12 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   covsToUse <- if(isMpc){fit$covariates}else{covariates}
   
   # Predict ipred without adapting the dose
-  newdata <- getNewdata(0, max(regimen$TIME) + dosingInterval, output)
+  newdata <- getNewdata(start=0, stop=max(regimen$TIME) + dosingInterval, output=output)
   ipred <-  predict(fit, newdata = newdata, regimen=regimen %>% dplyr::select(-PAST), covariates=covsToUse, se.fit=F)
   ipred$TIME <- firstDoseDate + ipred$TIME*3600 # Plotly able to plot POSIXct
   
   # Predict ipred with the new recommendation
-  newdata <- getNewdata(firstDoseInFutureTime, max(regimen$TIME) + dosingInterval, output)
+  newdata <- getNewdata(start=firstDoseInFutureTime, stop=max(regimen$TIME) + dosingInterval, output=output)
   ipredNew <- predict(fit, newdata=newdata, regimen=nextRegimen, covariates=covsToUse, se.fit=!isMpc, level=0.95) # se.fit disabled if MPC model
   ipredNew$TIME <- firstDoseDate + ipredNew$TIME*3600 # Plotly able to plot POSIXct
   

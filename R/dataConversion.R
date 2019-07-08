@@ -78,16 +78,18 @@ covsToTdmore <- function(covs, firstDoseDate, model) {
 #' @param start start time of 'TIME' column
 #' @param stop stop time of 'TIME' column
 #' @param output output name (e.g. 'CONC')
+#' @param observedVariables additional observed variables
 #' @return a dataframe for tdmore
 #'
-getNewdata <- function(start, stop, output) {
+getNewdata <- function(start, stop, output, observedVariables=NULL) {
   times <- seq(start, stop, by=0.5)
   minSamples <- 300
   if (length(times) < minSamples) {
     times <- seq(start, stop, length.out=minSamples)
   }
   newdata <- data.frame(TIME=times)
-  newdata[,output] <- NA
+  newdata[, output] <- NA
+  newdata[, observedVariables] <- NA
   return(newdata)
 }
 
