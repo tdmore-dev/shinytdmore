@@ -112,9 +112,6 @@ for(i in seq_len(nrow(corrMonolix))) {
   omega[ par2$etaName, par1$etaName ] <- covValue
 }
 
-iov = omegaMonolix %>% filter(GAMMA) %>% pull(etaName)
-if(length(iov)==0) iov <- NULL
-
 thetaDf <- monolixValues %>% dplyr::filter(THETA)
 theta <- thetaDf$value
 names(theta) <- paste0("TV", thetaDf$parameter %>% str_match("(.*)_pop$") %>% .[,2])
@@ -122,7 +119,6 @@ names(theta) <- paste0("TV", thetaDf$parameter %>% str_match("(.*)_pop$") %>% .[
 D7_AUC_2cpt_Tlag_CYP3A5_alloWT <- RxODE::RxODE(m1Code) %>% tdmore(
   parameters=rownames(omega),
   omega=omega,
-  iov=omegaMonolix %>% dplyr::filter(OMEGA | GAMMA) %>% pull(etaName),
   res_var=list( errorModel(var="Cwb",
                            add=monolixValues %>% dplyr::filter(parameter=="a") %>% pull(value),
                            prop=monolixValues %>% dplyr::filter(parameter=="b") %>% pull(value)) )
