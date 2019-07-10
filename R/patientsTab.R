@@ -62,7 +62,7 @@ renderPatientTable <- function(input, ns) {
 #'
 setPatient <- function(patient, val) {
   val$patient <- patient
-  
+
   # Copy model
   modelId <- patient$model
   model <- get(modelId)
@@ -78,7 +78,8 @@ setPatient <- function(patient, val) {
   val$db_dose <- autoSortByDate(db_dose) # Auto-sort the first time
   
   # Copy measures
-  db_obs <- val$patient$measures
+  db_obs <- patient$measures
+
   if(nrow(db_obs) == 0){
     db_obs$use <- logical() # Add column type
   } else {

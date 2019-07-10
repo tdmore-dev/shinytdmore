@@ -295,7 +295,6 @@ prepareParametersPlot <- function(data, parameters, population) {
   if (population) {
     return(NULL) # makes no sense to prepare this plot for population
   }
-  
   # Keep useful parameters and melt data (ids: TIME and PRED_ columns)
   data <- data %>% select(c("TIME", parameters, paste0("PRED_", parameters))) %>% melt(c("TIME", paste0("PRED_", parameters)))
   
@@ -312,10 +311,10 @@ prepareParametersPlot <- function(data, parameters, population) {
 
   # Get rid of other columns, round data
   data <- data %>% select("TIME", "Parameter", "Population", "Individual", "Change")
-  data <- data %>% mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
+  data <- data %>% mutate_if(is.numeric, round, 3) # Round dataframe for better hover tooltips
 
   plot <- ggplot(data=data, mapping=aes(x=TIME, y=Change, linetype=Parameter)) +
-    geom_line(color="slategray3", mapping=aes(text=sprintf("Population: %.2f<br>Individual: %.2f", Population, Individual))) +
+    geom_line(color="slategray3", mapping=aes(text=sprintf("Population: %.3f<br>Individual: %.3f", Population, Individual))) +
     labs(x="Time", y="Change (%)")
   #print(plot)
   return(plot)
