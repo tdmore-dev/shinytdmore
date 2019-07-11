@@ -123,9 +123,10 @@ predictionTabUI <- function(id) {
 #' @param output shiny output
 #' @param session shiny session
 #' @param val main reactive container
+#' @param outputReact reactive value for the plot type
 #' @param ns namespace
 #'
-previousNextLogic <- function(input, output, session, val, ns) {
+previousNextLogic <- function(input, output, session, val, outputReact, ns) {
   plotTypes <- c("population", "fit", "recommendation")
   plotTitles <- c("Population prediction", "Individual prediction", "Recommendation")
 
@@ -144,33 +145,32 @@ previousNextLogic <- function(input, output, session, val, ns) {
   
   # Logic initialisation (when a new patient is loaded)
   observeEvent(val$set_patient_counter, {
-    val$plot_type <- "population"
+    outputReact$plot_type <- "population"
     enableDisableButtons(1)
   })
   
   observeEvent(input$previous_plot, {
-    plotTypeIndex <- which(plotTypes==val$plot_type) - 1
+    plotTypeIndex <- which(plotTypes==outputReact$plot_type) - 1
     if (plotTypeIndex >= 1) {
-      val$plot_type <- plotTypes[plotTypeIndex]
+      outputReact$plot_type <- plotTypes[plotTypeIndex]
     }
     enableDisableButtons(plotTypeIndex)
   })
   
   observeEvent(input$next_plot, {
-    plotTypeIndex <- which(plotTypes==val$plot_type) + 1
+    plotTypeIndex <- which(plotTypes==outputReact$plot_type) + 1
     if (plotTypeIndex <= length(plotTypes)) {
-      val$plot_type <- plotTypes[plotTypeIndex]
+      outputReact$plot_type <- plotTypes[plotTypeIndex]
     }
     enableDisableButtons(plotTypeIndex)
   })
   
   output$plot_title <- renderText({
-    val$plot_title <- plotTitles[which(plotTypes==val$plot_type)]
-    return(val$plot_title)
+    return(plotTitles[which(plotTypes==outputReact$plot_type)])
   })
   
   output$plot_type <- reactive({
-    return(val$plot_type)
+    return(outputReact$plot_type)
   })
   
   outputOptions(output, "plot_type", suspendWhenHidden=F)
@@ -245,10 +245,13 @@ predictionTab <- function(input, output, session, val) {
     return(length(val$model$covariates) > 0)
   })
   
+  outputReact <- reactiveValues()
+  outputReact$plot_type <- "population"
+  
   outputOptions(output, "display_covariates", suspendWhenHidden=F)
   
   # Previous/Next button logic
-  previousNextLogic(input, output, session, val, ns)
+  previousNextLogic(input, output, session, val, outputReact, ns)
   
   # Now date logic
   nowDateLogic(input, output, session, val, ns)
@@ -261,15 +264,14 @@ predictionTab <- function(input, output, session, val) {
   
   # Observations/Measures table logic
   output$hotobs <- renderRHandsontable({
-    if (!is.null(val$obs))
-      borderRow <- getTableBorderIndex(val$obs, val$now, F)
-      rhandsontable(val$obs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
-                    colHeaders = c("Date", "Time", getMeasureColumnLabel(val$model), "Use")) %>%
-                    hot_col("Use", halign = "htCenter") %>%
-                    hot_col(col="Time", type="dropdown", source=hoursList()) %>%
-                    hot_table(customBorders = list(list(
-                      range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(val$obs)-1)),
-                      top=list(width=2, color=nowColorHex()))))
+    borderRow <- getTableBorderIndex(val$obs, val$now, F)
+    rhandsontable(val$obs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
+                  colHeaders = c("Date", "Time", getMeasureColumnLabel(val$model), "Use")) %>%
+                  hot_col("Use", halign = "htCenter") %>%
+                  hot_col(col="Time", type="dropdown", source=hoursList()) %>%
+                  hot_table(customBorders = list(list(
+                    range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(val$obs)-1)),
+                    top=list(width=2, color=nowColorHex()))))
   })
   
   observeEvent(input$hotobs, {
@@ -449,11 +451,11 @@ predictionTab <- function(input, output, session, val) {
   
   # Refresh plot when sidebar is collapsed/opened (make sure there is no transition time in CSS, otherwise not working)
   observeEvent(input$sidebarCollapse, {
-    if (val$plot_type == "population") {
+    if (outputReact$plot_type == "population") {
       output$populationPlot <- renderPlotly(populationPlot())
-    } else if(val$plot_type == "fit") {
+    } else if(outputReact$plot_type == "fit") {
       output$fitPlot <- renderPlotly(fitPlot())
-    } else if(val$plot_type == "recommendation") {
+    } else if(outputReact$plot_type == "recommendation") {
       output$recommendationPlot <- renderPlotly(recommendationPlot())
     }
     if (is.null(val$collapsed) || val$collapsed==F) {
