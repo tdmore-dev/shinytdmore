@@ -1,3 +1,6 @@
+assert_that <- assertthat::assert_that
+is.string <- assertthat::is.string
+
 #' Check firstname.
 #' 
 #' @param input user input

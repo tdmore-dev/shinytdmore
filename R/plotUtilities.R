@@ -115,16 +115,21 @@ mergePlots <- function(p1, p2, p3, output) {
   #tooltip3 <- c("TIME", "Parameter", "Population", "Individual", "Change")
 
   if (is.null(p3)) {
-    plot <- subplot(
-      ggplotly(p1, tooltip=tooltip1) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      ggplotly(p2, tooltip=tooltip2) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+    plot <- plotly::subplot(
+      plotly::ggplotly(p1, tooltip=tooltip1) %>% 
+        plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+      plotly::ggplotly(p2, tooltip=tooltip2) %>% 
+        plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
       nrows = 2, heights = c(0.8, 0.2), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
     ) %>% plotly::layout(dragmode = "pan")
   } else {
-    plot <- subplot(
-      ggplotly(p1, tooltip=tooltip1) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      ggplotly(p2, tooltip=tooltip2) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      ggplotly(p3) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+    plot <- plotly::subplot(
+      plotly::ggplotly(p1, tooltip=tooltip1) %>% 
+        plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+      plotly::ggplotly(p2, tooltip=tooltip2) %>% 
+        plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+      plotly::ggplotly(p3) %>% 
+        plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
       nrows = 3, heights = c(0.7, 0.15, 0.15), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
     ) %>% plotly::layout(dragmode = "pan", legend = list(orientation = "h", y=-250))
   }
@@ -177,7 +182,7 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
     stop("Please add a dose in the left panel")
   }
   data <- convertDataToTdmore(model, doses, obs, covs, now)
-  regimen <- data$regimen %>% select(-PAST)
+  regimen <- data$regimen %>% dplyr::select(-PAST)
   covariates <- data$covariates
   filteredObserved <- data$filteredObserved
   firstDoseDate <- data$firstDoseDate
@@ -296,7 +301,7 @@ prepareParametersPlot <- function(data, parameters, population) {
     return(NULL) # makes no sense to prepare this plot for population
   }
   # Keep useful parameters and melt data (ids: TIME and PRED_ columns)
-  data <- data %>% select(c("TIME", parameters, paste0("PRED_", parameters))) %>% melt(c("TIME", paste0("PRED_", parameters)))
+  data <- data %>% dplyr::select(c("TIME", parameters, paste0("PRED_", parameters))) %>% data.table::melt(c("TIME", paste0("PRED_", parameters)))
   
   # As data is molten, only 1 population column is needed (get rid of all PRED_ columns)
   data$Population <- 0
@@ -310,8 +315,8 @@ prepareParametersPlot <- function(data, parameters, population) {
   data$Change <- (data$Individual - data$Population) / data$Population * 100
 
   # Get rid of other columns, round data
-  data <- data %>% select("TIME", "Parameter", "Population", "Individual", "Change")
-  data <- data %>% mutate_if(is.numeric, round, 3) # Round dataframe for better hover tooltips
+  data <- data %>% dplyr::select("TIME", "Parameter", "Population", "Individual", "Change")
+  data <- data %>% dplyr::mutate_if(is.numeric, round, 3) # Round dataframe for better hover tooltips
 
   plot <- ggplot(data=data, mapping=aes(x=TIME, y=Change, linetype=Parameter)) +
     geom_line(color="slategray3", mapping=aes(text=sprintf("Population: %.3f<br>Individual: %.3f", Population, Individual))) +

@@ -4,7 +4,7 @@
 \alias{saveProject}
 \title{Save project server}
 \usage{
-saveProject(input, output, session, onTabChanged, val)
+saveProject(input, output, session, onTabChanged, val, db)
 }
 \arguments{
 \item{input}{shiny input}

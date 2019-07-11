@@ -4,7 +4,7 @@
 \alias{shinyTdmore}
 \title{Get server component of Shiny TDMore.}
 \usage{
-shinyTdmore(input, output, session, conf)
+shinyTdmore(input, output, session, conf, db)
 }
 \arguments{
 \item{input}{shiny input}
@@ -14,6 +14,8 @@ shinyTdmore(input, output, session, conf)
 \item{session}{shiny session}
 
 \item{conf}{modules configuration}
+
+\item{db}{database, uses in-memory database if missing}
 }
 \value{
 server component

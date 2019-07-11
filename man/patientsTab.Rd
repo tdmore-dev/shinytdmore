@@ -4,7 +4,8 @@
 \alias{patientsTab}
 \title{Patients tab server.}
 \usage{
-patientsTab(input, output, session, parentSession, val, onNewPatientAdded)
+patientsTab(input, output, session, parentSession, val, onNewPatientAdded,
+  db)
 }
 \arguments{
 \item{input}{shiny input}

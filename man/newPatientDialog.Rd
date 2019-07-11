@@ -4,7 +4,7 @@
 \alias{newPatientDialog}
 \title{New patient dialog server.}
 \usage{
-newPatientDialog(input, output, session, onNewPatientAdded)
+newPatientDialog(input, output, session, onNewPatientAdded, db)
 }
 \arguments{
 \item{input}{shiny input}

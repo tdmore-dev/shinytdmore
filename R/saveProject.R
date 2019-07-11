@@ -35,12 +35,12 @@ dataHasChanged <- function(val) {
 #'
 #' @param val main reactive container
 #'
-saveProjectToDB <- function(val) {
+saveProjectToDB <- function(val, db) {
   val$patient <- updatePatientDoses(val$patient, val$doses)
-  val$patient <- updatePatientMeasures(val$patient, val$obs %>% select(-use))
+  val$patient <- updatePatientMeasures(val$patient, val$obs %>% dplyr::select(-use))
   val$patient <- updateNowDate(val$patient, val$now)
   val$patient <- updatePatientCovariates(val$patient, val$covs)
-  updatePatient(val$patient$id, val$patient)
+  db$update(val$patient$id, val$patient)
 }
 
 #'
@@ -54,10 +54,10 @@ saveProjectToDB <- function(val) {
 #' 
 #' @export
 #'
-saveProject <- function(input, output, session, onTabChanged, val) {
+saveProject <- function(input, output, session, onTabChanged, val, db) {
   # Save project button observer
   observeEvent(input$saveProject, {
-    saveProjectToDB(val)
+    saveProjectToDB(val, db)
     removeModal()
   })
   

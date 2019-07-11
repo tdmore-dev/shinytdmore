@@ -5,9 +5,11 @@
 #' @param modelName model name
 #' @param covariateData data from covariate form, named vector
 #' 
-saveData <- function(userData, modelName, covariateData) {
+saveData <- function(userData, modelName, covariateData, db) {
   # See if patient already exists (in this case, model and covariates will be updated)
-  patient <- getPatient(firstname = userData[["firstname"]], lastname = userData[["lastname"]])
+  # FIXME: how ugly! What about two patients with same name (Jan Janssens)?
+  #patient <- getPatient(firstname = userData[["firstname"]], lastname = userData[["lastname"]])
+  patient <- NULL
   if (!is.null(covariateData)) {
     covs <- setNames(as.numeric(covariateData), names(covariateData)) # String to numeric conversion
     covs <- as.list(covs)
@@ -26,10 +28,10 @@ saveData <- function(userData, modelName, covariateData) {
     dose <- if(is.null(doseMetadata)) {0} else {doseMetadata$default_value}
     
     # Add by default a first dose at 8am
-    doses <- tibble(date=date, time=time, dose=dose)
+    doses <- tibble::tibble(date=date, time=time, dose=dose)
     
     # Create a empty measure data frame
-    measures <- tibble(date=date, time=character(), measure=numeric())
+    measures <- tibble::tibble(date=date, time=character(), measure=numeric())
     
     patient <- updatePatientMeasures(patient, measures)
     patient <- updatePatientDoses(patient, doses)
@@ -37,12 +39,12 @@ saveData <- function(userData, modelName, covariateData) {
     patient <- updateCovariates(patient, covs, date, time)
 
     # Add patient into DB
-    addPatient(patient)
+    db$add(patient)
   } else {
     # Update patient in DB
     patient <- updateCovariates(patient, covs, date, time)
     patient <- updatePatientModel(patient, modelName)
-    updatePatient(patient$id, patient)
+    db$update(patient$id, patient)
   }
 }
 
@@ -56,7 +58,7 @@ saveData <- function(userData, modelName, covariateData) {
 #' 
 updateCovariates <- function(patient, covs, date, time) {
   if (!is.null(covs)) {
-    covariates <- tibble(date=date, time=time)
+    covariates <- tibble::tibble(date=date, time=time)
     covariates <- bind_cols(covariates, as.list(covs))
     patient <- updatePatientCovariates(patient, covariates)
   }
@@ -163,7 +165,7 @@ hackSelectInput <- function(session) {
 #' 
 #' @export
 #'
-newPatientDialog <- function(input, output, session, onNewPatientAdded) {
+newPatientDialog <- function(input, output, session, onNewPatientAdded, db) {
   # Modal form OK button
   observeEvent(input$modalFormOK, {
       # Retrieve user form data
@@ -188,7 +190,7 @@ newPatientDialog <- function(input, output, session, onNewPatientAdded) {
       
       if (valuesAllNumeric) {
         model <- get(input$modelCombobox)
-        saveData(userData, input$modelCombobox, covariateData)
+        saveData(userData, input$modelCombobox, covariateData, db)
         
         # Use of a reactive value to trigger patients table refresh in patientsTab
         if (is.null(onNewPatientAdded$trigger)) {

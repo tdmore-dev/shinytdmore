@@ -4,7 +4,7 @@
 \alias{renderPatientTable}
 \title{Render the patients table.}
 \usage{
-renderPatientTable(input, ns)
+renderPatientTable(input, ns, db)
 }
 \arguments{
 \item{input}{the shiny input object}
