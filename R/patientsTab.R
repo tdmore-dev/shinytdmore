@@ -12,7 +12,7 @@ patientsTabUI <- function(id) {
     "Patients",
     icon = icon("users"),
     titlePanel("Patients"),
-    DTOutput(ns("patientTable")),
+    DT::DTOutput(ns("patientTable")),
     hr(),
     actionButton(ns("newPatientButton"), "New patient")
   )
@@ -24,16 +24,16 @@ patientsTabUI <- function(id) {
 #'
 #' @param ns namespace
 #'
-initDB <- function(ns) {
-  initiateDb()
-  patients <- getAllPatients()
+initDataTable <- function(ns, db) {
+  patients <- db$patients %>%
+    map_dfr(function(x) {as_tibble(x[c("firstname", "lastname", "created_at", "id")])})
   nb <- nrow(patients)
   patients$Name <- shinyInput(FUN=actionLink, id=ns("viewPatientButton"), label=paste(patients$firstname, patients$lastname))
   patients$NameNoHyperlink <- paste(patients$firstname, patients$lastname)
   patients$Admitted <- POSIXToPrettyString(stringToPOSIX(patients$created_at))
   patients$ID <- patients$id
   patients$Remove <- shinyInput(FUN=actionButton, id=ns("removePatientButton"), label=rep("",nb), icon=icon("trash-alt"))
-  DTtable <<- reactiveValues(patients = patients %>% select(ID, NameNoHyperlink, Name, Admitted, Remove))
+  DTtable <<- reactiveValues(patients = patients %>% dplyr::select(ID, NameNoHyperlink, Name, Admitted, Remove))
 }
 
 #'
@@ -42,11 +42,11 @@ initDB <- function(ns) {
 #' @param input the shiny input object
 #' @param ns namespace
 #'
-renderPatientTable <- function(input, ns) {
+renderPatientTable <- function(input, ns, db) {
   DT::renderDataTable(expr = {
     input$modalFormOK
     input$removePatientButton
-    initDB(ns)
+    initDataTable(ns, db)
     return(DTtable$patients)
   }, escape = FALSE, selection = 'single', options = list(
     info = FALSE, paging = FALSE, scrollX = FALSE, scrollY = FALSE,
@@ -117,11 +117,11 @@ setPatient <- function(patient, val) {
 #' 
 #' @export
 #'
-patientsTab <- function(input, output, session, parentSession, val, onNewPatientAdded) {
+patientsTab <- function(input, output, session, parentSession, val, onNewPatientAdded, db) {
   ns <- session$ns
   
   # Unnecessary call but currently needed to have at least 1 patient in the table
-  initDB(ns)
+  initDataTable(ns, db)
   
   # Open patient form dialog if new patient button is clicked
   observeEvent(input$newPatientButton, {
@@ -144,13 +144,13 @@ patientsTab <- function(input, output, session, parentSession, val, onNewPatient
     row <- as.numeric(strsplit(input$removePatientButton, "_")[[1]][2])
     patientRow <- DTtable$patients[row,]
     print(paste0("Remove patient ", patientRow$NameNoHyperlink, " (ID=", patientRow$ID, ")"))
-    removePatient(as.numeric(patientRow$ID))
+    db$remove(patientRow$ID)
     removeModal(session)
-    output$patientTable <- renderPatientTable(input, ns)
+    output$patientTable <- renderPatientTable(input, ns, db)
   })
   
   observeEvent(onNewPatientAdded$trigger, {
-    output$patientTable <- renderPatientTable(input, ns)
+    output$patientTable <- renderPatientTable(input, ns, db)
   })
   
   # View button
@@ -158,12 +158,12 @@ patientsTab <- function(input, output, session, parentSession, val, onNewPatient
     row <- as.numeric(strsplit(input$viewPatientButton, "_")[[1]][2])
     patientRow <- DTtable$patients[row,]
     print(paste0("View patient ", patientRow$NameNoHyperlink, " (ID=", patientRow$ID, ")"))
-    setPatient(getPatient(as.numeric(patientRow$ID)), val)
+    setPatient(db$get(patientRow$ID), val)
     updateTabsetPanel(parentSession, "tabs", selected="Prediction")
   })
   
   # Render the patients table
-  output$patientTable <- renderPatientTable(input, ns)
+  output$patientTable <- renderPatientTable(input, ns, db)
 }
 
 #'

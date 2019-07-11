@@ -184,7 +184,7 @@ covariateModelToJson <- function(covariateModel) {
   df <- data.frame(date=POSIXToString(datePosix))
   covsNames <- colnames(covariateModel)
   covsNames <- covsNames[!(covsNames %in% c("date", "time"))]
-  df <- bind_cols(df, covariateModel %>% select(covsNames))
+  df <- bind_cols(df, covariateModel %>% dplyr::select(covsNames))
   return(df)
 }
 
@@ -213,6 +213,7 @@ patientModelToJson <- function(patientModel) {
 #' @return the patient model
 #' 
 jsonToPatientModel <- function(patientJson) {
+  if(is.string(patientJson)) patientJson <- rjson::fromJSON(patientJson)
   patientModel <- patientJson
   patientModel$doses <- jsonToDoseModel(patientJson$doses)
   patientModel$measures <- jsonToMeasureModel(patientJson$measures)

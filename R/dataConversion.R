@@ -64,7 +64,7 @@ covsToTdmore <- function(covs, firstDoseDate, model) {
   covsDates <- dateAndTimeToPOSIX(covs$date, covs$time)
   if (length(covsNames) > 0) {
     covariates <- bind_cols(data.frame(TIME=as.numeric(difftime(covsDates, firstDoseDate, units="hour"))),
-                            covs %>% select(covsNames))
+                            covs %>% dplyr::select(covsNames))
   } else {
     covariates <- NULL
   }

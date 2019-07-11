@@ -2,7 +2,7 @@
 % Please edit documentation in R/uiMetadata.R
 \name{metadata.tdmore_observed_variables}
 \alias{metadata.tdmore_observed_variables}
-\title{Build  an 'observed variables' metadata.}
+\title{Build an 'observed variables' metadata.}
 \usage{
 \method{metadata}{tdmore_observed_variables}(x, ...)
 }
@@ -15,5 +15,5 @@
 a metadata structure
 }
 \description{
-Build  an 'observed variables' metadata.
+Build an 'observed variables' metadata.
 }

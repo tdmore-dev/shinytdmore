@@ -30,7 +30,8 @@ library(assertthat)
 library(data.table)
 
 # Default config added to environment
-toConfig(key="shinytdmore_db_config", value=defaultDBConfig())
+#toConfig(key="shinytdmore_db_config", value=defaultDBConfig())
+db <- MongoDatabase$new(collection="test", db="test")
 
 ui <- shinyTdmoreUI(title="shinyTDMore",
                     patientsTabUI(id="patientsTabId"),
@@ -46,6 +47,6 @@ conf <- list(save=list(module=saveProject, id="saveProjectId"),
              about=list(module=aboutTab, id="aboutTabId"))
 
 server <- function(input, output, session) {
-  shinyTdmore(input, output, session, conf)
+  shinyTdmore(input, output, session, conf, db=db)
 }
 shinyApp(ui = ui, server = server)

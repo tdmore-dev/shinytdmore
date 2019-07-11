@@ -2,7 +2,7 @@
 % Please edit documentation in R/uiMetadata.R
 \name{getObservedVariables}
 \alias{getObservedVariables}
-\title{Get observed variables from tdmore model.}
+\title{Get the observed variables from the tdmore model.}
 \usage{
 getObservedVariables(model)
 }
@@ -13,5 +13,5 @@ getObservedVariables(model)
 a list of observed variables
 }
 \description{
-Get observed variables from tdmore model.
+Get the observed variables from the tdmore model.
 }

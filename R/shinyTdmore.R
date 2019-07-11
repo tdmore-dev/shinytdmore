@@ -20,33 +20,35 @@ shinyTdmoreUI <- function(title, ...) {
 #' @param output shiny output
 #' @param session shiny session
 #' @param conf modules configuration
+#' @param db database, uses in-memory database if missing
 #' @return server component
 #' @export
 #' 
-shinyTdmore <- function(input, output, session, conf) {
+shinyTdmore <- function(input, output, session, conf, db) {
+  if(missing(db)) db <- InMemoryDatabase$new()
   # Change last tab
   onTabChanged <- reactiveValues()
   observe({
     isolate({onTabChanged$lastTab <- onTabChanged$currentTab})
     onTabChanged$currentTab <- input$tabs
   })
-  callModule(module=conf$save$module, id=conf$save$id, onTabChanged, val)
+  callModule(module=conf$save$module, id=conf$save$id, onTabChanged, val, db=db)
   
   # Call module new patient dialog
   onNewPatientAdded <- reactiveValues()
-  callModule(module=conf$new_patient$module, id=conf$new_patient$id, onNewPatientAdded)
+  callModule(module=conf$new_patient$module, id=conf$new_patient$id, onNewPatientAdded, db=db)
   
   # Create the main reactive container
   val <- reactiveValues()
   
   # Call module patients tab
-  callModule(module=conf$patients$module, id=conf$patients$id, parentSession=session, val, onNewPatientAdded)
+  callModule(module=conf$patients$module, id=conf$patients$id, parentSession=session, val, onNewPatientAdded, db=db)
   
   # Select first patient by default, needed for predictions tab
   isolate({
     if (is.null(val$patient)) {
       id <- DTtable$patients[1,]$ID
-      setPatient(getPatient(id), val) ## sensible default
+      setPatient(db$get(id), val) ## sensible default
     }
   })
   
@@ -73,13 +75,11 @@ selectPatientFromURL <- function(session, val) {
     query <- parseQueryString(session$clientData$url_search)
     value <- query[["patient"]]
     if (!is.null(value)) {
-      patientId <- as.numeric(value)
-      if (!is.na(patientId)) {
-        patient <- getPatient(patientId)
-        if (!is.null(patient)) {
-          setPatient(patient, val)
-          updateTabsetPanel(session, "tabs", selected="Prediction")
-        }
+      patientId <- value
+      patient <- db$get(patientId)
+      if (!is.null(patient)) {
+        setPatient(patient, val)
+        updateTabsetPanel(session, "tabs", selected="Prediction")
       }
     }
   })

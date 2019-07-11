@@ -4,7 +4,7 @@
 \alias{saveData}
 \title{Save data of both user and covariate forms.}
 \usage{
-saveData(userData, modelName, covariateData)
+saveData(userData, modelName, covariateData, db)
 }
 \arguments{
 \item{userData}{data from user from, named vector}
