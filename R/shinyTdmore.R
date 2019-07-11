@@ -32,7 +32,6 @@ shinyTdmore <- function(input, output, session, conf, db) {
     isolate({onTabChanged$lastTab <- onTabChanged$currentTab})
     onTabChanged$currentTab <- input$tabs
   })
-  callModule(module=conf$save$module, id=conf$save$id, onTabChanged, val, db=db)
   
   # Call module new patient dialog
   onNewPatientAdded <- reactiveValues()
@@ -44,14 +43,6 @@ shinyTdmore <- function(input, output, session, conf, db) {
   # Call module patients tab
   callModule(module=conf$patients$module, id=conf$patients$id, parentSession=session, val, onNewPatientAdded, db=db)
   
-  # Select first patient by default, needed for predictions tab
-  isolate({
-    if (is.null(val$patient)) {
-      id <- DTtable$patients[1,]$ID
-      setPatient(db$get(id), val) ## sensible default
-    }
-  })
-  
   # Call module prediction tab
   callModule(module=conf$prediction$module, id=conf$prediction$id, val)
 
@@ -61,26 +52,35 @@ shinyTdmore <- function(input, output, session, conf, db) {
   # Call module about tab (currently no logic)
   callModule(module=conf$about$module, id=conf$about$id)
   
-  # Select a patient from the URL
-  selectPatientFromURL(session, val)
+  # Call save module
+  callModule(module=conf$save$module, id=conf$save$id, onTabChanged, val, db=db)
+  
+  # Select a patient (last in DB or from URL)
+  selectPatient(session, val)
 }
 
-#' Select patient from URL logic.
+#' Select patient (last in DB or from URL).
 #'
 #' @param session shiny session
 #' @param val main reactive container
 #' 
-selectPatientFromURL <- function(session, val) {
+selectPatient <- function(session, val) {
   observeEvent(session$clientData$url_search, {
     query <- parseQueryString(session$clientData$url_search)
     value <- query[["patient"]]
+    updated <- F
     if (!is.null(value)) {
       patientId <- value
-      patient <- db$get(patientId)
-      if (!is.null(patient)) {
-        setPatient(patient, val)
-        updateTabsetPanel(session, "tabs", selected="Prediction")
-      }
+        patient <- db$get(patientId)
+        if (!is.null(patient)) {
+          setPatient(patient, val)
+          updateTabsetPanel(session, "tabs", selected="Prediction")
+          updated <- T
+        }
+    }
+    if (!updated && is.null(val$patient)) {
+        id <- DTtable$patients[1,]$ID
+        setPatient(getPatient(id), val) ## sensible default
     }
   })
 }

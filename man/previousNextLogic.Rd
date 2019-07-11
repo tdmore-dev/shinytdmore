@@ -4,7 +4,7 @@
 \alias{previousNextLogic}
 \title{Previous/Next button logic.}
 \usage{
-previousNextLogic(input, output, session, val, ns)
+previousNextLogic(input, output, session, val, outputReact, ns)
 }
 \arguments{
 \item{input}{shiny input}
@@ -14,6 +14,8 @@ previousNextLogic(input, output, session, val, ns)
 \item{session}{shiny session}
 
 \item{val}{main reactive container}
+
+\item{outputReact}{reactive value for the plot type}
 
 \item{ns}{namespace}
 }
