@@ -30,7 +30,6 @@ shinyTdmore <- function(input, output, session, conf) {
     isolate({onTabChanged$lastTab <- onTabChanged$currentTab})
     onTabChanged$currentTab <- input$tabs
   })
-  callModule(module=conf$save$module, id=conf$save$id, onTabChanged, val)
   
   # Call module new patient dialog
   onNewPatientAdded <- reactiveValues()
@@ -58,6 +57,9 @@ shinyTdmore <- function(input, output, session, conf) {
   
   # Call module about tab (currently no logic)
   callModule(module=conf$about$module, id=conf$about$id)
+  
+  # Call save module
+  callModule(module=conf$save$module, id=conf$save$id, onTabChanged, val)
   
   # Select a patient from the URL
   selectPatientFromURL(session, val)

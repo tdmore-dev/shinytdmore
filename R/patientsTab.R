@@ -70,25 +70,23 @@ setPatient <- function(patient, val) {
   val$model <- model
   
   # Copy covariates
-  db_covs <- patient$covariates
-  val$db_covs <- autoSortByDate(db_covs) # Auto-sort the first time
+  val$covs <- autoSortByDate(patient$covariates) # Auto-sort the first time
   
   # Copy doses
-  db_dose <- patient$doses
-  val$db_dose <- autoSortByDate(db_dose) # Auto-sort the first time
+  val$doses <- autoSortByDate(patient$doses) # Auto-sort the first time
   
   # Copy measures
-  db_obs <- patient$measures
+  obs <- patient$measures
 
-  if(nrow(db_obs) == 0){
-    db_obs$use <- logical() # Add column type
+  if(nrow(obs) == 0){
+    obs$use <- logical() # Add column type
   } else {
-    db_obs$use <- TRUE # All measures used by default
+    obs$use <- TRUE # All measures used by default
   }
-  val$db_obs <- autoSortByDate(db_obs) # Auto-sort the first time
+  val$obs <- autoSortByDate(obs) # Auto-sort the first time
   
   # Copy now_date
-  val$now_date <- patient$now_date
+  val$now <- patient$now_date
   
   # Define target
   target <- getMetadataByName(val$model, "TARGET")

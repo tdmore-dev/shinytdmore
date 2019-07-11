@@ -23,10 +23,10 @@ tabHasChanged <- function(onTabChanged) {
 #'
 dataHasChanged <- function(val) {
   patient <- val$patient
-  dosesHasChanged <- !are_equal(patient$doses, val$db_dose)
-  measuresHasChanged <- !are_equal(patient$measures, val$db_obs %>% select(-use))
-  nowDateHasChanged <- !are_equal(patient$now_date, val$now_date)
-  covariatesHasChanged <- !are_equal(patient$covariates, val$db_covs)
+  dosesHasChanged <- !are_equal(patient$doses, val$doses)
+  measuresHasChanged <- !are_equal(patient$measures, val$obs %>% select(-use))
+  nowDateHasChanged <- !are_equal(patient$now_date, val$now)
+  covariatesHasChanged <- !are_equal(patient$covariates, val$covs)
   return(dosesHasChanged || measuresHasChanged || nowDateHasChanged || covariatesHasChanged)
 }
 
@@ -36,10 +36,10 @@ dataHasChanged <- function(val) {
 #' @param val main reactive container
 #'
 saveProjectToDB <- function(val) {
-  val$patient <- updatePatientDoses(val$patient, val$db_dose)
-  val$patient <- updatePatientMeasures(val$patient, val$db_obs %>% select(-use))
-  val$patient <- updateNowDate(val$patient, val$now_date)
-  val$patient <- updatePatientCovariates(val$patient, val$db_covs)
+  val$patient <- updatePatientDoses(val$patient, val$doses)
+  val$patient <- updatePatientMeasures(val$patient, val$obs %>% select(-use))
+  val$patient <- updateNowDate(val$patient, val$now)
+  val$patient <- updatePatientCovariates(val$patient, val$covs)
   updatePatient(val$patient$id, val$patient)
 }
 

@@ -4,7 +4,7 @@
 \alias{reportsTab}
 \title{Reports tab server.}
 \usage{
-reportsTab(input, output, session)
+reportsTab(input, output, session, val)
 }
 \arguments{
 \item{input}{shiny input}
@@ -12,6 +12,8 @@ reportsTab(input, output, session)
 \item{output}{shiny output}
 
 \item{session}{shiny session}
+
+\item{val}{main reactive container}
 }
 \description{
 Reports tab server.

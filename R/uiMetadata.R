@@ -9,7 +9,7 @@
 #' @return a tdmore_observed_variables object
 #' @export
 observed_variables <- function(variables) {
-  assert_that(is.character(variables))
+  assertthat::assert_that(is.character(variables))
   structure(list(
     name="OBSERVED_VARIABLES",
     variables=variables
