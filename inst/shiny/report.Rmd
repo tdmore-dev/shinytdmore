@@ -15,7 +15,8 @@ library(assertthat)
 ```
 
 ```{r, echo=F}
-patient <- getPatient(params$id)
+db <- MongoDatabase$new(db="test", collection="test")
+patient <- db$get(params$id)
 ```
 
 ## Patient data

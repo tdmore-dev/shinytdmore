@@ -56,7 +56,7 @@ shinyTdmore <- function(input, output, session, conf, db) {
   callModule(module=conf$save$module, id=conf$save$id, onTabChanged, val, db=db)
   
   # Select a patient (last in DB or from URL)
-  selectPatient(session, val)
+  selectPatient(session, val, db)
 }
 
 #' Select patient (last in DB or from URL).
@@ -64,7 +64,7 @@ shinyTdmore <- function(input, output, session, conf, db) {
 #' @param session shiny session
 #' @param val main reactive container
 #' 
-selectPatient <- function(session, val) {
+selectPatient <- function(session, val, db) {
   observeEvent(session$clientData$url_search, {
     query <- parseQueryString(session$clientData$url_search)
     value <- query[["patient"]]
@@ -80,7 +80,7 @@ selectPatient <- function(session, val) {
     }
     if (!updated && is.null(val$patient)) {
         id <- DTtable$patients[1,]$ID
-        setPatient(getPatient(id), val) ## sensible default
+        setPatient(db$get(id), val) ## sensible default
     }
   })
 }
