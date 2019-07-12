@@ -10,7 +10,7 @@ reportsTabUI <- function(id) {
   ns <- NS(id)
   panel <- tabPanel(
     "Reports",
-    icon = icon("file-text"),
+    icon = icon("book"),
     fluidRow(
       div(
         h5("Click the button below to download the report of", style="display: inline-block; vertical-align: middle;"),

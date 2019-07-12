@@ -119,7 +119,8 @@ tacro_2cpt <- RxODE::RxODE(m1Code) %>% tdmore(
   res_var=list( errorModel(var="Cwb",
                            add=monolixValues %>% dplyr::filter(parameter=="a") %>% pull(value),
                            prop=monolixValues %>% dplyr::filter(parameter=="b") %>% pull(value)) )
-) %>% metadata(covariate("CYP3A5", label="CYP3A5 expressor", choices=list(Fast=0, Slow=1))) %>%
+) %>% metadata(covariate(name="WT", label="Weight", unit="kg", min=20, max=150)) %>%
+  metadata(covariate("CYP3A5", label="CYP3A5 expressor", choices=list(Fast=0, Slow=1))) %>%
   metadata(output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
   metadata(dose(unit="mg", dosing_interval=12, default_value=8)) %>%
   metadata(target(min=12, max=15)) %>%

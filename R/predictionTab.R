@@ -12,7 +12,7 @@ predictionTabUI <- function(id) {
     "Prediction",
     icon = icon("address-card"),
     div(
-      actionButton(ns("sidebarCollapse"), icon=icon("minus-square"), label="", style="display: inline-block; vertical-align: middle; font-size:120%;"),
+      actionButton(ns("sidebarCollapse"), icon=icon("minus-square"), label=NULL, style="display: inline-block; vertical-align: middle; font-size:150%;"),
       span(textOutput(outputId=ns("tab_title")), style="display: inline-block; vertical-align: middle; margin-left: 10px;")
     ),
     fluidRow(class="wrapper",
@@ -459,10 +459,10 @@ predictionTab <- function(input, output, session, val) {
       output$recommendationPlot <- plotly::renderPlotly(recommendationPlot())
     }
     if (is.null(val$collapsed) || val$collapsed==F) {
-      updateActionButton(session, ns("sidebarCollapse"), label=NULL, icon=icon("plus-square"))
+      updateActionButton(session, "sidebarCollapse", label=NULL, icon=icon("plus-square")) # ns() not needed
       val$collapsed <- T
     } else {
-      updateActionButton(session, ns("sidebarCollapse"), label=NULL, icon=icon("minus-square"))
+      updateActionButton(session, "sidebarCollapse", label=NULL, icon=icon("minus-square")) # ns() not needed
       val$collapsed <- F
     }
   })

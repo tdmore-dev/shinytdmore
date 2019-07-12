@@ -78,10 +78,11 @@ setPatient <- function(patient, val) {
   val$patient <- patient
 
   # Copy model
-  modelId <- patient$model
-  model <- get(modelId)
-  if(is.null(model)) stop("Model ", modelId, " not available...")
+  model_id <- patient$model
+  model <- get(model_id)
+  if(is.null(model)) stop("Model ", model_id, " not available...")
   val$model <- model
+  val$model_id <- model_id
   
   # Copy covariates
   val$covs <- autoSortByDate(patient$covariates) # Auto-sort the first time
