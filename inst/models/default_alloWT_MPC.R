@@ -29,6 +29,7 @@ nlmixrUI(function(){
     CONC ~ prop(EPS_PROP)
   })
 }) %>% tdmore(iov=c("EV1", "ECL")) %>% 
+  metadata(covariate(name="WT", label="Weight", unit="kg", min=20, max=150)) %>%
   metadata(output(name="CONC", label="Drug concentration", unit="mg/mL", default_value=5)) %>%
   metadata(dose(unit="mg", dosing_interval=24, default_value=5)) %>%
   metadata(target(min=4, max=8)) %>% 

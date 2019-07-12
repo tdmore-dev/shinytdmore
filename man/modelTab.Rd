@@ -4,7 +4,7 @@
 \alias{modelTab}
 \title{Model tab server.}
 \usage{
-modelTab(input, output, session, val)
+modelTab(input, output, session, val, onTabChanged)
 }
 \arguments{
 \item{input}{shiny input}
@@ -14,6 +14,8 @@ modelTab(input, output, session, val)
 \item{session}{shiny session}
 
 \item{val}{main reactive container}
+
+\item{onTabChanged}{on tab changed}
 }
 \description{
 Model tab server.

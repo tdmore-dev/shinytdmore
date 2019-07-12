@@ -2,7 +2,7 @@
 % Please edit documentation in R/saveProject.R
 \name{dataHasChanged}
 \alias{dataHasChanged}
-\title{Say if data (measures or doses) have been changed by the user.}
+\title{Say if data (measures, doses, covariates, now date or model) have been changed by the user.}
 \usage{
 dataHasChanged(val)
 }
@@ -13,5 +13,5 @@ dataHasChanged(val)
 a logical value
 }
 \description{
-Say if data (measures or doses) have been changed by the user.
+Say if data (measures, doses, covariates, now date or model) have been changed by the user.
 }

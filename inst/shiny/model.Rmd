@@ -2,7 +2,7 @@
 title: ""
 output: md_document
 params:
-    id: NA
+   modelId: NA
 ---
 
 ```{r, echo=F, message=F}
@@ -14,12 +14,7 @@ library(tidyverse)
 library(assertthat)
 ```
 
-```{r, echo=F}
-db <- MongoDatabase$new(db="test", collection="test")
-patient <- db$get(params$id)
-```
 
-Name: `r patient$model`
 ```{r, echo=F, comment=NA}
-summary(get(patient$model))
+summary(get(params$modelId))
 ```

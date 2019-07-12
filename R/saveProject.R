@@ -5,7 +5,7 @@
 #' @param onTabChanged onTabChanged reactive values
 #' @return a logical value
 #'
-tabHasChanged <- function(onTabChanged) {
+onPredictionTabExit <- function(onTabChanged) {
   currentTab <- onTabChanged$currentTab
   lastTab <- onTabChanged$lastTab
   if (is.null(lastTab)) {
@@ -16,7 +16,7 @@ tabHasChanged <- function(onTabChanged) {
 }
 
 #'
-#' Say if data (measures or doses) have been changed by the user.
+#' Say if data (measures, doses, covariates, now date or model) have been changed by the user.
 #'
 #' @param val main reactive container
 #' @return a logical value
@@ -27,7 +27,8 @@ dataHasChanged <- function(val) {
   measuresHasChanged <- !are_equal(patient$measures, val$obs %>% select(-use))
   nowDateHasChanged <- !are_equal(patient$now_date, val$now)
   covariatesHasChanged <- !are_equal(patient$covariates, val$covs)
-  return(dosesHasChanged || measuresHasChanged || nowDateHasChanged || covariatesHasChanged)
+  modelHasChanged <- !are_equal(patient$model, val$model_id)
+  return(dosesHasChanged || measuresHasChanged || nowDateHasChanged || covariatesHasChanged || modelHasChanged)
 }
 
 #'
@@ -40,6 +41,7 @@ saveProjectToDB <- function(val, db) {
   val$patient <- updatePatientMeasures(val$patient, val$obs %>% dplyr::select(-use))
   val$patient <- updateNowDate(val$patient, val$now)
   val$patient <- updatePatientCovariates(val$patient, val$covs)
+  val$patient <- updatePatientModel(val$patient, val$model_id)
   db$update(val$patient$id, val$patient)
 }
 
@@ -63,7 +65,7 @@ saveProject <- function(input, output, session, onTabChanged, val, db) {
   
   # Save project logic
   observeEvent(onTabChanged$currentTab, {
-    if (tabHasChanged(onTabChanged) && dataHasChanged(val)) {
+    if (onPredictionTabExit(onTabChanged) && dataHasChanged(val)) {
       # Make sure the patient is not read-only
       if (isReadOnlyPatient(val$patient)) {
         showModal(

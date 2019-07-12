@@ -47,7 +47,7 @@ shinyTdmore <- function(input, output, session, conf, db) {
   callModule(module=conf$prediction$module, id=conf$prediction$id, val)
 
   # Call model prediction tab
-  callModule(module=conf$model$module, id=conf$model$id, val)
+  callModule(module=conf$model$module, id=conf$model$id, val, onTabChanged)
   
   # Call module reports tab (currently no logic)
   callModule(module=conf$reports$module, id=conf$reports$id, val)
