@@ -23,17 +23,31 @@ patientsTabUI <- function(id) {
 #' Collect data from the mongoDB.
 #'
 #' @param ns namespace
+#' @importFrom purrr map_dfr
 #'
 initDataTable <- function(ns, db) {
-  patients <- db$patients %>%
-    map_dfr(function(x) {as_tibble(x[c("firstname", "lastname", "created_at", "id")])})
-  nb <- nrow(patients)
-  patients$Name <- shinyInput(FUN=actionLink, id=ns("viewPatientButton"), label=paste(patients$firstname, patients$lastname))
-  patients$NameNoHyperlink <- paste(patients$firstname, patients$lastname)
-  patients$Admitted <- POSIXToPrettyString(stringToPOSIX(patients$created_at))
-  patients$ID <- patients$id
-  patients$Remove <- shinyInput(FUN=actionButton, id=ns("removePatientButton"), label=rep("",nb), icon=icon("trash-alt"))
-  DTtable <<- reactiveValues(patients = patients %>% dplyr::select(ID, NameNoHyperlink, Name, Admitted, Remove))
+  displayPatientsDf <- data.frame(
+    ID=character(),
+    NameNoHyperlink=character(),
+    Name=character(),
+    Admitted=character(),
+    Remove=character()
+  )
+  
+  patients <- db$patients
+  if(length(patients) > 0) {
+    patients <- patients %>%
+      purrr::map_dfr(function(x) {tibble::as_tibble(x[c("firstname", "lastname", "created_at", "id")])})
+    nb <- nrow(patients)
+    
+    patients$Name <- shinyInput(FUN=actionLink, id=ns("viewPatientButton"), label=paste(patients$firstname, patients$lastname))
+    patients$NameNoHyperlink <- paste(patients$firstname, patients$lastname)
+    patients$Admitted <- patients$created_at %>% purrr::map(stringToPOSIX) %>% purrr::map(POSIXToPrettyString)
+    patients$ID <- patients$id
+    patients$Remove <- shinyInput(FUN=actionButton, id=ns("removePatientButton"), label=rep("",nb), icon=icon("trash-alt"))
+    displayPatientsDf <- patients %>% dplyr::select(ID, NameNoHyperlink, Name, Admitted, Remove)
+  }
+  DTtable <<- reactiveValues(patients = displayPatientsDf)
 }
 
 #'

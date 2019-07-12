@@ -6,10 +6,6 @@ library(rjson)
 library(tidyverse)
 
 context("Test the patient model")
-toConfig(key="shinytdmore_db_config", value=testDBConfig()) # Make sure the test DB config is enabled (a test database is used)
-
-# Remove everything from the database
-getDB()$remove("{}")
 
 # Create a patient and update the TDM model
 patientModel <- createPatient("Nicolas", "Luyckx")

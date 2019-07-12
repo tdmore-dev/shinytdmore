@@ -4,7 +4,7 @@
 #' @export
 #' 
 createFakePatient <- function() {
-  patient <- createPatient("Ruben", "Faelens")
+  patient <- createPatient("Demo", "Patient")
   patient <- updatePatientModel(patient, "bergmann2014_base")
   currentDate <- Sys.Date()
   currentTime <- Sys.time()

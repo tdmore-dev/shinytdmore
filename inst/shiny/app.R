@@ -30,7 +30,6 @@ library(assertthat)
 library(data.table)
 
 # Default config added to environment
-#toConfig(key="shinytdmore_db_config", value=defaultDBConfig())
 db <- MongoDatabase$new(collection="test", db="test")
 if(length(db$patients) == 0) db$add(createFakePatient())
 

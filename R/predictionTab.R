@@ -265,7 +265,7 @@ predictionTab <- function(input, output, session, val) {
   # Observations/Measures table logic
   output$hotobs <- rhandsontable::renderRHandsontable({
     borderRow <- getTableBorderIndex(val$obs, val$now, F)
-    rhandsontable(val$obs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
+    rhandsontable::rhandsontable(val$obs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
                   colHeaders = c("Date", "Time", getMeasureColumnLabel(val$model), "Use")) %>%
       rhandsontable::hot_col("Use", halign = "htCenter") %>%
       rhandsontable::hot_col(col="Time", type="dropdown", source=hoursList()) %>%
@@ -297,7 +297,7 @@ predictionTab <- function(input, output, session, val) {
   })
   
   # Doses table logic
-  output$hotdose <- renderRHandsontable({
+  output$hotdose <- rhandsontable::renderRHandsontable({
     borderRow <- getTableBorderIndex(val$doses, val$now, T)
     rhandsontable::rhandsontable(val$doses, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
                   colHeaders = c("Date", "Time", getDoseColumnLabel(val$model))) %>%

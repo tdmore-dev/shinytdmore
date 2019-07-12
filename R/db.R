@@ -161,7 +161,7 @@ JsonDatabase <- R6Class("JsonDatabase",
                     active=list(
                       patients=function(value) {
                         jsonList <- private$doGetPatients()
-                        map(jsonList, private$fromJson)
+                        purrr::map(jsonList, private$fromJson)
                       }
                     ),
                     private=list(
@@ -199,29 +199,37 @@ InMemoryDatabase <- R6Class("InMemoryDatabase", inherit=Database,
     }
   ))
 
+#' @export
 FileDatabase <- R6Class("FileDatabase", inherit=JsonDatabase,
   private=list(folder=list(),
   doGet=function(id) {
-    fileName <- file.path(folder, sprintf('%s.json', id))
+    fileName <- file.path(private$folder, sprintf('%s.json', id))
     readChar(fileName, file.info(fileName)$size)
   },
   doUpdate=function(id,patient) {
-    fileName <- file.path(folder, sprintf('%s.json', id))
-    writeChar(fileName, patient)
+    fileName <- file.path(private$folder, sprintf('%s.json', id))
+    writeChar(patient, fileName)
   },
   doRemove=function(id) {
-    fileName <- file.path(folder, sprintf('%s.json', id))
+    fileName <- file.path(private$folder, sprintf('%s.json', id))
     unlink(fileName)
   },
   doAdd=function(patient) {
     id <- floor(runif(n=1, max = .Machine$integer.max))
-    fileName <- file.path(folder, sprintf('%s.json', id))
+    fileName <- file.path(private$folder, sprintf('%s.json', id))
     if(file.exists(fileName)) return(doAdd(patient)) #try again
-    doUpdate(id, patient)
+    private$doUpdate(id, patient)
     id
   },
   doGetPatients=function() {
-    map( dir(folder), ~ readChar(.x, file.info(.x)$size) )
+    read <- function(filename) {
+      ## Add the `id`
+      x <- readChar(filename, file.info(filename)$size) %>% rjson::fromJSON()
+      id <- basename(filename) %>% gsub("\\.json$", "", .)
+      x$id <- id
+      rjson::toJSON(x)
+    }
+    purrr::map( dir(private$folder, full.names=T), read)
   }
 ),
 public=list(

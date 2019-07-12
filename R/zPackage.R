@@ -5,4 +5,5 @@ as.tibble <- tibble::as.tibble
 bind_cols <- dplyr::bind_cols
 
 #' @import shiny
+#' @import ggplot2
 NULL

@@ -235,9 +235,9 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
 #'
 preparePredictionPlot <- function(data, obs, target, population, model, now) {
   color <- if(population) {predColor()} else {ipredColor()}
-  obs <- obs %>% filter(use==TRUE) # Plot only 'used' observations
+  obs <- obs %>% dplyr::filter(use==TRUE) # Plot only 'used' observations
   obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
-  data <- data %>% mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
+  data <- data %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)
   output <- getModelOutput(model)
@@ -353,8 +353,8 @@ prepareRecommendedTimelinePlot <- function(originalDoses, recommendedDoses, xlim
   nudge_II <- II/24*60*60 #empirical ratio
   
   plot <- ggplot(doses_copy, aes(x=TIME,y=AMT)) +
-    geom_text(data=doses_copy %>% filter(TIME>now),aes(x=TIME, y=AMT, label=AMT), nudge_x=nudge_II, nudge_y=0, check_overlap=T, show.legend=F,color=recommendationColor()) +
-    geom_linerange(data=doses_copy %>% filter(TIME>now),ymin=0, aes(ymax=DOSE), position = position_nudge(x = nudge_II),color=recommendationColor()) +
+    geom_text(data=doses_copy %>% dplyr::filter(TIME>now),aes(x=TIME, y=AMT, label=AMT), nudge_x=nudge_II, nudge_y=0, check_overlap=T, show.legend=F,color=recommendationColor()) +
+    geom_linerange(data=doses_copy %>% dplyr::filter(TIME>now),ymin=0, aes(ymax=DOSE), position = position_nudge(x = nudge_II),color=recommendationColor()) +
     geom_text(data=doses_copy2,aes(x=TIME, y=AMT, label=AMT), nudge_x=-nudge_II, nudge_y=0, check_overlap=T, show.legend=F, alpha=0.2) +
     geom_linerange(data=doses_copy2,ymin=0, aes(ymax=DOSE), position = position_nudge(x = -nudge_II), alpha=0.2) +
     coord_cartesian(xlim=c(xlim[1]-nudge_II,xlim[2]), ylim=c(0, maxDose + addSpace)) +
@@ -451,12 +451,12 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
 #'
 prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommendation, now) {
   firstDoseDate <- recommendation$firstDoseDate
-  ipred <- recommendation$ipred %>% mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
-  ipredNew <- recommendation$ipredNew %>% mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
+  ipred <- recommendation$ipred %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
+  ipredNew <- recommendation$ipredNew %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   recommendedRegimen <- recommendation$recommendedRegimen
   recommendedRegimen$dose <- round(recommendedRegimen$AMT, digits=2)
   
-  obs <- obs %>% filter(use==TRUE) # Plot only used observations
+  obs <- obs %>% dplyr::filter(use==TRUE) # Plot only used observations
   obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)

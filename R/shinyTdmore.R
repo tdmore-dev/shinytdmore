@@ -79,8 +79,13 @@ selectPatient <- function(session, val, db) {
         }
     }
     if (!updated && is.null(val$patient)) {
+      if(nrow(DTtable$patients) > 0) {
         id <- DTtable$patients[1,]$ID
-        setPatient(db$get(id), val) ## sensible default
+        patient <- db$get(id)
+      } else {
+        patient <- createFakePatient()
+      }
+      setPatient(patient, val) ## sensible default
     }
   })
 }
