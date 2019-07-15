@@ -28,7 +28,7 @@
 #' 
 #' @section Implementing a database:
 #' ```
-#' InMemoryDatabase <- R6Class("InMemoryDatabase", inherit=Database,
+#' InMemoryDatabase <- R6::R6Class("InMemoryDatabase", inherit=Database,
 #'  private=list(storage=list()),
 #'  public=list(
 #'    get=function(id) storage[[id]],
@@ -69,10 +69,10 @@
 #' `$patients` retrieves a list of all patients in the database
 #'
 #' @section JSON Database:
-#' For simplicity, one could also inherit the `JsonDatabase` R6Class instead. 
+#' For simplicity, one could also inherit the `JsonDatabase` R6::R6Class instead. 
 #' This class takes care of marshalling from/to JSON, making an implementation easier.
 #' ```
-#' FileDatabase <- R6Class("FileDatabase", inherit=JsonDatabase,
+#' FileDatabase <- R6::R6Class("FileDatabase", inherit=JsonDatabase,
 #'    private=list(folder=list(),
 #'    doGet=function(id) {
 #'      fileName <- file.path(folder, sprintf('%s.json', id))
@@ -113,6 +113,7 @@
 #' id <- patient$id
 #'
 #' @import R6 
+#' @importFrom R6 R6Class
 #'
 NULL
 
@@ -121,7 +122,7 @@ not_implemented <- function() {
 }
 
 #' @export
-Database <- R6Class("Database", lock_objects=TRUE, lock_class=TRUE,
+Database <- R6::R6Class("Database", lock_objects=TRUE, lock_class=TRUE,
                     public=list(
                       get=function(id) not_implemented(),
                       update=function(id,patient) not_implemented(),
@@ -133,7 +134,7 @@ Database <- R6Class("Database", lock_objects=TRUE, lock_class=TRUE,
                       ))
 
 #' @export
-JsonDatabase <- R6Class("JsonDatabase", 
+JsonDatabase <- R6::R6Class("JsonDatabase", 
                         inherit=Database,
                         lock_objects=TRUE, lock_class=TRUE,
                     public=list(
@@ -175,21 +176,22 @@ JsonDatabase <- R6Class("JsonDatabase",
                       ))
 
 #' @export
-InMemoryDatabase <- R6Class("InMemoryDatabase", inherit=Database,
+InMemoryDatabase <- R6::R6Class("InMemoryDatabase", inherit=Database,
   private=list(storage=list()),
   public=list(
-    get=function(id) storage[[id]],
+    get=function(id) private$storage[[id]],
     update=function(id,patient) {
-      storage[[id]] <- patient
+      patient$id <- id
+      private$storage[[id]] <- patient
       invisible(self)
     },
     remove=function(id) {
-      storage[[id]] <- NULL
+      private$storage[[id]] <- NULL
       invisible(self)
     },
     add=function(patient) {
+      patient$id <- length(private$storage) + 1
       private$storage <- c(private$storage, list(patient))
-      patient$id <- length(storage)
     }
   ),
   active=list(
@@ -200,7 +202,7 @@ InMemoryDatabase <- R6Class("InMemoryDatabase", inherit=Database,
   ))
 
 #' @export
-FileDatabase <- R6Class("FileDatabase", inherit=JsonDatabase,
+FileDatabase <- R6::R6Class("FileDatabase", inherit=JsonDatabase,
   private=list(folder=list(),
   doGet=function(id) {
     fileName <- file.path(private$folder, sprintf('%s.json', id))
