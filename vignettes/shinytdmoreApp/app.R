@@ -7,6 +7,7 @@ db <- FileDatabase$new(dir)
 ui <- shinyTdmoreUI(title="shinyTDMore",
                     patientsTabUI(id="patientsTabId"),
                     predictionTabUI(id="predictionTabId"),
+                    modelTabUI(id="modelTabId"),
                     reportsTabUI(id="reportsTabId"),
                     aboutTabUI(id="aboutTabId"))
 
@@ -14,6 +15,7 @@ conf <- list(save=list(module=saveProject, id="saveProjectId"),
              new_patient=list(module=newPatientDialog, id="newPatientDialogId"),
              patients=list(module=patientsTab, id="patientsTabId"),
              prediction=list(module=predictionTab, id="predictionTabId"),
+             model=list(module=modelTab, id="modelTabId"),
              reports=list(module=reportsTab, id="reportsTabId"),
              about=list(module=aboutTab, id="aboutTabId"))
 
