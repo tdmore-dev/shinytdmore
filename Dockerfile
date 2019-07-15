@@ -16,6 +16,7 @@ RUN R -e 'install.packages("jsonvalidate")'
 RUN R -e 'install.packages("rjson")'
 RUN R -e 'install.packages("plumber")'
 RUN R -e 'install.packages("mongolite")'
+RUN R -e 'install.packages("R6")'
 
 ## Requirements for Shiny app
 RUN R -e 'install.packages("DT")'
