@@ -20,7 +20,8 @@
 
 #' @export
 #' @importFrom mongolite mongo
-MongoDatabase <- R6Class("MongoDatabase", inherit=JsonDatabase,
+#' @importFrom R6 R6Class
+MongoDatabase <- R6::R6Class("MongoDatabase", inherit=JsonDatabase,
   private=list(
     db=NULL,
     doGet=function(id) {
