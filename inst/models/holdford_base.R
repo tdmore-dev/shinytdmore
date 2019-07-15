@@ -1,4 +1,5 @@
 library(tdmore)
+library(shinytdmore)
 library(RxODE)
 
 rxModel <- RxODE::RxODE('

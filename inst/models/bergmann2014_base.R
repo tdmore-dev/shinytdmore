@@ -1,4 +1,5 @@
 library(tdmore)
+library(shinytdmore)
 library(RxODE)
 
 # Bergmann, Troels K., et al. "Population pharmacokinetics of tacrolimus in adult kidney transplant patients:
