@@ -1,10 +1,6 @@
 # Use the pre-built tdmore image
 FROM rfaelens/tdmore:latest
 
-# Set the working directory to /app
-WORKDIR /app
-COPY . /app
-
 # prepare for installation of packages via apt-get
 RUN apt-get update
 
@@ -23,6 +19,10 @@ RUN R -e 'install.packages("DT")'
 RUN R -e 'install.packages("plotly")'
 RUN R -e 'install.packages("rhandsontable")'
 RUN R -e 'install.packages("shinyBS")'
+
+# Set the working directory to /app
+WORKDIR /app
+COPY . /app
 
 # Do not consider dependencies here
 # This solves the issue that tdmore-dev/tdmore is a private repository,
