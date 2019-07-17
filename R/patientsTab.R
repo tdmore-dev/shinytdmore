@@ -37,7 +37,8 @@ initDataTable <- function(ns, db) {
   patients <- db$patients
   if(length(patients) > 0) {
     patients <- patients %>%
-      purrr::map_dfr(function(x) {tibble::as_tibble(x[c("firstname", "lastname", "created_at", "id")])})
+      purrr::map_dfr(function(x) {tibble::as_tibble(x[c("firstname", "lastname", "created_at", "id", "private")])}) %>%
+      dplyr::filter(!private) # Only show patients who are not 'private'
     nb <- nrow(patients)
     
     patients$Name <- shinyInput(FUN=actionLink, id=ns("viewPatientButton"), label=paste(patients$firstname, patients$lastname))

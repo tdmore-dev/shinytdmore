@@ -12,6 +12,8 @@ saveData(userData, modelName, covariateData, db)
 \item{modelName}{model name}
 
 \item{covariateData}{data from covariate form, named vector}
+
+\item{db}{db}
 }
 \description{
 Save data of both user and covariate forms.

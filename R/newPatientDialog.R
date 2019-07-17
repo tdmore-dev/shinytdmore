@@ -4,12 +4,9 @@
 #' @param userData data from user from, named vector
 #' @param modelName model name
 #' @param covariateData data from covariate form, named vector
+#' @param db db
 #' 
 saveData <- function(userData, modelName, covariateData, db) {
-  # See if patient already exists (in this case, model and covariates will be updated)
-  # FIXME: how ugly! What about two patients with same name (Jan Janssens)?
-  #patient <- getPatient(firstname = userData[["firstname"]], lastname = userData[["lastname"]])
-  patient <- NULL
   if (!is.null(covariateData)) {
     covs <- setNames(as.numeric(covariateData), names(covariateData)) # String to numeric conversion
     covs <- as.list(covs)
@@ -21,31 +18,24 @@ saveData <- function(userData, modelName, covariateData, db) {
   time <- c("08:00")
   now <- Sys.time()
 
-  if (is.null(patient)) {
-    patient <- createPatient(firstname = userData[["firstname"]], lastname = userData[["lastname"]])
-    patient <- updatePatientModel(patient, modelName)
-    doseMetadata <- getMetadataByName(get(modelName), "DOSE")
-    dose <- if(is.null(doseMetadata)) {0} else {doseMetadata$default_value}
-    
-    # Add by default a first dose at 8am
-    doses <- tibble::tibble(date=date, time=time, dose=dose)
-    
-    # Create a empty measure data frame
-    measures <- tibble::tibble(date=date, time=character(), measure=numeric())
-    
-    patient <- updatePatientMeasures(patient, measures)
-    patient <- updatePatientDoses(patient, doses)
-    patient <- updateNowDate(patient, now)
-    patient <- updateCovariates(patient, covs, date, time)
+  patient <- createPatient(firstname = userData[["firstname"]], lastname = userData[["lastname"]])
+  patient <- updatePatientModel(patient, modelName)
+  doseMetadata <- getMetadataByName(get(modelName), "DOSE")
+  dose <- if(is.null(doseMetadata)) {0} else {doseMetadata$default_value}
+  
+  # Add by default a first dose at 8am
+  doses <- tibble::tibble(date=date, time=time, dose=dose)
+  
+  # Create a empty measure data frame
+  measures <- tibble::tibble(date=date, time=character(), measure=numeric())
+  
+  patient <- updatePatientMeasures(patient, measures)
+  patient <- updatePatientDoses(patient, doses)
+  patient <- updateNowDate(patient, now)
+  patient <- updateCovariates(patient, covs, date, time)
 
-    # Add patient into DB
-    db$add(patient)
-  } else {
-    # Update patient in DB
-    patient <- updateCovariates(patient, covs, date, time)
-    patient <- updatePatientModel(patient, modelName)
-    db$update(patient$id, patient)
-  }
+  # Add patient into DB
+  db$add(patient)
 }
 
 #' Update covariates in patient model (convert numeric vector to tibble).
