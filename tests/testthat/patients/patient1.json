@@ -1,0 +1,25 @@
+{
+  "_id": {
+    "$oid": "5d2f37ab0b4a874528423e0a"
+  },
+  "covariates": {
+    "date": []
+  },
+  "created_at": "2019-07-17 16:58:51 +0200",
+  "doses": {
+    "date": "2019-07-17 08:00:00 +0200",
+    "amount": 10
+  },
+  "firstname": "Donald",
+  "lastname": "Duck",
+  "measures": {
+    "date": [],
+    "measure": []
+  },
+  "model": "bergmann2014_mixture",
+  "modified_at": "2019-07-17 16:58:51 +0200",
+  "now_date": "2019-07-17 16:58:51 +0200",
+  "private": false,
+  "read_only": false,
+  "id": "5d2f37ab0b4a874528423e0a"
+}

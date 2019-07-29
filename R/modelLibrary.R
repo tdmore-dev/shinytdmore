@@ -10,6 +10,12 @@ modelLibrary <- NULL
 #' @export
 bergmann2014_base <- NULL
 
+#' bergmann2014_mixture model.
+#' 
+#' @format tdmore mixture model
+#' @export
+bergmann2014_mixture <- NULL
+
 #' meropenem_alloWT model.
 #' 
 #' @format tdmore model

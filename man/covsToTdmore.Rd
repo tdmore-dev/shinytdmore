@@ -4,14 +4,12 @@
 \alias{covsToTdmore}
 \title{Covariates conversion (shinyTDMore -> TDMore).}
 \usage{
-covsToTdmore(covs, firstDoseDate, model)
+covsToTdmore(covs, firstDoseDate)
 }
 \arguments{
 \item{covs}{shinyTDMore covariates}
 
 \item{firstDoseDate}{first dose date}
-
-\item{model}{model}
 }
 \value{
 TDMore covariates

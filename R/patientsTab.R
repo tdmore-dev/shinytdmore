@@ -74,6 +74,7 @@ renderPatientTable <- function(input, ns, db) {
 #'
 #' @param patient the patient to be set
 #' @param val main reactive container
+#' @export
 #'
 setPatient <- function(patient, val) {
   val$patient <- patient

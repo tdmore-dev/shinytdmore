@@ -7,6 +7,7 @@
 #' @param now now date, POSIXlt date
 #' 
 #' @return to be described
+#' @export
 #'
 convertDataToTdmore <- function(model, doses, obs, covs, now) {
   # Model output
@@ -23,7 +24,7 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
   relativeNow <- POSIXToHours(now) - POSIXToHours(firstDoseDate)
   
   # Covariates conversion
-  covariates <- covsToTdmore(covs, firstDoseDate, model)
+  covariates <- covsToTdmore(covs, firstDoseDate)
   
   # Make regimen and filtered regimen dataframes
   regimen <- data.frame(
@@ -55,10 +56,9 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
 #' 
 #' @param covs shinyTDMore covariates
 #' @param firstDoseDate first dose date
-#' @param model model
 #' @return TDMore covariates
 #'
-covsToTdmore <- function(covs, firstDoseDate, model) {
+covsToTdmore <- function(covs, firstDoseDate) {
   covsNames <- colnames(covs)
   covsNames <- covsNames[!(covsNames %in% c("date", "time"))]
   covsDates <- dateAndTimeToPOSIX(covs$date, covs$time)
