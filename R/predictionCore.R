@@ -89,7 +89,7 @@ preparePrediction <- function(doses, obs, model, covs, target, population, now) 
 #' 
 #' @param doses doses
 #' @param obs observations
-#' @param model tdmore model
+#' @param model tdmore/tdmore_mpc/tdmore_mixture model
 #' @param covs covariates
 #' @param target numeric vector of size 2, min and max value
 #' @param now now date, POSIXlt date
@@ -101,11 +101,12 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   if (nrow(doses)==0) {
     stop("Please add a dose in the left panel")
   }
-  data <- convertDataToTdmore(model, doses, obs, covs, now)
-  regimen <- data$regimen
-  covariates <- data$covariates
-  filteredObserved <- data$filteredObserved
-  firstDoseDate <- data$firstDoseDate
+  defaultModel <- getDefaultModel(model)
+  tdmoreData <- convertDataToTdmore(defaultModel, doses, obs, covs, now)
+  regimen <- tdmoreData$regimen
+  covariates <- tdmoreData$covariates
+  filteredObserved <- tdmoreData$filteredObserved
+  firstDoseDate <- tdmoreData$firstDoseDate
   isMpc <- inherits(model, "tdmore_mpc")
   
   # Find dose rows to be adapted
@@ -116,11 +117,12 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   
   # Compute fit
   fit <- estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST), covariates=covariates)
+  winningFit <- getWinnerFit(fit)
   
   # Implementing the iterative process
   nextRegimen <- regimen %>% dplyr::select(-PAST)
-  dosingInterval <- getDosingInterval(model)
-  output <- getModelOutput(model)
+  dosingInterval <- getDosingInterval(defaultModel)
+  output <- getModelOutput(defaultModel)
   
   for (index in seq_along(doseRows)) {
     row <- regimen[doseRows[index],]
@@ -133,7 +135,7 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
     }
     targetDf <- data.frame(TIME=nextTime)
     targetDf[, output] <- (target$min + target$max)/2
-    recommendation <- findDose(fit, regimen=nextRegimen, doseRows=doseRows[(index:length(doseRows))], target=targetDf)
+    recommendation <- findDose(winningFit, regimen=nextRegimen, doseRows=doseRows[(index:length(doseRows))], target=targetDf)
     nextRegimen <- recommendation$regimen
   }
   
@@ -153,5 +155,5 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   # Back compute to POSIXct
   recommendedRegimen <- recommendation$regimen %>% dplyr::mutate(TIME=firstDoseDate + TIME*3600, PAST=regimen$PAST)
   
-  return(list(ipred=ipred, ipredNew=ipredNew, recommendedRegimen=recommendedRegimen, firstDoseDate=firstDoseDate))
+  return(list(ipred=ipred, ipredNew=ipredNew, recommendedRegimen=recommendedRegimen, tdmoreData=tdmoreData, fit=winningFit))
 }

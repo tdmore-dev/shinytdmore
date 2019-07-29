@@ -183,7 +183,8 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
   data <- data %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)
-  output <- getModelOutput(model)
+  defaultModel <- getDefaultModel(model)
+  output <- getModelOutput(defaultModel)
   
   plot <- ggplot(mapping=aes_string(x="TIME", y=output))
   if (!population) {
@@ -194,7 +195,7 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
     geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
-    labs(y=getYAxisLabel(model))
+    labs(y=getYAxisLabel(defaultModel))
   
   ribbonLower <- paste0(output, ".lower") # Not there in MPC fit
   ribbonUpper <- paste0(output, ".upper") # Not there in MPC fit
@@ -315,23 +316,23 @@ prepareRecommendedTimelinePlot <- function(originalDoses, recommendedDoses, xlim
 #' @param model tdmore model
 #' @param covs covariates
 #' @param target numeric vector of size 2, min and max value
-#' @param recommendation recommendation (contains ipred, ipredNew and the recommendation)
+#' @param recommendationData recommendation data (contains namely ipred, ipredNew and the recommendation)
 #' @param now now date
 #' 
 #' @return a list of two plots
 #'
-prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommendation, now) {
-  firstDoseDate <- recommendation$firstDoseDate
-  ipred <- recommendation$ipred %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
-  ipredNew <- recommendation$ipredNew %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
-  recommendedRegimen <- recommendation$recommendedRegimen
+prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommendationData, now) {
+  firstDoseDate <- recommendationData$tdmoreData$firstDoseDate
+  ipred <- recommendationData$ipred %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
+  ipredNew <- recommendationData$ipredNew %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
+  recommendedRegimen <- recommendationData$recommendedRegimen
   recommendedRegimen$dose <- round(recommendedRegimen$AMT, digits=2)
-  
+  defaultModel <- getDefaultModel(model)
   obs <- obs %>% dplyr::filter(use==TRUE) # Plot only used observations
   obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)
-  output <- getModelOutput(model)
+  output <- getModelOutput(defaultModel)
   
   p1 <- ggplot(mapping=aes_string(x="TIME", y=output)) +
     geom_line(data=ipred, color=ipredColor(), alpha=0.2) +
@@ -339,7 +340,7 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
     geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
-    labs(y=getYAxisLabel(model))
+    labs(y=getYAxisLabel(defaultModel))
   
   ribbonLower <- paste0(output, ".lower") # Not there in MPC fit
   ribbonUpper <- paste0(output, ".upper") # Not there in MPC fit

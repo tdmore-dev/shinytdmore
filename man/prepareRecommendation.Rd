@@ -11,7 +11,7 @@ prepareRecommendation(doses, obs, model, covs, target, now)
 
 \item{obs}{observations}
 
-\item{model}{tdmore model}
+\item{model}{tdmore/tdmore_mpc/tdmore_mixture model}
 
 \item{covs}{covariates}
 

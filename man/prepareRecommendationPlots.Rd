@@ -5,8 +5,8 @@
 \title{Prepare recommendation plots (to be refactored).
 This includes the recommendation plot and the timeline plot.}
 \usage{
-prepareRecommendationPlots(doses, obs, model, covs, target, recommendation,
-  now)
+prepareRecommendationPlots(doses, obs, model, covs, target,
+  recommendationData, now)
 }
 \arguments{
 \item{doses}{doses}
@@ -19,7 +19,7 @@ prepareRecommendationPlots(doses, obs, model, covs, target, recommendation,
 
 \item{target}{numeric vector of size 2, min and max value}
 
-\item{recommendation}{recommendation (contains ipred, ipredNew and the recommendation)}
+\item{recommendationData}{recommendation data (contains namely ipred, ipredNew and the recommendation)}
 
 \item{now}{now date}
 }
