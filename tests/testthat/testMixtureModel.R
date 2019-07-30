@@ -11,7 +11,14 @@ context("Test the mixture model integration in shinytdmore")
 #setwd("C:/prj_dev/shinytdmore/tests/testthat")
 
 db <- FileDatabase$new("patients")
-patient <- db$patients[[1]]
+
+findPatient <- function(db, patientId) {
+  index <- which(sapply(db$patients, function(patient) patient$id==patientId))
+  if(length(index) == 0) stop(paste("Patient", patientId, "not found"))
+  return(db$patients[[index]])
+}
+
+patient <- findPatient(db, "mixture_test")
 
 # Small issue to solve later on:
 # -> 1) use column is added in setPatient method

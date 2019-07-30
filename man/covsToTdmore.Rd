@@ -2,7 +2,8 @@
 % Please edit documentation in R/dataConversion.R
 \name{covsToTdmore}
 \alias{covsToTdmore}
-\title{Covariates conversion (shinyTDMore -> TDMore).}
+\title{Covariates conversion (shinyTDMore -> TDMore).
+TODO: discuss this code within the team and test it.}
 \usage{
 covsToTdmore(covs, firstDoseDate)
 }
@@ -16,4 +17,5 @@ TDMore covariates
 }
 \description{
 Covariates conversion (shinyTDMore -> TDMore).
+TODO: discuss this code within the team and test it.
 }

@@ -43,6 +43,9 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
     observed[, output] <- obs$measure
     observed <- observed %>% dplyr::mutate(PAST=nearEqual(TIME, relativeNow, mode="ne.lt")) # sign '<=' used on purpose (through concentration can be used for recommendation dose at same time)
     filteredObserved <- observed %>% dplyr::filter(PAST & USE) %>% dplyr::select(-c("PAST", "USE"))
+    if (nrow(filteredObserved %>% filter(TIME < 0)) > 0) {
+      stop("Some measures occur before the first dose")
+    }
   } else {
     observed <- NULL
     filteredObserved <- NULL
@@ -53,6 +56,7 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
 
 #'
 #' Covariates conversion (shinyTDMore -> TDMore).
+#' TODO: discuss this code within the team and test it.
 #' 
 #' @param covs shinyTDMore covariates
 #' @param firstDoseDate first dose date
@@ -65,6 +69,22 @@ covsToTdmore <- function(covs, firstDoseDate) {
   if (length(covsNames) > 0) {
     covariates <- bind_cols(data.frame(TIME=as.numeric(difftime(covsDates, firstDoseDate, units="hour"))),
                             covs %>% dplyr::select(covsNames))
+    hasCovariatesAfterT0 <- nrow(covariates %>% filter(TIME >= 0)) > 0
+    hasCovariatesAtT0 <- nrow(covariates %>% filter(TIME == 0)) > 0
+    
+    if (hasCovariatesAfterT0) {
+      # In this case, keep only covariates after t0
+      covariates <- covariates %>% dplyr::filter(TIME >= 0)
+      if (!hasCovariatesAtT0) {
+        # Duplicate first row to preserve the original covariates
+        covariates <- bind_rows(covariates[1,], covariates) 
+        covariates[1, "TIME"] <- 0 # Set time to 0
+      }
+    } else {
+      # In this case, keep only last one
+      covariates <- covariates[nrow(covariates),]
+      covariates[1, "TIME"] <- 0 # Replace original negative time by 0
+    }
   } else {
     covariates <- NULL
   }

@@ -195,6 +195,7 @@ covariateModelToJson <- function(covariateModel) {
 #' @param patientModel the patient model
 #' @return the patient, JSON form
 #' @importFrom rjson toJSON
+#' @export
 #' 
 patientModelToJson <- function(patientModel) {
   patientJson <- patientModel
@@ -269,6 +270,19 @@ isReadOnlyPatient <- function(patientModel) {
 #' 
 isPrivatePatient <- function(patientModel) {
   return(patientModel$private)
+}
+
+#' Export patient to JSON file.
+#'
+#' @param filePath the file path (including file name)
+#' @param patientModel the patient model to be exported
+#' @export
+#' 
+exportPatientToJsonFile <- function(filePath, patientModel) {
+  jsonPatient <- patientModelToJson(patientModel)
+  fileConn <- file(filePath)
+  writeLines(jsonPatient, fileConn)
+  close(fileConn)
 }
 
 
