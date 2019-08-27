@@ -61,6 +61,7 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
 #' 
 #' @param covs shinyTDMore covariates
 #' @param firstDoseDate first dose date
+#' @importFrom dplyr bind_cols bind_rows filter select
 #' @return TDMore covariates
 #'
 covsToTdmore <- function(covs, firstDoseDate) {
@@ -68,7 +69,7 @@ covsToTdmore <- function(covs, firstDoseDate) {
   covsNames <- covsNames[!(covsNames %in% c("date", "time"))]
   covsDates <- dateAndTimeToPOSIX(covs$date, covs$time)
   if (length(covsNames) > 0) {
-    covariates <- bind_cols(data.frame(TIME=as.numeric(difftime(covsDates, firstDoseDate, units="hour"))),
+    covariates <- dplyr::bind_cols(data.frame(TIME=as.numeric(difftime(covsDates, firstDoseDate, units="hour"))),
                             covs %>% dplyr::select(covsNames))
     hasCovariatesAfterT0 <- nrow(covariates %>% filter(TIME >= 0)) > 0
     hasCovariatesAtT0 <- nrow(covariates %>% filter(TIME == 0)) > 0
@@ -78,7 +79,7 @@ covsToTdmore <- function(covs, firstDoseDate) {
       covariates <- covariates %>% dplyr::filter(TIME >= 0)
       if (!hasCovariatesAtT0) {
         # Duplicate first row to preserve the original covariates
-        covariates <- bind_rows(covariates[1,], covariates) 
+        covariates <- dplyr::bind_rows(covariates[1,], covariates) 
         covariates[1, "TIME"] <- 0 # Set time to 0
       }
     } else {
