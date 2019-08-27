@@ -7,6 +7,7 @@
 #' @param now now date, POSIXlt date
 #' 
 #' @return to be described
+#' @importFrom dplyr filter mutate select
 #' @export
 #'
 convertDataToTdmore <- function(model, doses, obs, covs, now) {
@@ -43,7 +44,7 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
     observed[, output] <- obs$measure
     observed <- observed %>% dplyr::mutate(PAST=nearEqual(TIME, relativeNow, mode="ne.lt")) # sign '<=' used on purpose (through concentration can be used for recommendation dose at same time)
     filteredObserved <- observed %>% dplyr::filter(PAST & USE) %>% dplyr::select(-c("PAST", "USE"))
-    if (nrow(filteredObserved %>% filter(TIME < 0)) > 0) {
+    if (nrow(filteredObserved %>% dplyr::filter(TIME < 0)) > 0) {
       stop("Some measures occur before the first dose")
     }
   } else {

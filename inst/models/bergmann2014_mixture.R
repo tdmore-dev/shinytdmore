@@ -51,5 +51,5 @@ regimen <- data.frame(
 plot(fastMetaboliser, regimen)
 plot(slowMetaboliser, regimen)
 
-mixture <- tdmore_mixture(fastMetaboliser, slowMetaboliser, probs = c(0.1, 0.9))
+mixture <- tdmore_mixture(fastMetaboliser, slowMetaboliser, probs = c(0.13, 0.87))
   
