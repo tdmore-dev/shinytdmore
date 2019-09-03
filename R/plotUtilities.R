@@ -44,7 +44,8 @@ getYAxisLabel <- function(model) {
 #' @return a label
 #'
 getDoseColumnLabel <- function(model, breakLine=T) {
-  doseMetadata <- getMetadataByName(model, "DOSE")
+  formulations <- getMetadataByClass(model,"tdmore_formulation")
+  doseMetadata <- getMetadataByName(model, formulations[[1]]$name)
   separator <- if(breakLine){"\n"} else{" "}
   label <- if(!is.null(doseMetadata)) {paste0("Dose", separator, "(", doseMetadata$unit, ")")} else {"Dose"}
   return(label)
@@ -58,7 +59,8 @@ getDoseColumnLabel <- function(model, breakLine=T) {
 #' @return a label
 #'
 getRecommendedDoseColumnLabel <- function(model, breakLine=T) {
-  doseMetadata <- getMetadataByName(model, "DOSE")
+  formulations <- getMetadataByClass(model,"tdmore_formulation")
+  doseMetadata <- getMetadataByName(model, formulations[[1]]$name)
   separator <- if(breakLine){"\n"} else{" "}
   label <- if(!is.null(doseMetadata)) {paste0("Rec. dose", separator, "(", doseMetadata$unit, ")")} else {"Dose"}
   return(label)
@@ -82,7 +84,8 @@ getModelOutput <- function(model) {
 #' @return the dosing interval
 #'
 getDosingInterval <- function(model) {
-  doseMetadata <- getMetadataByName(model, "DOSE")
+  formulations <- getMetadataByClass(model,"tdmore_formulation")
+  doseMetadata <- getMetadataByName(model, formulations[[1]]$name)
   dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
   return(dosingInterval)
 }

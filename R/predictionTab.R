@@ -299,9 +299,11 @@ predictionTab <- function(input, output, session, val) {
   # Doses table logic
   output$hotdose <- renderRHandsontable({
     borderRow <- getTableBorderIndex(val$doses, val$now, T)
+    #browser()
     rhandsontable(val$doses, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
-                  colHeaders = c("Date", "Time", getDoseColumnLabel(val$model))) %>%
-                  hot_col(col="Time", type="dropdown", source=hoursList()) %>%
+                  colHeaders = c("Date", "Time", getDoseColumnLabel(val$model),"Formulation")) %>%
+                  hot_col(col="Time", type="dropdown", source=hoursList(), autocomplete=F, strict=F) %>%
+                  hot_col(col="Formulation", type="dropdown", source=c('Meropenem','test'), autocomplete=TRUE, strict=TRUE) %>%
                   hot_table(customBorders = list(list(
                     range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(val$doses)-1)),
                     top=list(width=2, color=nowColorHex()))))
@@ -312,7 +314,8 @@ predictionTab <- function(input, output, session, val) {
   })
   
   addDose <- function(val) {
-    doseMetadata <- getMetadataByName(val$model, "DOSE")
+    formulations <- getMetadataByClass(val$model,"tdmore_formulation")
+    doseMetadata <- getMetadataByName(val$model, formulations[[1]]$name)
     dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
     
     if(nrow(val$doses) > 0) {
@@ -374,7 +377,8 @@ predictionTab <- function(input, output, session, val) {
   })
   
   addCovariate <- function(val) {
-    doseMetadata <- getMetadataByName(val$model, "DOSE")
+    formulations <- getMetadataByClass(val$model,"tdmore_formulation")
+    doseMetadata <- getMetadataByName(val$model, formulations[[1]]$name)
     dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
     
     if(nrow(val$covs) > 0) {

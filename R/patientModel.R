@@ -94,12 +94,12 @@ updateNowDate <- function(patient, now) {
 #' 
 jsonToDoseModel <- function(doseJson) {
   if (is.null(doseJson) || length(doseJson$date) == 0) {
-    return(tibble(date=date(), time=character(), dose=numeric()))
+    return(tibble(date=date(), time=character(), dose=numeric(), formulation=character()))
   }
   datePosix <- as.POSIXct(unlist(doseJson$date))
   date <- POSIXToDate(datePosix)
   time <- POSIXToTime(datePosix)
-  return(tibble(date=date, time=time, dose=as.numeric(unlist(doseJson$amount))))
+  return(tibble(date=date, time=time, dose=as.numeric(unlist(doseJson$amount)), formulation=unlist(doseJson$formulation)))
 }
 
 #' Convert dose model to JSON structure.
@@ -113,7 +113,7 @@ doseModelToJson <- function(doseModel) {
     return(data.frame(date=character(), amount=numeric()))
   }
   datePosix <- dateAndTimeToPOSIX(doseModel$date, doseModel$time)
-  return(data.frame(date=POSIXToString(datePosix), amount=doseModel$dose))
+  return(data.frame(date=POSIXToString(datePosix), amount=doseModel$dose, formulation=doseModel$formulation))
 }
 
 #' Convert measures (JSON) to dose model.
