@@ -36,6 +36,6 @@ CONC = center / V1 * 1000
   res_var=list(errorModel(prop=0.295))
 ) %>% metadata(covariate("CYP3A5", label="CYP3A5 expressor", choices=list(Fast=0, Slow=1))) %>%
   metadata(output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
-  metadata(dose(unit="mg", dosing_interval=12, default_value=8)) %>%
+  metadata(formulation(name="Default",unit="mg", dosing_interval=12, default_value=8)) %>%
   metadata(target(min=12, max=15)) %>%
   metadata(observed_variables(c("CL", "V1", "V2", "KA")))

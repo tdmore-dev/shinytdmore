@@ -30,7 +30,7 @@ nlmixrUI(function(){
   })
 }) %>% tdmore(iov=c("EV1", "ECL")) %>% 
   metadata(output(name="CONC", label="Drug concentration", unit="mg/mL", default_value=5)) %>%
-  metadata(dose(unit="mg", dosing_interval=24, default_value=5)) %>%
+  metadata(formulation(name="Default",unit="mg", dosing_interval=24, default_value=5)) %>%
   metadata(target(min=4, max=8)) %>% 
   mpc(theta=c(TVCL=3.7, TVV1=61), suffix="_next") %>%
   metadata(observed_variables(c("CL", "V1")))

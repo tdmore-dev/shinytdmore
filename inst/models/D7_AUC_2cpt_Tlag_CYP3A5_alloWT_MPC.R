@@ -121,7 +121,7 @@ tacro_2cpt <- RxODE::RxODE(m1Code) %>% tdmore(
                            prop=monolixValues %>% dplyr::filter(parameter=="b") %>% pull(value)) )
 ) %>% metadata(covariate("CYP3A5", label="CYP3A5 expressor", choices=list(Fast=0, Slow=1))) %>%
   metadata(output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
-  metadata(dose(unit="mg", dosing_interval=12, default_value=8)) %>%
+  metadata(formulation(name="Default",unit="mg", dosing_interval=12, default_value=8)) %>%
   metadata(target(min=12, max=15)) %>%
   metadata(observed_variables(c("ka", "Cl", "V1", "Q", "V2", "F")))
 D7_AUC_2cpt_Tlag_CYP3A5_alloWT_MPC <- tacro_2cpt %>% mpc(theta=theta, suffix="_next")
