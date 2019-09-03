@@ -39,6 +39,7 @@ saveData <- function(userData, modelName, covariateData, db) {
 
   # Add patient into DB
   db$add(patient)
+  }
 }
 
 #' Update covariates in patient model (convert numeric vector to tibble).
