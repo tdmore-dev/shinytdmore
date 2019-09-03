@@ -12,7 +12,8 @@ createFakePatient <- function() {
   doseModel <- tibble::tibble(
     date=currentDate,
     time=c("08:00"),
-    dose=c(8)
+    dose=c(8),
+    formulation=c("Formulation")
   )
   patient <- updatePatientDoses(patient, doseModel)
   

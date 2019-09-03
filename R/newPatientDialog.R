@@ -18,28 +18,26 @@ saveData <- function(userData, modelName, covariateData, db) {
   time <- c("08:00")
   now <- Sys.time()
 
-  if (is.null(patient)) {
-    patient <- createPatient(firstname = userData[["firstname"]], lastname = userData[["lastname"]])
-    patient <- updatePatientModel(patient, modelName)
-    formulations <- getMetadataByClass(get(modelName),"tdmore_formulation")
-    doseMetadata <- getMetadataByName(get(modelName), formulations[[1]]$name)
-    dose <- if(is.null(doseMetadata)) {0} else {doseMetadata$default_value}
-    formulation <- if(is.null(doseMetadata)) {"TMT"} else {doseMetadata$name}
+  patient <- createPatient(firstname = userData[["firstname"]], lastname = userData[["lastname"]])
+  patient <- updatePatientModel(patient, modelName)
+  formulations <- getMetadataByClass(get(modelName),"tdmore_formulation")
+  doseMetadata <- getMetadataByName(get(modelName), formulations[[1]]$name)
+  dose <- if(is.null(doseMetadata)) {0} else {doseMetadata$default_value}
+  formulation <- if(is.null(doseMetadata)) {"TMT"} else {doseMetadata$name}
     
-    # Add by default a first dose at 8am
-    doses <- tibble(date=date, time=time, dose=dose, formulation=doseMetadata$name)
+  # Add by default a first dose at 8am
+  doses <- tibble(date=date, time=time, dose=dose, formulation=doseMetadata$name)
     
-    # Create a empty measure data frame
-    measures <- tibble(date=date, time=character(), measure=numeric())
+  # Create a empty measure data frame
+  measures <- tibble(date=date, time=character(), measure=numeric())
     
-    patient <- updatePatientMeasures(patient, measures)
-    patient <- updatePatientDoses(patient, doses)
-    patient <- updateNowDate(patient, now)
-    patient <- updateCovariates(patient, covs, date, time)
+  patient <- updatePatientMeasures(patient, measures)
+  patient <- updatePatientDoses(patient, doses)
+  patient <- updateNowDate(patient, now)
+  patient <- updateCovariates(patient, covs, date, time)
 
   # Add patient into DB
   db$add(patient)
-  }
 }
 
 #' Update covariates in patient model (convert numeric vector to tibble).

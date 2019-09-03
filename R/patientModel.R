@@ -112,7 +112,7 @@ jsonToDoseModel <- function(doseJson) {
 #' 
 doseModelToJson <- function(doseModel) {
   if (is.null(doseModel)) {
-    return(data.frame(date=character(), amount=numeric()))
+    return(data.frame(date=character(), amount=numeric(), formulation=character()))
   }
   datePosix <- dateAndTimeToPOSIX(doseModel$date, doseModel$time)
   return(data.frame(date=POSIXToString(datePosix), amount=doseModel$dose, formulation=doseModel$formulation))

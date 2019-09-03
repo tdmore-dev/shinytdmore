@@ -31,7 +31,7 @@ rxodeModel <- "
   CONC = center / V1 * 1000
 "
 outputM <- output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)
-doseM <- dose(unit="mg", dosing_interval=12, default_value=8)
+doseM <- formulation(name="Test",unit="mg", dosing_interval=12, default_value=8)
 targetM <- target(min=12, max=15)
 observedM <- observed_variables(c("CL", "V1", "V2", "KA"))
 

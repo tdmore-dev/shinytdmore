@@ -45,7 +45,7 @@ shinyTdmore <- function(input, output, session, conf, db) {
   
   # Call module prediction tab
   callModule(module=conf$prediction$module, id=conf$prediction$id, val)
-
+  
   # Call model prediction tab
   callModule(module=conf$model$module, id=conf$model$id, val, onTabChanged)
   
@@ -74,12 +74,12 @@ selectPatient <- function(session, val, db) {
     updated <- F
     if (!is.null(value)) {
       patientId <- value
-        patient <- db$get(patientId)
-        if (!is.null(patient)) {
-          setPatient(patient, val)
-          updateTabsetPanel(session, "tabs", selected="Prediction")
-          updated <- T
-        }
+      patient <- db$get(patientId)
+      if (!is.null(patient)) {
+        setPatient(patient, val)
+        updateTabsetPanel(session, "tabs", selected="Prediction")
+        updated <- T
+      }
     }
     if (!updated && is.null(val$patient)) {
       if(nrow(DTtable$patients) > 0) {
