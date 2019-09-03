@@ -6,47 +6,51 @@ library(rjson)
 library(tidyverse)
 
 context("Test the persistence layer")
-toConfig(key="shinytdmore_db_config", value=testDBConfig()) # Make sure the test DB config is enabled (a test database is used)
-
-# Remove everything from the database
-getDB()$remove("{}")
 
 # Create 4 patients
-patient1 <- createPatient("Nicolas", "Luyckx")
-patient1 <- updatePatientModel(patient1, "", c(AGE=30, WT=60))
+patient1 <- createPatient("Nicolas", "Luyckx") %>%
+  updatePatientModel("") %>%
+  updatePatientCovariates(data.frame(date="11/07/2019", time="12:00", AGE=30, WT=63))
+patient2 <- createPatient("Quentin", "Leirens") %>%
+  updatePatientModel("") %>%
+  updatePatientCovariates(data.frame(date="11/07/2019", time="12:00", AGE=30, WT=63))
+patient3 <- createPatient("Ruben", "Faelens") %>%
+  updatePatientModel("") %>%
+  updatePatientCovariates(data.frame(date="11/07/2019", time="12:00", AGE=30, WT=63))
+patient4 <- createPatient("Thomas", "Bouillon") %>%
+  updatePatientModel("") %>%
+  updatePatientCovariates(data.frame(date="11/07/2019", time="12:00", AGE=30, WT=63))
 
-patient2 <- createPatient("Quentin", "Leirens")
-patient2 <- updatePatientModel(patient2, "", c(AGE=30, WT=61))
+db <- MongoDatabase$new(collection="test", db="test")
 
-patient3 <- createPatient("Ruben", "Faelens")
-patient3 <- updatePatientModel(patient3, "", c(AGE=30, WT=62))
+# Remove everything from the database
+db$.__enclos_env__$private$db$drop()
 
-patient4 <- createPatient("Thomas", "Bouillon")
-patient4 <- updatePatientModel(patient4, "", c(AGE=30, WT=63))
+#debug(db$.__enclos_env__$private$doAdd)
 
 # Add these 4 patients in the database
-addPatient(patient1)
-addPatient(patient2)
-addPatient(patient3)
-addPatient(patient4)
+pt1 <- db$add(patient1)
+pt2 <- db$add(patient2)
+pt3 <- db$add(patient3)
+pt4 <- db$add(patient4)
 
 # Retrieve patient
-patient <- getPatient(1)
+patient <- db$get(pt1$id)
 expect_equal(patient$firstname, "Nicolas")
 expect_equal(patient$lastname, "Luyckx")
-expect_equal(patient$covariates, c(AGE=30, WT=60))
 
 # Remove a patient
-removePatient(4)
-expect_true(is.null(getPatient(4)))
+db$remove(pt4$id)
+expect_error(db$get(pt4$id)) #  Error: $ operator is invalid for atomic vectors 
 
 # Update a patient & check
-patient <- createPatient("Nicolas", "Luyckx")
-patient <- updatePatientModel(patient, "", c(WT=70, HT=1.8, FEMALE=0, CYP3A5=0, PredDose=50, FirstDay=0, HCT=0.45))
+patient <- db$add(createPatient("Nicolas", "Luyckx"))
+patient <- updatePatientModel(patient, "blabla")
 
-updatePatient(1, patient)
-patient <- getPatient(1)
-expect_equal(patient$covariates, c(WT=70, HT=1.8, FEMALE=0, CYP3A5=0, PredDose=50, FirstDay=0, HCT=0.45))
+db$update(patient$id, patient)
+patient <- db$get(patient$id)
+expect_equal(patient$model, "blabla")
 
 # Get all patients
-patients <- getAllPatients()
+patients <- db$patients[[4]]
+

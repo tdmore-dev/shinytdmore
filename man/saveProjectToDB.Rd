@@ -4,7 +4,7 @@
 \alias{saveProjectToDB}
 \title{Save project into DB (measures and doses from shiny are saved).}
 \usage{
-saveProjectToDB(val)
+saveProjectToDB(val, db)
 }
 \arguments{
 \item{val}{main reactive container}

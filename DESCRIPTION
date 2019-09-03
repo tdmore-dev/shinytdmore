@@ -14,13 +14,15 @@ Authors@R: c(
   )
 Description: The functions in this package allow you to quickly create a shiny application for dose adaptation.
 Depends: R (>= 3.5.0)
-Imports: assertthat, plyr, dplyr, tdmore, rjson, jsonlite, lubridate, mongolite, shiny, shinyBS, DT, tidyverse, plotly, crosstalk
+Imports: assertthat, plyr, dplyr, tdmore, rjson, jsonlite, lubridate, mongolite, 
+  shiny, shinyBS, DT, tidyverse, plotly, crosstalk,
+  rhandsontable, R6
 Remotes: tdmore-dev/shinytdmore
 License: file LICENSE
 Encoding: UTF-8
 Language: en-US
 LazyData: true
-Suggests: stringr, knitr, rmarkdown, testthat, roxygen2, devtools, vdiffr, svglite, pkgdown, bookdown
+Suggests: stringr, knitr, rmarkdown, testthat, roxygen2, devtools, vdiffr, svglite, pkgdown, bookdown, webshot
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
 URL: https://github.com/tdmore-dev/shinytdmore

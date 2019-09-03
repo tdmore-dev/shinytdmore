@@ -1,5 +1,5 @@
 #'
-#' Update plot using animation.
+#' Update plot using animation. NOT USED.
 #' 
 #' @param plot the given plot
 #' @param outputId the output ID
@@ -67,30 +67,6 @@ getRecommendedDoseColumnLabel <- function(model, breakLine=T) {
 }
 
 #'
-#' Get model output variable name.
-#' 
-#' @param model tdmore model
-#' @return the model output variable name, like 'CONC'
-#'
-getModelOutput <- function(model) {
-  return(model$res_var[[1]]$var) # TODO: what if several outputs?
-}
-
-#'
-#' Retrieve the dosing interval from the tdmore metadata.
-#' If no dose metadata is defined in the model, 24 hours is returned by default.
-#' 
-#' @param model tdmore model
-#' @return the dosing interval
-#'
-getDosingInterval <- function(model) {
-  formulations <- getMetadataByClass(model,"tdmore_formulation")
-  doseMetadata <- getMetadataByName(model, formulations[[1]]$name)
-  dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
-  return(dosingInterval)
-}
-
-#'
 #' Get measure column label.
 #' 
 #' @param model tdmore model
@@ -118,23 +94,27 @@ mergePlots <- function(p1, p2, p3, output) {
   #tooltip3 <- c("TIME", "Parameter", "Population", "Individual", "Change")
 
   if (is.null(p3)) {
-    plot <- subplot(
-      ggplotly(p1, tooltip=tooltip1) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      ggplotly(p2, tooltip=tooltip2) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+    plot <- plotly::subplot(
+      plotly::ggplotly(p1, tooltip=tooltip1) %>% 
+        plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+      plotly::ggplotly(p2, tooltip=tooltip2) %>% 
+        plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
       nrows = 2, heights = c(0.8, 0.2), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
     ) %>% plotly::layout(dragmode = "pan")
   } else {
-    plot <- subplot(
-      ggplotly(p1, tooltip=tooltip1) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      ggplotly(p2, tooltip=tooltip2) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      ggplotly(p3) %>% config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+    plot <- plotly::subplot(
+      plotly::ggplotly(p1, tooltip=tooltip1) %>% 
+        plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+      plotly::ggplotly(p2, tooltip=tooltip2) %>% 
+        plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
+      plotly::ggplotly(p3) %>% 
+        plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
       nrows = 3, heights = c(0.7, 0.15, 0.15), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
     ) %>% plotly::layout(dragmode = "pan", legend = list(orientation = "h", y=-250))
   }
   
   return(plot)
 }
-
 
 #'
 #' Add now label ('Past' and 'Future') and X intercept to an existing plot.
@@ -174,50 +154,17 @@ addNowLabelAndIntercept <- function(plot, now) {
 #' @param population logical value, true for population, false for individual
 #' @param now now date, POSIXlt date
 #' @return a list of two plots
+#' @export
 #'
 preparePredictionPlots <- function(doses, obs, model, covs, target, population, now) {
-  if(nrow(doses)==0) {
-    stop("Please add a dose in the left panel")
-  }
-  data <- convertDataToTdmore(model, doses, obs, covs, now)
-  regimen <- data$regimen %>% select(-PAST)
-  covariates <- data$covariates
-  filteredObserved <- data$filteredObserved
-  firstDoseDate <- data$firstDoseDate
-  isMpc <- inherits(model, "tdmore_mpc")
-  observedVariables <- getObservedVariables(model)
-
-  if (population) {
-    # Population 'fit'
-    object <- estimate(model, regimen=regimen, covariates=covariates)
-  } else {
-    # Fit
-    object <- estimate(model, observed=filteredObserved, regimen=regimen, covariates=covariates)
-  }
+  predictionData <- preparePrediction(doses, obs, model, covs, target, population, now)
+  data <- predictionData$predictionData
+  fit <- predictionData$fit
+  selectedModel <- fit$tdmore
+  observedVariables <- getObservedVariables(selectedModel)
   
-  # Predictions
-  dosingInterval <- getDosingInterval(model)
-  maxTime <- if(nrow(regimen)==0){dosingInterval} else {max(regimen$TIME)+dosingInterval}
-  newdata <- getNewdata(start=0, stop=maxTime, output=getModelOutput(model), observedVariables=observedVariables)
-  
-  if (isMpc && !population) {
-    data <- predict(object, newdata=newdata, regimen=regimen, covariates=object$covariates, se.fit=F)
-  } else {
-    data <- predict(object, newdata=newdata, regimen=regimen, covariates=object$covariates, se.fit=T, level=0.95) # 95% CI by default
-  }
-  data$TIME <- firstDoseDate + data$TIME*60*60
-
-  # In case of fit, compute PRED median as well
-  if (!population) {
-    pred <- predict(model, newdata=newdata, regimen=regimen, covariates=covariates, se=F)
-    data$PRED <- pred[, getModelOutput(model)]
-    for (parameter in observedVariables) {
-      data[, paste0("PRED_", parameter)] <- pred[, parameter]
-    }
-  }
-  
-  return(list(p1=preparePredictionPlot(data=data, obs=obs, target=target, population=population, model=model, now=now),
-              p2=prepareTimelinePlot(doses=doses, xlim=c(firstDoseDate, max(data$TIME)), model=model, now=now),
+  return(list(p1=preparePredictionPlot(data=data, obs=obs, target=target, population=population, model=selectedModel, now=now),
+              p2=prepareTimelinePlot(doses=doses, xlim=c(predictionData$tdmoreData$firstDoseDate, max(data$TIME)), model=selectedModel, now=now),
               p3=prepareParametersPlot(data=data, parameters=observedVariables, population=population)))
 }
 
@@ -233,12 +180,13 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
 #'
 preparePredictionPlot <- function(data, obs, target, population, model, now) {
   color <- if(population) {predColor()} else {ipredColor()}
-  obs <- obs %>% filter(use==TRUE) # Plot only 'used' observations
+  obs <- obs %>% dplyr::filter(use==TRUE) # Plot only 'used' observations
   obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
-  data <- data %>% mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
+  data <- data %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)
-  output <- getModelOutput(model)
+  defaultModel <- getDefaultModel(model)
+  output <- getModelOutput(defaultModel)
   
   plot <- ggplot(mapping=aes_string(x="TIME", y=output))
   if (!population) {
@@ -249,7 +197,7 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
     geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
-    labs(y=getYAxisLabel(model))
+    labs(y=getYAxisLabel(defaultModel))
   
   ribbonLower <- paste0(output, ".lower") # Not there in MPC fit
   ribbonUpper <- paste0(output, ".upper") # Not there in MPC fit
@@ -299,7 +247,7 @@ prepareParametersPlot <- function(data, parameters, population) {
     return(NULL) # makes no sense to prepare this plot for population
   }
   # Keep useful parameters and melt data (ids: TIME and PRED_ columns)
-  data <- data %>% select(c("TIME", parameters, paste0("PRED_", parameters))) %>% melt(c("TIME", paste0("PRED_", parameters)))
+  data <- data %>% dplyr::select(c("TIME", parameters, paste0("PRED_", parameters))) %>% data.table::melt(c("TIME", paste0("PRED_", parameters)))
   
   # As data is molten, only 1 population column is needed (get rid of all PRED_ columns)
   data$Population <- 0
@@ -313,8 +261,8 @@ prepareParametersPlot <- function(data, parameters, population) {
   data$Change <- (data$Individual - data$Population) / data$Population * 100
 
   # Get rid of other columns, round data
-  data <- data %>% select("TIME", "Parameter", "Population", "Individual", "Change")
-  data <- data %>% mutate_if(is.numeric, round, 3) # Round dataframe for better hover tooltips
+  data <- data %>% dplyr::select("TIME", "Parameter", "Population", "Individual", "Change")
+  data <- data %>% dplyr::mutate_if(is.numeric, round, 3) # Round dataframe for better hover tooltips
 
   plot <- ggplot(data=data, mapping=aes(x=TIME, y=Change, linetype=Parameter)) +
     geom_line(color="slategray3", mapping=aes(text=sprintf("Population: %.3f<br>Individual: %.3f", Population, Individual))) +
@@ -351,86 +299,14 @@ prepareRecommendedTimelinePlot <- function(originalDoses, recommendedDoses, xlim
   nudge_II <- II/24*60*60 #empirical ratio
   
   plot <- ggplot(doses_copy, aes(x=TIME,y=AMT)) +
-    geom_text(data=doses_copy %>% filter(TIME>now),aes(x=TIME, y=AMT, label=AMT), nudge_x=nudge_II, nudge_y=0, check_overlap=T, show.legend=F,color=recommendationColor()) +
-    geom_linerange(data=doses_copy %>% filter(TIME>now),ymin=0, aes(ymax=DOSE), position = position_nudge(x = nudge_II),color=recommendationColor()) +
+    geom_text(data=doses_copy %>% dplyr::filter(TIME>now),aes(x=TIME, y=AMT, label=AMT), nudge_x=nudge_II, nudge_y=0, check_overlap=T, show.legend=F,color=recommendationColor()) +
+    geom_linerange(data=doses_copy %>% dplyr::filter(TIME>now),ymin=0, aes(ymax=DOSE), position = position_nudge(x = nudge_II),color=recommendationColor()) +
     geom_text(data=doses_copy2,aes(x=TIME, y=AMT, label=AMT), nudge_x=-nudge_II, nudge_y=0, check_overlap=T, show.legend=F, alpha=0.2) +
     geom_linerange(data=doses_copy2,ymin=0, aes(ymax=DOSE), position = position_nudge(x = -nudge_II), alpha=0.2) +
     coord_cartesian(xlim=c(xlim[1]-nudge_II,xlim[2]), ylim=c(0, maxDose + addSpace)) +
     labs(x="Time", y=getDoseColumnLabel(model, breakLine=F))
   
   return(plot)
-}
-
-#'
-#' Prepare recommendation.
-#' 
-#' @param doses doses
-#' @param obs observations
-#' @param model tdmore model
-#' @param covs covariates
-#' @param target numeric vector of size 2, min and max value
-#' @param now now date, POSIXlt date
-#' 
-#' @return a list with pred, ipred and the recommendation
-#' @export
-#'
-prepareRecommendation <- function(doses, obs, model, covs, target, now) {
-  if (nrow(doses)==0) {
-    stop("Please add a dose in the left panel")
-  }
-  data <- convertDataToTdmore(model, doses, obs, covs, now)
-  regimen <- data$regimen
-  covariates <- data$covariates
-  filteredObserved <- data$filteredObserved
-  firstDoseDate <- data$firstDoseDate
-  isMpc <- inherits(model, "tdmore_mpc")
-  
-  # Find dose rows to be adapted
-  doseRows <- which(!regimen$PAST)
-  if (length(doseRows)==0) {
-    stop("There is no dose in the future")
-  }
-
-  # Compute fit
-  fit <- estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST), covariates=covariates)
-
-  # Implementing the iterative process
-  nextRegimen <- regimen %>% dplyr::select(-PAST)
-  dosingInterval <- getDosingInterval(model)
-  output <- getModelOutput(model)
-  
-  for (index in seq_along(doseRows)) {
-    row <- regimen[doseRows[index],]
-    last <- index == length(doseRows)
-    
-    if (last) {
-      nextTime <- row$TIME + dosingInterval # By default, II
-    } else {
-      nextTime <- regimen[doseRows[index + 1],]$TIME - 0.001 # Just before the next dose
-    }
-    targetDf <- data.frame(TIME=nextTime)
-    targetDf[, output] <- (target$min + target$max)/2
-    recommendation <- findDose(fit, regimen=nextRegimen, doseRows=doseRows[(index:length(doseRows))], target=targetDf)
-    nextRegimen <- recommendation$regimen
-  }
-  
-  firstDoseInFutureTime <- regimen$TIME[doseRows[1]]
-  covsToUse <- if(isMpc){fit$covariates}else{covariates}
-  
-  # Predict ipred without adapting the dose
-  newdata <- getNewdata(start=0, stop=max(regimen$TIME) + dosingInterval, output=output)
-  ipred <-  predict(fit, newdata = newdata, regimen=regimen %>% dplyr::select(-PAST), covariates=covsToUse, se.fit=F)
-  ipred$TIME <- firstDoseDate + ipred$TIME*3600 # Plotly able to plot POSIXct
-  
-  # Predict ipred with the new recommendation
-  newdata <- getNewdata(start=firstDoseInFutureTime, stop=max(regimen$TIME) + dosingInterval, output=output)
-  ipredNew <- predict(fit, newdata=newdata, regimen=nextRegimen, covariates=covsToUse, se.fit=!isMpc, level=0.95) # se.fit disabled if MPC model
-  ipredNew$TIME <- firstDoseDate + ipredNew$TIME*3600 # Plotly able to plot POSIXct
-  
-  # Back compute to POSIXct
-  recommendedRegimen <- recommendation$regimen %>% dplyr::mutate(TIME=firstDoseDate + TIME*3600, PAST=regimen$PAST)
-
-  return(list(ipred=ipred, ipredNew=ipredNew, recommendedRegimen=recommendedRegimen, firstDoseDate=firstDoseDate))
 }
 
 #'
@@ -442,23 +318,23 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
 #' @param model tdmore model
 #' @param covs covariates
 #' @param target numeric vector of size 2, min and max value
-#' @param recommendation recommendation (contains ipred, ipredNew and the recommendation)
+#' @param recommendationData recommendation data (contains namely ipred, ipredNew and the recommendation)
 #' @param now now date
 #' 
 #' @return a list of two plots
 #'
-prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommendation, now) {
-  firstDoseDate <- recommendation$firstDoseDate
-  ipred <- recommendation$ipred %>% mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
-  ipredNew <- recommendation$ipredNew %>% mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
-  recommendedRegimen <- recommendation$recommendedRegimen
+prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommendationData, now) {
+  firstDoseDate <- recommendationData$tdmoreData$firstDoseDate
+  ipred <- recommendationData$ipred %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
+  ipredNew <- recommendationData$ipredNew %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
+  recommendedRegimen <- recommendationData$recommendedRegimen
   recommendedRegimen$dose <- round(recommendedRegimen$AMT, digits=2)
-  
-  obs <- obs %>% filter(use==TRUE) # Plot only used observations
+  defaultModel <- getDefaultModel(model)
+  obs <- obs %>% dplyr::filter(use==TRUE) # Plot only used observations
   obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)
-  output <- getModelOutput(model)
+  output <- getModelOutput(defaultModel)
   
   p1 <- ggplot(mapping=aes_string(x="TIME", y=output)) +
     geom_line(data=ipred, color=ipredColor(), alpha=0.2) +
@@ -466,7 +342,7 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
     geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
-    labs(y=getYAxisLabel(model))
+    labs(y=getYAxisLabel(defaultModel))
   
   ribbonLower <- paste0(output, ".lower") # Not there in MPC fit
   ribbonUpper <- paste0(output, ".upper") # Not there in MPC fit

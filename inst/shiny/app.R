@@ -30,11 +30,13 @@ library(assertthat)
 library(data.table)
 
 # Default config added to environment
-toConfig(key="shinytdmore_db_config", value=defaultDBConfig())
+db <- MongoDatabase$new(collection="test", db="test")
+if(length(db$patients) == 0) db$add(createFakePatient())
 
 ui <- shinyTdmoreUI(title="shinyTDMore",
                     patientsTabUI(id="patientsTabId"),
                     predictionTabUI(id="predictionTabId"),
+                    modelTabUI(id="modelTabId"),
                     reportsTabUI(id="reportsTabId"),
                     aboutTabUI(id="aboutTabId"))
 
@@ -42,10 +44,11 @@ conf <- list(save=list(module=saveProject, id="saveProjectId"),
              new_patient=list(module=newPatientDialog, id="newPatientDialogId"),
              patients=list(module=patientsTab, id="patientsTabId"),
              prediction=list(module=predictionTab, id="predictionTabId"),
+             model=list(module=modelTab, id="modelTabId"),
              reports=list(module=reportsTab, id="reportsTabId"),
              about=list(module=aboutTab, id="aboutTabId"))
 
 server <- function(input, output, session) {
-  shinyTdmore(input, output, session, conf)
+  shinyTdmore(input, output, session, conf, db=db)
 }
 shinyApp(ui = ui, server = server)

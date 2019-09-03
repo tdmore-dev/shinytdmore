@@ -12,6 +12,8 @@ createPatient <- function(firstname, lastname) {
   patient <- list(firstname=firstname, lastname=lastname)
   patient$created_at <- Sys.time()
   patient$modified_at <- Sys.time()
+  patient$read_only <- FALSE
+  patient$private <- FALSE
   return(patient)
 }
 
@@ -184,7 +186,7 @@ covariateModelToJson <- function(covariateModel) {
   df <- data.frame(date=POSIXToString(datePosix))
   covsNames <- colnames(covariateModel)
   covsNames <- covsNames[!(covsNames %in% c("date", "time"))]
-  df <- bind_cols(df, covariateModel %>% select(covsNames))
+  df <- bind_cols(df, covariateModel %>% dplyr::select(covsNames))
   return(df)
 }
 
@@ -193,10 +195,10 @@ covariateModelToJson <- function(covariateModel) {
 #' @param patientModel the patient model
 #' @return the patient, JSON form
 #' @importFrom rjson toJSON
+#' @export
 #' 
 patientModelToJson <- function(patientModel) {
   patientJson <- patientModel
-  patientJson$read_only <- patientModel$read_only
   patientJson$doses <- doseModelToJson(patientModel$doses)
   patientJson$measures <- measureModelToJson(patientModel$measures)
   patientJson$covariates <- covariateModelToJson(patientModel$covariates)
@@ -213,6 +215,7 @@ patientModelToJson <- function(patientModel) {
 #' @return the patient model
 #' 
 jsonToPatientModel <- function(patientJson) {
+  if(is.string(patientJson)) patientJson <- rjson::fromJSON(patientJson)
   patientModel <- patientJson
   patientModel$doses <- jsonToDoseModel(patientJson$doses)
   patientModel$measures <- jsonToMeasureModel(patientJson$measures)
@@ -220,10 +223,13 @@ jsonToPatientModel <- function(patientJson) {
   patientModel$created_at <- stringToPOSIX(patientJson$created_at)
   patientModel$modified_at <- stringToPOSIX(patientJson$modified_at)
   patientModel$now_date <- if(is.null(patientJson$now_date)){Sys.time()} else {stringToPOSIX(patientJson$now_date)}
+  patientModel$read_only <- if(is.null(patientJson$read_only)){FALSE} else {patientJson$read_only}
+  patientModel$private <- if(is.null(patientJson$private)){FALSE} else {patientJson$private}
   return(patientModel)
 }
 
 #' Make a patient read-only.
+#' A read-only patient cannot be modified in shinytdmore.
 #'
 #' @param patientModel the patient model
 #' @return the patient model
@@ -234,6 +240,18 @@ toReadOnlyPatient <- function(patientModel) {
   return(patientModel)
 }
 
+#' Classify a patient as private.
+#' These patients will not appear in the patients tab.
+#'
+#' @param patientModel the patient model
+#' @return the patient model
+#' @export
+#' 
+toPrivatePatient <- function(patientModel) {
+  patientModel$private <- T
+  return(patientModel)
+}
+
 #' Say if the given patient is read-only.
 #'
 #' @param patientModel the patient model
@@ -241,10 +259,30 @@ toReadOnlyPatient <- function(patientModel) {
 #' @export
 #' 
 isReadOnlyPatient <- function(patientModel) {
-  if (is.null(patientModel$read_only)) {
-    return(FALSE)  
-  }
   return(patientModel$read_only)
+}
+
+#' Say if the given patient is private.
+#'
+#' @param patientModel the patient model
+#' @return a logical value
+#' @export
+#' 
+isPrivatePatient <- function(patientModel) {
+  return(patientModel$private)
+}
+
+#' Export patient to JSON file.
+#'
+#' @param filePath the file path (including file name)
+#' @param patientModel the patient model to be exported
+#' @export
+#' 
+exportPatientToJsonFile <- function(filePath, patientModel) {
+  jsonPatient <- patientModelToJson(patientModel)
+  fileConn <- file(filePath)
+  writeLines(jsonPatient, fileConn)
+  close(fileConn)
 }
 
 

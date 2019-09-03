@@ -8,8 +8,7 @@ library(tidyverse)
 
 context("Test the recommendation")
 
-#toConfig(key="shinytdmore_db_config", value = createDBConfig(collection="patients", db="tacrolimuskws"))
-toConfig(key="shinytdmore_db_config", value = createDBConfig(collection="patients", db="shinytdmore"))
+db <- MongoDatabase$new(collection="patients", db="shinytdmore")
 
 # Very useful to test the recommendation without running the shiny app
 

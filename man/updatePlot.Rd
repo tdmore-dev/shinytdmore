@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotUtilities.R
 \name{updatePlot}
 \alias{updatePlot}
-\title{Update plot using animation.}
+\title{Update plot using animation. NOT USED.}
 \usage{
 updatePlot(plot, outputId)
 }
@@ -12,5 +12,5 @@ updatePlot(plot, outputId)
 \item{outputId}{the output ID}
 }
 \description{
-Update plot using animation.
+Update plot using animation. NOT USED.
 }

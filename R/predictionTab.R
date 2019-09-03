@@ -12,37 +12,37 @@ predictionTabUI <- function(id) {
     "Prediction",
     icon = icon("address-card"),
     div(
-      actionButton(ns("sidebarCollapse"), icon=icon("minus-square"), label="", style="display: inline-block; vertical-align: middle; font-size:120%;"),
+      actionButton(ns("sidebarCollapse"), icon=icon("minus-square"), label=NULL, style="display: inline-block; vertical-align: middle; font-size:150%;"),
       span(textOutput(outputId=ns("tab_title")), style="display: inline-block; vertical-align: middle; margin-left: 10px;")
     ),
     fluidRow(class="wrapper",
       div(id="sidebar",
-        bsCollapse(id=ns("bsCollapse"), multiple=T, open=c("Doses", "Measures", "Now"),
-          bsCollapsePanel(title="Doses", style="primary",
+        shinyBS::bsCollapse(id=ns("bsCollapse"), multiple=T, open=c("Doses", "Measures", "Now"),
+          shinyBS::bsCollapsePanel(title="Doses", style="primary",
             conditionalPanel(
               condition = "output.plot_type == 'population' || output.plot_type == 'fit'",
-              rHandsontableOutput(ns("hotdose")),
+              rhandsontable::rHandsontableOutput(ns("hotdose")),
               actionButton(ns("addDose"), "Add dose", style="margin-top: 5px;"),
               ns=ns
             ),
             conditionalPanel(
               condition = "output.plot_type == 'recommendation'",
-              rHandsontableOutput(ns("hotdosefuture")),
+              rhandsontable::rHandsontableOutput(ns("hotdosefuture")),
               actionButton(ns("addDoseFuture"), "Add dose", style="margin-top: 5px;"),
               ns=ns
             )
           ),
-          bsCollapsePanel(title="Measures", style="primary",
-            rHandsontableOutput(ns("hotobs")),
+          shinyBS::bsCollapsePanel(title="Measures", style="primary",
+            rhandsontable::rHandsontableOutput(ns("hotobs")),
             actionButton(ns("addObs"), "Add measure", style="margin-top: 5px;")
           ),
-          bsCollapsePanel(title="Now", style="primary",
+          shinyBS::bsCollapsePanel(title="Now", style="primary",
             editableInput(inputId=ns("nowDate"), type = "combodate", value="2000-01-01 00:00")
           ),
-          bsCollapsePanel(title="Covariates", style="primary",
+          shinyBS::bsCollapsePanel(title="Covariates", style="primary",
             conditionalPanel(
               condition = "output.display_covariates == true",
-              rHandsontableOutput(ns("hotcov")),
+              rhandsontable::rHandsontableOutput(ns("hotcov")),
               actionButton(ns("addCovariate"), "Add covariate", style="margin-top: 5px;"),
               ns=ns
             ),
@@ -52,7 +52,7 @@ predictionTabUI <- function(id) {
               ns=ns
             )
           ),
-          bsCollapsePanel(title="Target", style="primary",
+          shinyBS::bsCollapsePanel(title="Target", style="primary",
             numericInput(ns("targetDown"), "Lower limit", 0),
             numericInput(ns("targetUp"), "Upper limit", 0)
           )
@@ -70,13 +70,13 @@ predictionTabUI <- function(id) {
          tags$head(tags$style(HTML('#predictionTabId-next_plot{background-color:#dde5eb}')))
        ),
        conditionalPanel(condition = "output.plot_type == 'population'",
-                        plotlyOutput(ns("populationPlot"), height="680px", width="100%"), ns=ns),
+                        plotly::plotlyOutput(ns("populationPlot"), height="680px", width="100%"), ns=ns),
 
        conditionalPanel(condition = "output.plot_type == 'fit'",
-                        plotlyOutput(ns("fitPlot"), height="800px", width="100%"), ns=ns),
+                        plotly::plotlyOutput(ns("fitPlot"), height="800px", width="100%"), ns=ns),
 
        conditionalPanel(condition = "output.plot_type == 'recommendation'",
-                        plotlyOutput(ns("recommendationPlot"), height="680px", width="100%"), ns=ns)
+                        plotly::plotlyOutput(ns("recommendationPlot"), height="680px", width="100%"), ns=ns)
       )
     ),
     tags$head(
@@ -263,20 +263,20 @@ predictionTab <- function(input, output, session, val) {
   output$tab_title <- renderText({return(paste(val$patient$firstname, val$patient$lastname))})
   
   # Observations/Measures table logic
-  output$hotobs <- renderRHandsontable({
+  output$hotobs <- rhandsontable::renderRHandsontable({
     borderRow <- getTableBorderIndex(val$obs, val$now, F)
-    rhandsontable(val$obs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
+    rhandsontable::rhandsontable(val$obs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
                   colHeaders = c("Date", "Time", getMeasureColumnLabel(val$model), "Use")) %>%
-                  hot_col("Use", halign = "htCenter") %>%
-                  hot_col(col="Time", type="dropdown", source=hoursList()) %>%
-                  hot_table(customBorders = list(list(
+      rhandsontable::hot_col("Use", halign = "htCenter") %>%
+      rhandsontable::hot_col(col="Time", type="dropdown", source=hoursList()) %>%
+      rhandsontable::hot_table(customBorders = list(list(
                     range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(val$obs)-1)),
                     top=list(width=2, color=nowColorHex()))))
   })
   
   observeEvent(input$hotobs, {
     if (!is.null(input$hotobs)) {
-      val$obs <- autoSortByDate(hot_to_r(input$hotobs))
+      val$obs <- autoSortByDate(rhandsontable::hot_to_r(input$hotobs))
     }
   })
   
@@ -297,10 +297,9 @@ predictionTab <- function(input, output, session, val) {
   })
   
   # Doses table logic
-  output$hotdose <- renderRHandsontable({
+  output$hotdose <- rhandsontable::renderRHandsontable({
     borderRow <- getTableBorderIndex(val$doses, val$now, T)
-    #browser()
-    rhandsontable(val$doses, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
+    rhandsontable::rhandsontable(val$doses, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
                   colHeaders = c("Date", "Time", getDoseColumnLabel(val$model),"Formulation")) %>%
                   hot_col(col="Time", type="dropdown", source=hoursList(), autocomplete=F, strict=F) %>%
                   hot_col(col="Formulation", type="dropdown", source=c('Meropenem','test'), autocomplete=TRUE, strict=TRUE) %>%
@@ -310,7 +309,7 @@ predictionTab <- function(input, output, session, val) {
   })
   
   observeEvent(input$hotdose, {
-    val$doses <- autoSortByDate(hot_to_r(input$hotdose))
+    val$doses <- autoSortByDate(rhandsontable::hot_to_r(input$hotdose))
   })
   
   addDose <- function(val) {
@@ -342,38 +341,39 @@ predictionTab <- function(input, output, session, val) {
   
   renderHotDoseFuture <- function(data) {
     borderRow <- getTableBorderIndex(data, val$now, T)
-    output$hotdosefuture <- renderRHandsontable({
-      recColumnLabel <- getRecommendedDoseColumnLabel(val$model)
-      rhandsontable(data, useTypes=TRUE, stretchH="all", rowHeaders=NULL, readOnly=FALSE,
-                    colHeaders = c("Date", "Time", getDoseColumnLabel(val$model), recColumnLabel)) %>%
-        hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE ) %>%
-        hot_col(col="Time", type="dropdown", source=hoursList()) %>%
-        hot_col(col=recColumnLabel, readOnly = TRUE) %>%
-        hot_table(customBorders = list(list(
+    output$hotdosefuture <- rhandsontable::renderRHandsontable({
+      defaultModel <- getDefaultModel(val$model)
+      recColumnLabel <- getRecommendedDoseColumnLabel(defaultModel)
+      rhandsontable::rhandsontable(data, useTypes=TRUE, stretchH="all", rowHeaders=NULL, readOnly=FALSE,
+                    colHeaders = c("Date", "Time", getDoseColumnLabel(defaultModel), recColumnLabel)) %>%
+        rhandsontable::hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE ) %>%
+        rhandsontable::hot_col(col="Time", type="dropdown", source=hoursList()) %>%
+        rhandsontable::hot_col(col=recColumnLabel, readOnly = TRUE) %>%
+        rhandsontable::hot_table(customBorders = list(list(
           range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(data)-1)),
           top=list(width=2, color=nowColorHex()))))
     })
   }
   
   observeEvent(input$hotdosefuture, {
-    val$doses <- autoSortByDate(hot_to_r(input$hotdosefuture) %>% select(-rec))
+    val$doses <- autoSortByDate(rhandsontable::hot_to_r(input$hotdosefuture) %>% dplyr::select(-rec))
   })
   
   # Covariates table logic
-  output$hotcov <- renderRHandsontable({
+  output$hotcov <- rhandsontable::renderRHandsontable({
     covsNames <- colnames(val$covs)
     covsNames <- covsNames[!(covsNames %in% c("date", "time"))]
     borderRow <- getTableBorderIndex(val$covs, val$now, T)
-    rhandsontable(val$covs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
+    rhandsontable::rhandsontable(val$covs, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
                   colHeaders = c("Date", "Time", covsNames)) %>%
-      hot_col(col="Time", type="dropdown", source=hoursList()) %>%
-      hot_table(customBorders = list(list(
+      rhandsontable::hot_col(col="Time", type="dropdown", source=hoursList()) %>%
+      rhandsontable::hot_table(customBorders = list(list(
         range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(val$covs)-1)),
         top=list(width=2, color=nowColorHex()))))
   })
   
   observeEvent(input$hotcov, {
-    val$covs <- autoSortByDate(hot_to_r(input$hotcov))
+    val$covs <- autoSortByDate(rhandsontable::hot_to_r(input$hotcov))
   })
   
   addCovariate <- function(val) {
@@ -415,9 +415,9 @@ predictionTab <- function(input, output, session, val) {
     plots <- preparePredictionPlots(doses=react()$doses, obs=react()$obs, model=react()$model,
                                     covs=react()$covs, target=react()$target, population=T, now=react()$now)
     progress$set(message = "Rendering plot...", value = 1)
-    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(react()$model))
+    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(react()$model)))
   })
-  output$populationPlot <- renderPlotly(populationPlot())
+  output$populationPlot <- plotly::renderPlotly(populationPlot())
   
   # 2 - Individual prediction
   fitPlot <- reactive({
@@ -428,9 +428,9 @@ predictionTab <- function(input, output, session, val) {
     plots <- preparePredictionPlots(doses=react()$doses, obs=react()$obs, model=react()$model,
                                     covs=react()$covs, target=react()$target, population=F, now=react()$now)
     progress$set(message = "Rendering plot...", value = 1)
-    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(react()$model))
+    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(react()$model)))
   })
-  output$fitPlot <- renderPlotly(fitPlot())
+  output$fitPlot <- plotly::renderPlotly(fitPlot())
   
   # 3 - Recommendation
   recommendationPlot <- reactive({
@@ -438,35 +438,35 @@ predictionTab <- function(input, output, session, val) {
     progress <- shiny::Progress$new(max = 2)
     on.exit(progress$close())
     progress$set(message = "Preparing...", value = 0.5)
-    recommendation <- prepareRecommendation(doses=react()$doses, obs=react()$obs, model=react()$model,
+    recommendationData <- prepareRecommendation(doses=react()$doses, obs=react()$obs, model=react()$model,
                                             covs=react()$covs, target=react()$target, now=react()$now)
-    recommendedRegimen <- recommendation$recommendedRegimen
+    recommendedRegimen <- recommendationData$recommendedRegimen
     data <- react()$doses
     data$rec <- ifelse(recommendedRegimen$PAST, "/", round(recommendedRegimen$AMT, 2))
     renderHotDoseFuture(data)
     
     plots <- prepareRecommendationPlots(doses=react()$doses, obs=react()$obs, model=react()$model,
-                                        covs=react()$covs, target=react()$target, recommendation=recommendation, now=react()$now)
+                                        covs=react()$covs, target=react()$target, recommendationData=recommendationData, now=react()$now)
     progress$set(message = "Rendering plot...", value = 1)
-    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(react()$model))
+    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(react()$model)))
   })
-  output$recommendationPlot <- renderPlotly(recommendationPlot())
+  output$recommendationPlot <- plotly::renderPlotly(recommendationPlot())
   
   
   # Refresh plot when sidebar is collapsed/opened (make sure there is no transition time in CSS, otherwise not working)
   observeEvent(input$sidebarCollapse, {
     if (outputReact$plot_type == "population") {
-      output$populationPlot <- renderPlotly(populationPlot())
+      output$populationPlot <- plotly::renderPlotly(populationPlot())
     } else if(outputReact$plot_type == "fit") {
-      output$fitPlot <- renderPlotly(fitPlot())
+      output$fitPlot <- plotly::renderPlotly(fitPlot())
     } else if(outputReact$plot_type == "recommendation") {
-      output$recommendationPlot <- renderPlotly(recommendationPlot())
+      output$recommendationPlot <- plotly::renderPlotly(recommendationPlot())
     }
     if (is.null(val$collapsed) || val$collapsed==F) {
-      updateActionButton(session, ns("sidebarCollapse"), label=NULL, icon=icon("plus-square"))
+      updateActionButton(session, "sidebarCollapse", label=NULL, icon=icon("plus-square")) # ns() not needed
       val$collapsed <- T
     } else {
-      updateActionButton(session, ns("sidebarCollapse"), label=NULL, icon=icon("minus-square"))
+      updateActionButton(session, "sidebarCollapse", label=NULL, icon=icon("minus-square")) # ns() not needed
       val$collapsed <- F
     }
   })

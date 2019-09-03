@@ -4,10 +4,9 @@
 #' @param userData data from user from, named vector
 #' @param modelName model name
 #' @param covariateData data from covariate form, named vector
+#' @param db db
 #' 
-saveData <- function(userData, modelName, covariateData) {
-  # See if patient already exists (in this case, model and covariates will be updated)
-  patient <- getPatient(firstname = userData[["firstname"]], lastname = userData[["lastname"]])
+saveData <- function(userData, modelName, covariateData, db) {
   if (!is.null(covariateData)) {
     covs <- setNames(as.numeric(covariateData), names(covariateData)) # String to numeric conversion
     covs <- as.list(covs)
@@ -38,14 +37,8 @@ saveData <- function(userData, modelName, covariateData) {
     patient <- updateNowDate(patient, now)
     patient <- updateCovariates(patient, covs, date, time)
 
-    # Add patient into DB
-    addPatient(patient)
-  } else {
-    # Update patient in DB
-    patient <- updateCovariates(patient, covs, date, time)
-    patient <- updatePatientModel(patient, modelName)
-    updatePatient(patient$id, patient)
-  }
+  # Add patient into DB
+  db$add(patient)
 }
 
 #' Update covariates in patient model (convert numeric vector to tibble).
@@ -58,7 +51,7 @@ saveData <- function(userData, modelName, covariateData) {
 #' 
 updateCovariates <- function(patient, covs, date, time) {
   if (!is.null(covs)) {
-    covariates <- tibble(date=date, time=time)
+    covariates <- tibble::tibble(date=date, time=time)
     covariates <- bind_cols(covariates, as.list(covs))
     patient <- updatePatientCovariates(patient, covariates)
   }
@@ -165,7 +158,7 @@ hackSelectInput <- function(session) {
 #' 
 #' @export
 #'
-newPatientDialog <- function(input, output, session, onNewPatientAdded) {
+newPatientDialog <- function(input, output, session, onNewPatientAdded, db) {
   # Modal form OK button
   observeEvent(input$modalFormOK, {
       # Retrieve user form data
@@ -190,7 +183,7 @@ newPatientDialog <- function(input, output, session, onNewPatientAdded) {
       
       if (valuesAllNumeric) {
         model <- get(input$modelCombobox)
-        saveData(userData, input$modelCombobox, covariateData)
+        saveData(userData, input$modelCombobox, covariateData, db)
         
         # Use of a reactive value to trigger patients table refresh in patientsTab
         if (is.null(onNewPatientAdded$trigger)) {

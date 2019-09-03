@@ -6,10 +6,6 @@ library(rjson)
 library(tidyverse)
 
 context("Test the patient model")
-toConfig(key="shinytdmore_db_config", value=testDBConfig()) # Make sure the test DB config is enabled (a test database is used)
-
-# Remove everything from the database
-getDB()$remove("{}")
 
 # Create a patient and update the TDM model
 patientModel <- createPatient("Nicolas", "Luyckx")
@@ -40,13 +36,14 @@ covariateModel <- tibble(
 )
 patientModel <- updatePatientCovariates(patientModel, covariateModel)
 
+db <- InMemoryDatabase$new()
 # Add patient to the database
 #debugonce(shinytdmore:::jsonToCovariateModel)
-idInDB <- addPatient(patientModel)
+idInDB <- db$add(patientModel)
 expect_equal(idInDB, 1)
 
 # Add patient to DB and find it back from DB
-retrievedPatient <- getPatient(idInDB)
+retrievedPatient <- db$get(idInDB)
 
 # Check doses can be retrieved correctly
 expect_equal(doseModel, retrievedPatient$doses)

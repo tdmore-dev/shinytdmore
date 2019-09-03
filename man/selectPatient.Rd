@@ -4,7 +4,7 @@
 \alias{selectPatient}
 \title{Select patient (last in DB or from URL).}
 \usage{
-selectPatient(session, val)
+selectPatient(session, val, db)
 }
 \arguments{
 \item{session}{shiny session}
