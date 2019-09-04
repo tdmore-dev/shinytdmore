@@ -25,7 +25,7 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
   relativeNow <- POSIXToHours(now) - POSIXToHours(firstDoseDate)
   
   # Add formulations as covariates for tdmore
-  covsMerge <-  merge(covs, doses %>% select(-dose))
+  covsMerge <-  mergeFormAndCov(covs, doses)
   
   # Covariates conversion
   covariates <- covsToTdmore(covsMerge, firstDoseDate)
@@ -95,6 +95,24 @@ covsToTdmore <- function(covs, firstDoseDate) {
   }
   
   return(covariates)
+}
+
+#'
+#' Join covariates and formulations (shinyTDMore -> TDMore).
+#' 
+#' @param covs shinyTDMore covariates
+#' @param forms shinyTDMore doses
+#' @importFrom dplyr bind_rows select arrange distinct
+#' @importFrom tidyr fill
+#' @return TDMore covariates
+#'
+mergeFormAndCov <- function(covs, doses) {
+  joinedCov <- bind_rows(covs, doses %>% select(-dose)) %>%
+                  arrange( date, time ) %>%
+                  fill(c(-date,-time)) %>%
+                  fill(c(-date,-time), .direction = 'up') %>%
+                  distinct()
+  return(joinedCov)
 }
 
 #'
