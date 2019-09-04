@@ -101,7 +101,12 @@ jsonToDoseModel <- function(doseJson) {
   datePosix <- as.POSIXct(unlist(doseJson$date))
   date <- POSIXToDate(datePosix)
   time <- POSIXToTime(datePosix)
-  return(tibble(date=date, time=time, dose=as.numeric(unlist(doseJson$amount)), formulation=unlist(doseJson$formulation)))
+  if (is.null(doseJson$formulation)) {
+    formulation <- rep("Unknown", length(date)) # Ensure backwards compatibility
+  } else {
+    formulation <- unlist(doseJson$formulation)
+  }
+  return(tibble(date=date, time=time, dose=as.numeric(unlist(doseJson$amount)), formulation=formulation))
 }
 
 #' Convert dose model to JSON structure.

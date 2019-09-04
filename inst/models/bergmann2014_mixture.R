@@ -31,17 +31,18 @@ rxodeModel <- "
   CONC = center / V1 * 1000
 "
 outputM <- output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)
-doseM <- formulation(name="Test",unit="mg", dosing_interval=12, default_value=8)
+form1 <- formulation(name="Prograft",unit="mg", dosing_interval=12, default_value=5)
+form2 <- formulation(name="Advagraf",unit="mg", dosing_interval=24, default_value=5)
 targetM <- target(min=12, max=15)
 observedM <- observed_variables(c("CL", "V1", "V2", "KA"))
 
 fastMetaboliser <- RxODE::RxODE(gsub("CYP3A5", "0", rxodeModel)) %>%
   tdmore(parameters=names(omega), omega=omega, res_var=list(errorModel(prop=0.295))) %>%
-  metadata(outputM, doseM, targetM, observedM)
+  metadata(outputM, form1, form2, targetM, observedM)
 
 slowMetaboliser <- RxODE::RxODE(gsub("CYP3A5", "1", rxodeModel)) %>%
   tdmore(parameters=names(omega), omega=omega, res_var=list(errorModel(prop=0.295))) %>%
-  metadata(outputM, doseM, targetM, observedM)
+  metadata(outputM, form1, form2, targetM, observedM)
 
 regimen <- data.frame(
   TIME=c(0,24),

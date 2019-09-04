@@ -81,6 +81,19 @@ getMeasureColumnLabel <- function(model, breakLine=T) {
 }
 
 #'
+#' Get the list of formulations for the given model.
+#' 
+#' @param model tdmore model
+#' @importFrom plyr laply
+#' @return a label
+#'
+getFormulationList <- function(model) {
+  allFormulations <- getMetadataByClass(model, "tdmore_formulation")
+  list <- plyr::laply(allFormulations, function(form) {form$name})
+  return(list)
+}
+
+#'
 #' Merge plots.
 #' 
 #' @param p1 first plot

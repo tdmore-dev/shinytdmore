@@ -302,7 +302,7 @@ predictionTab <- function(input, output, session, val) {
     rhandsontable::rhandsontable(val$doses, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
                   colHeaders = c("Date", "Time", getDoseColumnLabel(val$model),"Formulation")) %>%
                   hot_col(col="Time", type="dropdown", source=hoursList(), autocomplete=F, strict=F) %>%
-                  hot_col(col="Formulation", type="dropdown", source=c('Meropenem','test'), autocomplete=TRUE, strict=TRUE) %>%
+                  hot_col(col="Formulation", type="dropdown", source=getFormulationList(val$model), autocomplete=TRUE, strict=TRUE) %>%
                   hot_table(customBorders = list(list(
                     range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(val$doses)-1)),
                     top=list(width=2, color=nowColorHex()))))
