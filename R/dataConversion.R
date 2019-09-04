@@ -24,8 +24,11 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
   # Now but in hours compared to the reference time
   relativeNow <- POSIXToHours(now) - POSIXToHours(firstDoseDate)
   
+  # Add formulations as covariates for tdmore
+  covsMerge <-  merge(covs, doses %>% select(-dose))
+  
   # Covariates conversion
-  covariates <- covsToTdmore(covs, firstDoseDate)
+  covariates <- covsToTdmore(covsMerge, firstDoseDate)
   
   # Make regimen and filtered regimen dataframes
   regimen <- data.frame(
