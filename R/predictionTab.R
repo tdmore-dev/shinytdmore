@@ -345,9 +345,10 @@ predictionTab <- function(input, output, session, val) {
       defaultModel <- getDefaultModel(val$model)
       recColumnLabel <- getRecommendedDoseColumnLabel(defaultModel)
       rhandsontable::rhandsontable(data, useTypes=TRUE, stretchH="all", rowHeaders=NULL, readOnly=FALSE,
-                    colHeaders = c("Date", "Time", getDoseColumnLabel(defaultModel), recColumnLabel)) %>%
+                    colHeaders = c("Date", "Time", getDoseColumnLabel(defaultModel), "Formulation", recColumnLabel)) %>%
         rhandsontable::hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE ) %>%
         rhandsontable::hot_col(col="Time", type="dropdown", source=hoursList()) %>%
+        rhandsontable::hot_col(col="Formulation", type="dropdown", source=getFormulationList(val$model), autocomplete=TRUE, strict=TRUE) %>%
         rhandsontable::hot_col(col=recColumnLabel, readOnly = TRUE) %>%
         rhandsontable::hot_table(customBorders = list(list(
           range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(data)-1)),
