@@ -110,7 +110,6 @@
 #' @examples
 #' db <- InMemoryDatabase$new()
 #' patient <- db$add(createFakePatient())
-#' id <- patient$id
 #'
 #' @import R6 
 #' @importFrom R6 R6Class

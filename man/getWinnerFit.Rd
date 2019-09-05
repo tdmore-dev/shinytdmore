@@ -9,7 +9,7 @@ If the given fit is a tdmorefit mixture, the winner fit is returned.}
 getWinnerFit(fit)
 }
 \arguments{
-\item{model}{tdmore model or tdmore_mixture model}
+\item{fit}{tdmore fit object}
 }
 \value{
 a tdmore model

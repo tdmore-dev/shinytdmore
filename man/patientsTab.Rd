@@ -19,6 +19,8 @@ patientsTab(input, output, session, parentSession, val, onNewPatientAdded,
 \item{val}{main reactive container}
 
 \item{onNewPatientAdded}{reactive value}
+
+\item{db}{database}
 }
 \description{
 Patients tab server.

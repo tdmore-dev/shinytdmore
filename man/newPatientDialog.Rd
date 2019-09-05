@@ -14,6 +14,8 @@ newPatientDialog(input, output, session, onNewPatientAdded, db)
 \item{session}{shiny session}
 
 \item{onNewPatientAdded}{reactive value}
+
+\item{db}{database}
 }
 \description{
 New patient dialog server.

@@ -1,7 +1,6 @@
 #'
 #' Say if the user went out of the 'Prediction' tab.
 #'
-#' @param input shiny input object
 #' @param onTabChanged onTabChanged reactive values
 #' @return a logical value
 #'
@@ -35,6 +34,7 @@ dataHasChanged <- function(val) {
 #' Save project into DB (measures and doses from shiny are saved).
 #'
 #' @param val main reactive container
+#' @param db database
 #'
 saveProjectToDB <- function(val, db) {
   val$patient <- updatePatientDoses(val$patient, val$doses)
@@ -53,6 +53,7 @@ saveProjectToDB <- function(val, db) {
 #' @param session shiny session
 #' @param onTabChanged onTabChanged reactive values
 #' @param val main reactive container
+#' @param db database
 #' 
 #' @export
 #'

@@ -20,7 +20,7 @@ getDefaultModel <- function(model) {
 #' If the given fit is not a tdmorefit mixture, this fit is returned.
 #' If the given fit is a tdmorefit mixture, the winner fit is returned.
 #' 
-#' @param model tdmore model or tdmore_mixture model
+#' @param fit tdmore fit object
 #' @return a tdmore model
 #' @export
 #'

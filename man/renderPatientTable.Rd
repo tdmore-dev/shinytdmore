@@ -10,6 +10,8 @@ renderPatientTable(input, ns, db)
 \item{input}{the shiny input object}
 
 \item{ns}{namespace}
+
+\item{db}{database}
 }
 \description{
 Render the patients table.

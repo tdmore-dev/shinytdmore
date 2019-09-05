@@ -10,6 +10,8 @@ selectPatient(session, val, db)
 \item{session}{shiny session}
 
 \item{val}{main reactive container}
+
+\item{db}{database}
 }
 \description{
 Select patient (last in DB or from URL).

@@ -97,6 +97,5 @@ FileDatabase <- R6::R6Class("FileDatabase", inherit=JsonDatabase,
 \examples{
 db <- InMemoryDatabase$new()
 patient <- db$add(createFakePatient())
-id <- patient$id
 
 }

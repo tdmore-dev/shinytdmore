@@ -66,6 +66,7 @@ shinyTdmore <- function(input, output, session, conf, db) {
 #'
 #' @param session shiny session
 #' @param val main reactive container
+#' @param db database
 #' 
 selectPatient <- function(session, val, db) {
   observeEvent(session$clientData$url_search, {

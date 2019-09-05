@@ -154,6 +154,7 @@ hackSelectInput <- function(session) {
 #' @param output shiny output
 #' @param session shiny session
 #' @param onNewPatientAdded reactive value
+#' @param db database
 #' 
 #' @export
 #'

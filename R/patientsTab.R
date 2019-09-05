@@ -23,6 +23,7 @@ patientsTabUI <- function(id) {
 #' Collect data from the mongoDB.
 #'
 #' @param ns namespace
+#' @param db database
 #' @importFrom purrr map_dfr
 #'
 initDataTable <- function(ns, db) {
@@ -56,6 +57,7 @@ initDataTable <- function(ns, db) {
 #'
 #' @param input the shiny input object
 #' @param ns namespace
+#' @param db database
 #'
 renderPatientTable <- function(input, ns, db) {
   DT::renderDataTable(expr = {
@@ -130,6 +132,7 @@ setPatient <- function(patient, val) {
 #' @param parentSession shiny parent session
 #' @param val main reactive container
 #' @param onNewPatientAdded reactive value
+#' @param db database
 #' 
 #' @export
 #'
