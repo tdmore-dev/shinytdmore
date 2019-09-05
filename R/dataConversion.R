@@ -101,17 +101,17 @@ covsToTdmore <- function(covs, firstDoseDate) {
 #' Join covariates and formulations (shinyTDMore -> TDMore).
 #' 
 #' @param covs shinyTDMore covariates
-#' @param forms shinyTDMore doses
+#' @param doses shinyTDMore doses
 #' @importFrom dplyr bind_rows select arrange distinct
 #' @importFrom tidyr fill
 #' @return TDMore covariates
 #'
 mergeFormAndCov <- function(covs, doses) {
-  joinedCov <- bind_rows(covs, doses %>% select(-dose)) %>%
-                  arrange( date, time ) %>%
-                  fill(c(-date,-time)) %>%
-                  fill(c(-date,-time), .direction = 'up') %>%
-                  distinct()
+  joinedCov <- dplyr::bind_rows(covs, doses %>% select(-dose)) %>%
+                  dplyr::arrange( date, time ) %>%
+                  tidyr::fill(c(-date,-time)) %>%
+                  tidyr::fill(c(-date,-time), .direction = 'up') %>%
+                  dplyr::distinct()
   return(joinedCov)
 }
 
