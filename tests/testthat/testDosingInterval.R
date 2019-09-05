@@ -10,19 +10,24 @@ source("testUtils.R")
 patient <- findPatient(FileDatabase$new("patients"), "dosing_interval")
 
 # Prepare recommendation
-data <- prepareRecommendation(
-  doses = patient$doses,
-  obs = patient$measures,
-  model = get(patient$model),
-  covs = patient$covariates,
-  target = patient$target,
-  now = patient$now
-)
+data <- prepareRecommendationTest(patient)
 
 # Retrieve recommended regimen
 recommendedRegimen <- data$recommendedRegimen
 
-# Check recommended doses are fine for PROGRAFT (last dose is PROGRAFT)
+# Check recommended doses are fine for Prograft (last dose is Prograft)
+expectDoses(recommendedRegimen, c(12.02, 4.76))
+
+#########################################
+
+# Change last dose formulation by Advagraf
+patient$doses[nrow(patient$doses), "formulation"] <- "Advagraf"
+
+# Prepare recommendation
+data <- prepareRecommendationTest(patient)
+
+# Retrieve recommended regimen
+recommendedRegimen <- data$recommendedRegimen
+
+# Check recommended doses (last dose is now Advagraf)
 expectDoses(recommendedRegimen, c(12.02, 10.40))
-
-

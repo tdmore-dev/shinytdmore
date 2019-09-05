@@ -9,16 +9,27 @@ getModelOutput <- function(model) {
 }
 
 #'
-#' Retrieve the dosing interval from the tdmore metadata.
-#' If no dose metadata is defined in the model, 24 hours is returned by default.
-#' 
-#' @param model tdmore model
-#' @return the dosing interval
+#' Retrieve the dosing interval from the tdmore metadata according to the specified formulation.
+#' If no formulation matches, dosing interval of the first formulation is returned.
+#' If no formulation at all in metadata, 24 hours is returned.
 #'
-getDosingInterval <- function(model) {
-  doseMetadata <- getMetadataByName(model, "DOSE")
-  dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
-  return(dosingInterval)
+#' @param model tdmore model
+#' @param formulation formulation we are looking for, character, can be NULL
+#' @return a dosing interval, numeric value
+#'
+getDosingInterval <- function(model, formulation=NULL) {
+  formulations <- getMetadataByClass(model, "tdmore_formulation")
+  
+  results <- formulations[sapply(formulations, function(x) {!is.null(formulation) && x$name==formulation})]
+  if (length(results) > 0) {
+    return(results[[1]]$dosing_interval)
+  
+  } else if (length(formulations) > 0) {
+    return(formulations[[1]]$dosing_interval)
+  
+  } else {
+    return(24)
+  }
 }
 
 #' Prepare population OR individual prediction data.
@@ -41,7 +52,7 @@ preparePrediction <- function(doses, obs, model, covs, target, population, now) 
   tdmoreData <- convertDataToTdmore(defaultModel, doses, obs, covs, now)
   
   # Retrieving data
-  regimen <- tdmoreData$regimen %>% dplyr::select(-PAST)
+  regimen <- tdmoreData$regimen %>% dplyr::select(-PAST, -FORM)
   covariates <- tdmoreData$covariates
   filteredObserved <- tdmoreData$filteredObserved
   firstDoseDate <- tdmoreData$firstDoseDate
@@ -96,6 +107,7 @@ preparePrediction <- function(doses, obs, model, covs, target, population, now) 
 #' 
 #' @return a list with pred, ipred and the recommendation
 #' @export
+#' @importFrom dplyr last mutate pull select
 #'
 prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   if (nrow(doses)==0) {
@@ -116,12 +128,14 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   }
   
   # Compute fit
-  fit <- estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST), covariates=covariates)
+  fit <- estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST, -FORM), covariates=covariates)
   winningFit <- getWinnerFit(fit)
   
   # Implementing the iterative process
-  nextRegimen <- regimen %>% dplyr::select(-PAST)
-  dosingInterval <- getDosingInterval(defaultModel)
+  nextRegimen <- regimen %>% dplyr::select(-PAST, -FORM)
+  
+  # Dosing interval of last formulation found is used
+  dosingInterval <- getDosingInterval(defaultModel, regimen %>% dplyr::pull(FORM) %>% dplyr::last())
   output <- getModelOutput(defaultModel)
   
   for (index in seq_along(doseRows)) {
@@ -144,7 +158,7 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   
   # Predict ipred without adapting the dose
   newdata <- getNewdata(start=0, stop=max(regimen$TIME) + dosingInterval, output=output)
-  ipred <-  predict(fit, newdata = newdata, regimen=regimen %>% dplyr::select(-PAST), covariates=covsToUse, se.fit=F)
+  ipred <-  predict(fit, newdata = newdata, regimen=regimen %>% dplyr::select(-PAST, -FORM), covariates=covsToUse, se.fit=F)
   ipred$TIME <- firstDoseDate + ipred$TIME*3600 # Plotly able to plot POSIXct
   
   # Predict ipred with the new recommendation

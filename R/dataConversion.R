@@ -33,7 +33,8 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
   # Make regimen and filtered regimen dataframes
   regimen <- data.frame(
     TIME=as.numeric(difftime(doseDates, firstDoseDate, units="hour")),
-    AMT=doses$dose
+    AMT=doses$dose,
+    FORM=doses$formulation
   )
   if (iov) {
     regimen$OCC <- seq_len(nrow(regimen))
@@ -46,7 +47,7 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
     observed <- data.frame(TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")), USE=obs$use)
     observed[, output] <- obs$measure
     observed <- observed %>% dplyr::mutate(PAST=nearEqual(TIME, relativeNow, mode="ne.lt")) # sign '<=' used on purpose (through concentration can be used for recommendation dose at same time)
-    filteredObserved <- observed %>% dplyr::filter(PAST & USE) %>% dplyr::select(-c("PAST", "USE"))
+    filteredObserved <- observed %>% dplyr::filter(PAST & USE) %>% dplyr::select(-PAST, -USE)
     if (nrow(filteredObserved %>% dplyr::filter(TIME < 0)) > 0) {
       stop("Some measures occur before the first dose")
     }
