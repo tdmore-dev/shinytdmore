@@ -40,3 +40,20 @@ expectDoses <- function(recommendedRegimen, expectedDoses) {
   # as.numeric used to remove names
   expect_equal(round(recommendedRegimen %>% dplyr::filter(!PAST) %>% dplyr::pull(AMT), 2), round(expectedDoses, 2))
 }
+
+#' Encapsulate the prepareRecommendation method.
+#'
+#' @param patient
+#' @return a list
+#'
+prepareRecommendationTest <- function(patient) {
+  list <- prepareRecommendation(
+    doses = patient$doses,
+    obs = patient$measures,
+    model = get(patient$model),
+    covs = patient$covariates,
+    target = patient$target,
+    now = patient$now
+  )
+  return(list)
+} 

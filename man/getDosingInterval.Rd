@@ -2,18 +2,22 @@
 % Please edit documentation in R/predictionCore.R
 \name{getDosingInterval}
 \alias{getDosingInterval}
-\title{Retrieve the dosing interval from the tdmore metadata.
-If no dose metadata is defined in the model, 24 hours is returned by default.}
+\title{Retrieve the dosing interval from the tdmore metadata according to the specified formulation.
+If no formulation matches, dosing interval of the first formulation is returned.
+If no formulation at all in metadata, 24 hours is returned.}
 \usage{
-getDosingInterval(model)
+getDosingInterval(model, formulation = NULL)
 }
 \arguments{
 \item{model}{tdmore model}
+
+\item{formulation}{formulation we are looking for, character, can be NULL}
 }
 \value{
-the dosing interval
+a dosing interval, numeric value
 }
 \description{
-Retrieve the dosing interval from the tdmore metadata.
-If no dose metadata is defined in the model, 24 hours is returned by default.
+Retrieve the dosing interval from the tdmore metadata according to the specified formulation.
+If no formulation matches, dosing interval of the first formulation is returned.
+If no formulation at all in metadata, 24 hours is returned.
 }
