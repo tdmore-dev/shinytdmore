@@ -13,7 +13,8 @@ createFakePatient <- function() {
     date=currentDate,
     time=c("08:00"),
     dose=c(8),
-    formulation=c("Formulation")
+    formulation=c("Formulation"),
+    fix=c(FALSE)
   )
   patient <- updatePatientDoses(patient, doseModel)
   

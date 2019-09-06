@@ -34,7 +34,8 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
   regimen <- data.frame(
     TIME=as.numeric(difftime(doseDates, firstDoseDate, units="hour")),
     AMT=doses$dose,
-    FORM=doses$formulation
+    FORM=doses$formulation,
+    FIX=doses$fix
   )
   if (iov) {
     regimen$OCC <- seq_len(nrow(regimen))

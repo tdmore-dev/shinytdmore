@@ -52,7 +52,7 @@ preparePrediction <- function(doses, obs, model, covs, target, population, now) 
   tdmoreData <- convertDataToTdmore(defaultModel, doses, obs, covs, now)
   
   # Retrieving data
-  regimen <- tdmoreData$regimen %>% dplyr::select(-PAST, -FORM)
+  regimen <- tdmoreData$regimen %>% dplyr::select(-PAST, -FORM, -FIX)
   covariates <- tdmoreData$covariates
   filteredObserved <- tdmoreData$filteredObserved
   firstDoseDate <- tdmoreData$firstDoseDate
@@ -122,17 +122,17 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   isMpc <- inherits(model, "tdmore_mpc")
   
   # Find dose rows to be adapted
-  doseRows <- which(!regimen$PAST)
+  doseRows <- which(!regimen$PAST & !regimen$FIX)
   if (length(doseRows)==0) {
     stop("There is no dose in the future")
   }
   
   # Compute fit
-  fit <- estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST, -FORM), covariates=covariates)
+  fit <- estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST, -FORM, -FIX), covariates=covariates)
   winningFit <- getWinnerFit(fit)
   
   # Implementing the iterative process
-  nextRegimen <- regimen %>% dplyr::select(-PAST, -FORM)
+  nextRegimen <- regimen %>% dplyr::select(-PAST, -FORM, -FIX)
   
   # Dosing interval of last formulation found is used
   dosingInterval <- getDosingInterval(defaultModel, regimen %>% dplyr::pull(FORM) %>% dplyr::last())
@@ -158,7 +158,7 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   
   # Predict ipred without adapting the dose
   newdata <- getNewdata(start=0, stop=max(regimen$TIME) + dosingInterval, output=output)
-  ipred <-  predict(fit, newdata = newdata, regimen=regimen %>% dplyr::select(-PAST, -FORM), covariates=covsToUse, se.fit=F)
+  ipred <-  predict(fit, newdata = newdata, regimen=regimen %>% dplyr::select(-PAST, -FORM, -FIX), covariates=covsToUse, se.fit=F)
   ipred$TIME <- firstDoseDate + ipred$TIME*3600 # Plotly able to plot POSIXct
   
   # Predict ipred with the new recommendation

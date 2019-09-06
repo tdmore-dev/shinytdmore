@@ -300,10 +300,11 @@ predictionTab <- function(input, output, session, val) {
   output$hotdose <- rhandsontable::renderRHandsontable({
     borderRow <- getTableBorderIndex(val$doses, val$now, T)
     rhandsontable::rhandsontable(val$doses, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
-                  colHeaders = c("Date", "Time", getDoseColumnLabel(val$model),"Formulation")) %>%
-                  hot_col(col="Time", type="dropdown", source=hoursList(), autocomplete=F, strict=F) %>%
-                  hot_col(col="Formulation", type="dropdown", source=getFormulationList(val$model), autocomplete=TRUE, strict=TRUE) %>%
-                  hot_table(customBorders = list(list(
+                  colHeaders = c("Date", "Time", getDoseColumnLabel(val$model),"Formulation", "Fix")) %>%
+      rhandsontable::hot_col(col="Time", type="dropdown", source=hoursList(), autocomplete=F, strict=F) %>%
+      rhandsontable::hot_col(col="Formulation", type="dropdown", source=getFormulationList(val$model), autocomplete=TRUE, strict=TRUE) %>%
+      rhandsontable::hot_col(col = 'Fix', colWidths=0.1) %>% # Trick to hide column, see https://github.com/jrowen/rhandsontable/issues/249
+      rhandsontable::hot_table(customBorders = list(list(
                     range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(val$doses)-1)),
                     top=list(width=2, color=nowColorHex()))))
   })
@@ -345,10 +346,11 @@ predictionTab <- function(input, output, session, val) {
       defaultModel <- getDefaultModel(val$model)
       recColumnLabel <- getRecommendedDoseColumnLabel(defaultModel)
       rhandsontable::rhandsontable(data, useTypes=TRUE, stretchH="all", rowHeaders=NULL, readOnly=FALSE,
-                    colHeaders = c("Date", "Time", getDoseColumnLabel(defaultModel), "Formulation", recColumnLabel)) %>%
+                    colHeaders = c("Date", "Time", getDoseColumnLabel(defaultModel), "Formulation", "Fix", recColumnLabel)) %>%
         rhandsontable::hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE ) %>%
         rhandsontable::hot_col(col="Time", type="dropdown", source=hoursList()) %>%
         rhandsontable::hot_col(col="Formulation", type="dropdown", source=getFormulationList(val$model), autocomplete=TRUE, strict=TRUE) %>%
+        rhandsontable::hot_col(col = 'Fix', colWidths=0.1) %>% # Trick to hide column, see https://github.com/jrowen/rhandsontable/issues/249
         rhandsontable::hot_col(col=recColumnLabel, readOnly = TRUE) %>%
         rhandsontable::hot_table(customBorders = list(list(
           range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(data)-1)),

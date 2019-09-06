@@ -31,6 +31,13 @@
       "Prograft",
       "Prograft",
       "Prograft"
+    ],
+    "fix": [
+      false,
+      false,
+      false,
+      false,
+      false
     ]
   },
   "now_date": "2019-09-06 11:00:00 +0200",

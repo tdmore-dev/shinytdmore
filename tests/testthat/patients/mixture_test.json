@@ -21,6 +21,11 @@
       "Def",
       "Def",
       "Def"
+    ],
+    "fix": [
+      false,
+      false,
+      false
     ]
   },
   "firstname": "Mixture",

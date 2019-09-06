@@ -23,10 +23,10 @@ saveData <- function(userData, modelName, covariateData, db) {
   formulations <- getMetadataByClass(get(modelName),"tdmore_formulation")
   doseMetadata <- getMetadataByName(get(modelName), formulations[[1]]$name)
   dose <- if(is.null(doseMetadata)) {0} else {doseMetadata$default_value}
-  formulation <- if(is.null(doseMetadata)) {"TMT"} else {doseMetadata$name}
+  formulation <- if(is.null(doseMetadata)) {"Unknown"} else {doseMetadata$name}
     
   # Add by default a first dose at 8am
-  doses <- tibble(date=date, time=time, dose=dose, formulation=doseMetadata$name)
+  doses <- tibble(date=date, time=time, dose=dose, formulation=doseMetadata$name, fix=F)
     
   # Create a empty measure data frame
   measures <- tibble(date=date, time=character(), measure=numeric())

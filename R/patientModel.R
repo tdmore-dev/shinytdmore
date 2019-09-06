@@ -101,12 +101,21 @@ jsonToDoseModel <- function(doseJson) {
   datePosix <- as.POSIXct(unlist(doseJson$date))
   date <- POSIXToDate(datePosix)
   time <- POSIXToTime(datePosix)
+  
+  # Backwards compatibility for formulations
   if (is.null(doseJson$formulation)) {
-    formulation <- rep("Unknown", length(date)) # Ensure backwards compatibility
+    formulation <- rep("Unknown", length(date)) # By default, form is 'Unknown'
   } else {
     formulation <- unlist(doseJson$formulation)
   }
-  return(tibble(date=date, time=time, dose=as.numeric(unlist(doseJson$amount)), formulation=formulation))
+  
+  # Backwards compatibility for fix
+  if (is.null(doseJson$fix)) {
+    fix <- rep(FALSE, length(date)) # By default, don't fix doses
+  } else {
+    fix <- unlist(doseJson$fix)
+  }
+  return(tibble(date=date, time=time, dose=as.numeric(unlist(doseJson$amount)), formulation=formulation, fix=fix))
 }
 
 #' Convert dose model to JSON structure.
@@ -117,10 +126,10 @@ jsonToDoseModel <- function(doseJson) {
 #' 
 doseModelToJson <- function(doseModel) {
   if (is.null(doseModel)) {
-    return(data.frame(date=character(), amount=numeric(), formulation=character()))
+    return(data.frame(date=character(), amount=numeric(), formulation=character(), fix=logical()))
   }
   datePosix <- dateAndTimeToPOSIX(doseModel$date, doseModel$time)
-  return(data.frame(date=POSIXToString(datePosix), amount=doseModel$dose, formulation=doseModel$formulation))
+  return(data.frame(date=POSIXToString(datePosix), amount=doseModel$dose, formulation=doseModel$formulation, fix=doseModel$fix))
 }
 
 #' Convert measures (JSON) to dose model.
