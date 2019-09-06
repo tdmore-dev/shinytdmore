@@ -18,6 +18,10 @@
 ##
 ## ---------------------------
 
+#' Mongo database class
+#' @title MongoDatabase Class
+#' @docType class
+#' @description MongoDatabase class description
 #' @export
 #' @importFrom mongolite mongo
 #' @importFrom R6 R6Class

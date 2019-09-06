@@ -18,108 +18,14 @@
 ##
 ## ---------------------------
 
-
-
-#' Database connection
-#'
-#' This R6 class provides an interface for `shinytdmore` to connect
-#' to a database of patient information. This could be a simple
-#' in-memory database, a file-based storage, or even an external database.
-#' 
-#' @section Implementing a database:
-#' ```
-#' InMemoryDatabase <- R6::R6Class("InMemoryDatabase", inherit=Database,
-#'  private=list(storage=list()),
-#'  public=list(
-#'    get=function(id) storage[[id]],
-#'    update=function(id,patient) {
-#'      storage[[id]] <- patient
-#'      invisible(self)
-#'    },
-#'    remove=function(id) {
-#'      storage[[id]] <- NULL
-#'      invisible(self)
-#'    },
-#'    add=function(patient) {
-#'      private$storage <- c(private$storage, list(patient))
-#'      patient$id <- length(storage)
-#'    }
-#'  ),
-#'  active=list(
-#'    patients=function(value) {
-#'      if(missing(value)) private$storage
-#'      else private$storage <- value
-#'    }
-#'  ))
-#' ```
-#'
-#' @section Methods:
-#' `$new()` creates a new database connection, connecting to the 
-#' database and performing required sanity checks.
-#'
-#' `$get(id)` retrieves a patient with the given `id` from the database
-#' 
-#' `$update(id, patient)` updates an existing patient with new information
-#' 
-#' `$remove(id)` removes a patient from the database
-#' 
-#' `$add(patient)` adds a patient to the database, and returns the patient with 
-#' the `id` field filled in
-#' 
-#' `$patients` retrieves a list of all patients in the database
-#'
-#' @section JSON Database:
-#' For simplicity, one could also inherit the `JsonDatabase` R6::R6Class instead. 
-#' This class takes care of marshalling from/to JSON, making an implementation easier.
-#' ```
-#' FileDatabase <- R6::R6Class("FileDatabase", inherit=JsonDatabase,
-#'    private=list(folder=list(),
-#'    doGet=function(id) {
-#'      fileName <- file.path(folder, sprintf('%s.json', id))
-#'      readChar(fileName, file.info(fileName)$size)
-#'    },
-#'    doUpdate=function(id,patient) {
-#'      fileName <- file.path(folder, sprintf('%s.json', id))
-#'      writeChar(fileName, patient)
-#'    },
-#'    doRemove=function(id) {
-#'      fileName <- file.path(folder, sprintf('%s.json', id))
-#'      unlink(fileName)
-#'    },
-#'    doAdd=function(patient) {
-#'      id <- floor(runif(n=1, max = .Machine$integer.max))
-#'      fileName <- file.path(folder, sprintf('%s.json', id))
-#'      if(file.exists(fileName)) return(doAdd(patient)) #try again
-#'      doUpdate(id, patient)
-#'      id
-#'    },
-#'    doGetPatients=function() {
-#'      map( dir(folder), ~ readChar(.x, file.info(.x)$size) )
-#'    }
-#'  ),
-#'  public=list(
-#'    initialize=function(folder) {
-#'      private$folder <- folder
-#'      invisible(self)
-#'    }
-#'  )
-#' )
-#' ```
-#'
-#' @name Database
-#' @examples
-#' db <- InMemoryDatabase$new()
-#' patient <- db$add(createFakePatient())
-#'
-#' @import R6 
-#' @importFrom R6 R6Class
-#'
-NULL
-
 not_implemented <- function() {
   stop("Not implemented yet. This function needs to be implemented in subclasses.")
 }
 
+#' Database class
+#' @title Database Class
+#' @docType class
+#' @description Database class description
 #' @export
 Database <- R6::R6Class("Database", lock_objects=TRUE, lock_class=TRUE,
                     public=list(
@@ -132,6 +38,10 @@ Database <- R6::R6Class("Database", lock_objects=TRUE, lock_class=TRUE,
                       patients=function(value) not_implemented()
                       ))
 
+#' JSON database class
+#' @title JsonDatabase Class
+#' @docType class
+#' @description JsonDatabase class description
 #' @export
 JsonDatabase <- R6::R6Class("JsonDatabase", 
                         inherit=Database,
@@ -174,6 +84,10 @@ JsonDatabase <- R6::R6Class("JsonDatabase",
                       doGetPatients=function() not_implemented()
                       ))
 
+#' In-memory database class
+#' @title InMemoryDatabase Class
+#' @docType class
+#' @description InMemoryDatabase class description
 #' @export
 InMemoryDatabase <- R6::R6Class("InMemoryDatabase", inherit=Database,
   private=list(storage=list()),
@@ -202,6 +116,10 @@ InMemoryDatabase <- R6::R6Class("InMemoryDatabase", inherit=Database,
     }
   ))
 
+#' File database class
+#' @title FileDatabase Class
+#' @docType class
+#' @description FileDatabase class description
 #' @export
 FileDatabase <- R6::R6Class("FileDatabase", inherit=JsonDatabase,
   private=list(folder=list(),

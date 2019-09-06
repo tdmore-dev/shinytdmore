@@ -2,8 +2,6 @@ library(tdmore)
 library(shinytdmore)
 library(testthat)
 
-setwd("C:/Users/SGS/git/shinytdmore/tests/testthat")
-
 context("Test the merge of covariates and formulations")
 
 source("testUtils.R")
@@ -24,7 +22,7 @@ expect_equal(sum(is.na(covsMerge)), 0)
 
 # Check result
 expected <- tibble(date=as.Date(c("2019-09-05","2019-09-05","2019-09-05","2019-09-06","2019-09-06","2019-09-06","2019-09-07","2019-09-07","2019-09-07")),
-                    time=c('08:00','19:00','20:00','08:00','08:00','20:00','08:00','20:00','20:00'),
-                    CYP3A5=c(0,1,1,0,0,0,0,1,1),
-                    formulation=c("Prograft","Prograft","Advagraf","Advagraf","Prograft","Advagraf","Advagraf","Advagraf","Prograft"))
+                   time=c('08:00','19:00','20:00','08:00','08:00','20:00','08:00','20:00','20:00'),
+                   CYP3A5=c(0,1,1,0,0,0,0,1,1),
+                   formulation=c("Prograft","Prograft","Advagraf","Advagraf","Prograft","Advagraf","Advagraf","Advagraf","Prograft"))
 expect_equal(covsMerge, expected)

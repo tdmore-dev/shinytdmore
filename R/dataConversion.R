@@ -109,7 +109,7 @@ covsToTdmore <- function(covs, firstDoseDate) {
 #' @return TDMore covariates
 #'
 mergeFormAndCov <- function(covs, doses) {
-  joinedCov <- dplyr::bind_rows(covs, doses %>% select(-dose)) %>%
+  joinedCov <- dplyr::bind_rows(covs, doses %>% select(-dose, -fix)) %>%
                   dplyr::arrange( date, time ) %>%
                   tidyr::fill(c(-date,-time)) %>%
                   tidyr::fill(c(-date,-time), .direction = 'up') %>%
