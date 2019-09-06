@@ -32,6 +32,27 @@ getDosingInterval <- function(model, formulation=NULL) {
   }
 }
 
+#'
+#' Retrieve the rounding function from the tdmore metadata according to the specified formulation.
+#' If no formulation matches, no rounding function is used.
+#' If no formulation at all in metadata, no rounding function is used.
+#'
+#' @param model tdmore model
+#' @param formulation formulation we are looking for, character, can be NULL
+#' @return a round function, nevel NULL
+#'
+getRoundFunction <- function(model, formulation=NULL) {
+  formulations <- getMetadataByClass(model, "tdmore_formulation")
+  
+  results <- formulations[sapply(formulations, function(x) {!is.null(formulation) && x$name==formulation})]
+  if (length(results) > 0) {
+    return(results[[1]]$round_function)
+    
+  } else {
+    return(function(x){x})
+  }
+}
+
 #' Prepare population OR individual prediction data.
 #' 
 #' @param doses doses
@@ -135,7 +156,7 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   nextRegimen <- regimen %>% dplyr::select(-PAST, -FORM, -FIX)
   
   # Dosing interval of last formulation found is used
-  dosingInterval <- getDosingInterval(defaultModel, regimen %>% dplyr::pull(FORM) %>% dplyr::last())
+  lastII <- getDosingInterval(defaultModel, regimen %>% dplyr::pull(FORM) %>% dplyr::last())
   output <- getModelOutput(defaultModel)
   
   for (index in seq_along(doseRows)) {
@@ -143,13 +164,16 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
     last <- index == length(doseRows)
     
     if (last) {
-      nextTime <- row$TIME + dosingInterval # By default, II
+      nextTime <- row$TIME + lastII # By default, II
     } else {
       nextTime <- regimen[doseRows[index + 1],]$TIME - 0.001 # Just before the next dose
     }
     targetDf <- data.frame(TIME=nextTime)
     targetDf[, output] <- (target$min + target$max)/2
-    recommendation <- findDose(winningFit, regimen=nextRegimen, doseRows=doseRows[(index:length(doseRows))], target=targetDf)
+    currentDoseRows <- doseRows[(index:length(doseRows))]
+    recommendation <- findDose(winningFit, regimen=nextRegimen, doseRows=currentDoseRows, target=targetDf)
+    roundFun <- getRoundFunction(model, row$FORM)
+    recommendation$regimen[currentDoseRows, "AMT"] <- roundFun(recommendation$regimen[currentDoseRows, "AMT"])
     nextRegimen <- recommendation$regimen
   }
   
@@ -157,12 +181,12 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   covsToUse <- if(isMpc){fit$covariates}else{covariates}
   
   # Predict ipred without adapting the dose
-  newdata <- getNewdata(start=0, stop=max(regimen$TIME) + dosingInterval, output=output)
+  newdata <- getNewdata(start=0, stop=max(regimen$TIME) + lastII, output=output)
   ipred <-  predict(fit, newdata = newdata, regimen=regimen %>% dplyr::select(-PAST, -FORM, -FIX), covariates=covsToUse, se.fit=F)
   ipred$TIME <- firstDoseDate + ipred$TIME*3600 # Plotly able to plot POSIXct
   
   # Predict ipred with the new recommendation
-  newdata <- getNewdata(start=firstDoseInFutureTime, stop=max(regimen$TIME) + dosingInterval, output=output)
+  newdata <- getNewdata(start=firstDoseInFutureTime, stop=max(regimen$TIME) + lastII, output=output)
   ipredNew <- predict(fit, newdata=newdata, regimen=nextRegimen, covariates=covsToUse, se.fit=!isMpc, level=0.95) # se.fit disabled if MPC model
   ipredNew$TIME <- firstDoseDate + ipredNew$TIME*3600 # Plotly able to plot POSIXct
   

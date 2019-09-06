@@ -16,7 +16,7 @@ data <- prepareRecommendationTest(patient)
 recommendedRegimen <- data$recommendedRegimen
 
 # Check recommended doses are fine for Prograft (last dose is Prograft)
-expectDoses(recommendedRegimen, c(12.02, 4.76))
+expectDoses(recommendedRegimen, c(12, 5))
 
 #########################################
 
@@ -30,4 +30,4 @@ data <- prepareRecommendationTest(patient)
 recommendedRegimen <- data$recommendedRegimen
 
 # Check recommended doses (last dose is now Advagraf)
-expectDoses(recommendedRegimen, c(12.02, 10.40))
+expectDoses(recommendedRegimen, c(12, 10.5))

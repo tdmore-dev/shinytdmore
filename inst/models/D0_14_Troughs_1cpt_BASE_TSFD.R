@@ -84,7 +84,7 @@ D0_14_Troughs_1cpt_BASE_TSFD <- RxODE::RxODE(m1Code) %>% tdmore(
                            prop=monolixValues %>% filter(parameter=="b") %>% pull(value)) 
   )
 ) %>% metadata(output(name="Cwb", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
-  metadata(formulation(name="Prograft", unit="mg", dosing_interval=12, default_value=5)) %>%
-  metadata(formulation(name="Advagraf", unit="mg", dosing_interval=24, default_value=5)) %>%
+  metadata(formulation(name="Prograft", unit="mg", dosing_interval=12, default_value=5, round_function=function(x){round(x/0.5)*0.5})) %>%
+  metadata(formulation(name="Advagraf", unit="mg", dosing_interval=24, default_value=5, round_function=function(x){round(x/0.5)*0.5})) %>%
   metadata(target(min=12, max=15)) %>%
   metadata(observed_variables(c("V", "k0", "kplus", "kk")))
