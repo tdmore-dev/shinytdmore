@@ -9,7 +9,7 @@ mergeFormAndCov(covs, doses)
 \arguments{
 \item{covs}{shinyTDMore covariates}
 
-\item{forms}{shinyTDMore doses}
+\item{doses}{shinyTDMore doses}
 }
 \value{
 TDMore covariates
