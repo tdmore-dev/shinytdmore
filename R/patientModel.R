@@ -96,7 +96,9 @@ updateNowDate <- function(patient, now) {
 #' 
 jsonToDoseModel <- function(doseJson) {
   if (is.null(doseJson) || length(doseJson$date) == 0) {
-    return(tibble(date=date(), time=character(), dose=numeric(), formulation=character()))
+    emptyTibble <- tibble(date=date(), time=character(), dose=numeric(), formulation=character())
+    emptyTibble$date <- as.Date(labResults$date)
+    return(emptyTibble)
   }
   datePosix <- as.POSIXct(unlist(doseJson$date))
   date <- POSIXToDate(datePosix)
@@ -107,6 +109,7 @@ jsonToDoseModel <- function(doseJson) {
     formulation <- rep("Unknown", length(date)) # By default, form is 'Unknown'
   } else {
     formulation <- unlist(doseJson$formulation)
+    formulation <- as.character(formulation)
   }
   
   # Backwards compatibility for fix
@@ -140,7 +143,9 @@ doseModelToJson <- function(doseModel) {
 #' 
 jsonToMeasureModel <- function(measureJson) {
   if (is.null(measureJson) || length(measureJson$date) == 0) {
-    return(tibble(date=date(), time=character(), measure=numeric()))
+    emptyTibble <- tibble(date=date(), time=character(), measure=numeric())
+    emptyTibble$date <- as.Date(emptyTibble$date)
+    return(emptyTibble)
   }
   datePosix <- as.POSIXct(unlist(measureJson$date))
   date <- POSIXToDate(datePosix)
@@ -170,7 +175,9 @@ measureModelToJson <- function(measureModel) {
 #' 
 jsonToCovariateModel <- function(covariateJson) {
   if (is.null(covariateJson) || length(covariateJson$date) == 0) {
-    return(tibble(date=date(), time=character()))
+    emptyTibble <- tibble(date=date(), time=character())
+    emptyTibble$date <- as.Date(emptyTibble$date)
+    return(emptyTibble)
   }
   datePosix <- as.POSIXct(unlist(covariateJson$date))
   date <- POSIXToDate(datePosix)
@@ -227,6 +234,7 @@ patientModelToJson <- function(patientModel) {
 #'
 #' @param patientJson the patient, JSON form
 #' @return the patient model
+#' @export
 #' 
 jsonToPatientModel <- function(patientJson) {
   if(is.string(patientJson)) patientJson <- rjson::fromJSON(patientJson)

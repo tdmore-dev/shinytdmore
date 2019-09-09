@@ -106,7 +106,7 @@ InMemoryDatabase <- R6::R6Class("InMemoryDatabase", inherit=Database,
       id <- length(private$storage) + 1
       patient$id <- id
       private$storage <- c(private$storage, list(patient))
-      id
+      patient
     }
   ),
   active=list(
