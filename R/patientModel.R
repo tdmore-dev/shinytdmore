@@ -100,7 +100,7 @@ jsonToDoseModel <- function(doseJson) {
     emptyTibble$date <- as.Date(labResults$date)
     return(emptyTibble)
   }
-  datePosix <- as.POSIXct(unlist(doseJson$date))
+  datePosix <- stringToPOSIX(unlist(doseJson$date))
   date <- POSIXToDate(datePosix)
   time <- POSIXToTime(datePosix)
   
@@ -147,7 +147,7 @@ jsonToMeasureModel <- function(measureJson) {
     emptyTibble$date <- as.Date(emptyTibble$date)
     return(emptyTibble)
   }
-  datePosix <- as.POSIXct(unlist(measureJson$date))
+  datePosix <- stringToPOSIX(unlist(measureJson$date))
   date <- POSIXToDate(datePosix)
   time <- POSIXToTime(datePosix)
   return(tibble(date=date, time=time, measure=as.numeric(unlist(measureJson$measure))))
@@ -179,7 +179,7 @@ jsonToCovariateModel <- function(covariateJson) {
     emptyTibble$date <- as.Date(emptyTibble$date)
     return(emptyTibble)
   }
-  datePosix <- as.POSIXct(unlist(covariateJson$date))
+  datePosix <- stringToPOSIX(unlist(covariateJson$date))
   date <- POSIXToDate(datePosix)
   time <- POSIXToTime(datePosix)
   tibble <- tibble(date=date, time=time)

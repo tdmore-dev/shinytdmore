@@ -97,3 +97,37 @@ test_that("POSIX to date/to time functions work well, called in Paris", {
   time <- POSIXToTime(posixDate)
   expect_equal(time, "01:00")
 })
+
+
+source("testUtils.R")
+
+test_that("String dates correctly converted in patient model", {
+  Sys.setenv(TZ="Europe/Paris")
+  
+  patient <- findPatient(FileDatabase$new("patients"), "reading_timezones")
+  
+  pos1 <- dateAndTimeToPOSIX(patient$doses$date[1], patient$doses$time[1])
+  pos1Ref <- stringToPOSIX("2019-09-05 07:00:00 +0200")
+  expect_equal(pos1, pos1Ref)
+  
+  pos1b <- dateAndTimeToPOSIX(patient$doses$date[2], patient$doses$time[2])
+  pos1bRef <- stringToPOSIX("2019-09-06 07:00:00 +0200")
+  expect_equal(pos1b, pos1bRef)
+  
+  pos2 <- dateAndTimeToPOSIX(patient$measures$date[1], patient$measures$time[1])
+  pos2Ref <- stringToPOSIX("2019-09-06 06:00:00 +0200")
+  expect_equal(pos2, pos2Ref)
+  
+  pos3 <- dateAndTimeToPOSIX(patient$covariates$date[1], patient$covariates$time[1])
+  pos3Ref <- stringToPOSIX("2019-09-05 04:00:00 +0200")
+  expect_equal(pos3, pos3Ref)
+  
+  pos4 <- dateAndTimeToPOSIX(patient$now_date, patient$now_date)
+  pos4Ref <- stringToPOSIX("2019-09-06 08:00:00 +0200")
+  expect_equal(pos4, pos4Ref)
+})
+
+
+
+
+

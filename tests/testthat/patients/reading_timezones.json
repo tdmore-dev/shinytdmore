@@ -1,0 +1,37 @@
+{
+  "firstname": "Reading timezones",
+  "lastname": "Test",
+  "created_at": "2019-09-05 08:57:25 +0200",
+  "modified_at": "2019-09-05 09:06:28 +0200",
+  "read_only": false,
+  "private": false,
+  "model": "bergmann2014_base",
+  "measures": {
+    "date": "2019-09-06 08:00:00 +0400",
+    "measure": 8
+  },
+  "doses": {
+    "date": [
+      "2019-09-05 08:00:00 +0300",
+      "2019-09-06 08:00:00 +0300"
+    ],
+    "amount": [
+      10,
+      10
+    ],
+    "formulation": [
+      "Prograft",
+      "Prograft"
+    ],
+    "fix": [
+      false,
+      false
+    ]
+  },
+  "now_date": "2019-09-06 11:00:00 +0500",
+  "covariates": {
+    "date": "2019-09-05 08:00:00 +0600",
+    "CYP3A5": 0
+  },
+  "id": "525813846"
+}
