@@ -98,7 +98,7 @@ MongoDatabase <- R6::R6Class("MongoDatabase", inherit=JsonDatabase,
 
 MongoDatabase$composeUrl <- function(host="localhost", user=NULL, password=NULL) {
   url <- "mongodb://"
-  if(!is.null(user)) {
+  if(!is.null(user) && user != "") {
     if(is.null(password)) stop("User specified, but password was not...")
     url <- paste0(url, utils::URLencode(user), ":", utils::URLencode(password), "@")
   }
