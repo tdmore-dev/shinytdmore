@@ -23,6 +23,7 @@ patientsTabUI <- function(id) {
 #' Collect data from the mongoDB.
 #'
 #' @param ns namespace
+#' @param db database
 #' @importFrom purrr map_dfr
 #'
 initDataTable <- function(ns, db) {
@@ -37,7 +38,8 @@ initDataTable <- function(ns, db) {
   patients <- db$patients
   if(length(patients) > 0) {
     patients <- patients %>%
-      purrr::map_dfr(function(x) {tibble::as_tibble(x[c("firstname", "lastname", "created_at", "id")])})
+      purrr::map_dfr(function(x) {tibble::as_tibble(x[c("firstname", "lastname", "created_at", "id", "private")])}) %>%
+      dplyr::filter(!private) # Only show patients who are not 'private'
     nb <- nrow(patients)
     
     patients$Name <- shinyInput(FUN=actionLink, id=ns("viewPatientButton"), label=paste(patients$firstname, patients$lastname))
@@ -55,6 +57,7 @@ initDataTable <- function(ns, db) {
 #'
 #' @param input the shiny input object
 #' @param ns namespace
+#' @param db database
 #'
 renderPatientTable <- function(input, ns, db) {
   DT::renderDataTable(expr = {
@@ -73,6 +76,7 @@ renderPatientTable <- function(input, ns, db) {
 #'
 #' @param patient the patient to be set
 #' @param val main reactive container
+#' @export
 #'
 setPatient <- function(patient, val) {
   val$patient <- patient
@@ -128,6 +132,7 @@ setPatient <- function(patient, val) {
 #' @param parentSession shiny parent session
 #' @param val main reactive container
 #' @param onNewPatientAdded reactive value
+#' @param db database
 #' 
 #' @export
 #'

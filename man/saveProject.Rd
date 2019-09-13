@@ -16,6 +16,8 @@ saveProject(input, output, session, onTabChanged, val, db)
 \item{onTabChanged}{onTabChanged reactive values}
 
 \item{val}{main reactive container}
+
+\item{db}{database}
 }
 \description{
 Save project server

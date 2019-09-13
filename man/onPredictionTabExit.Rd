@@ -8,8 +8,6 @@ onPredictionTabExit(onTabChanged)
 }
 \arguments{
 \item{onTabChanged}{onTabChanged reactive values}
-
-\item{input}{shiny input object}
 }
 \value{
 a logical value

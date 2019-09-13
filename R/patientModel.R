@@ -12,6 +12,8 @@ createPatient <- function(firstname, lastname) {
   patient <- list(firstname=firstname, lastname=lastname)
   patient$created_at <- Sys.time()
   patient$modified_at <- Sys.time()
+  patient$read_only <- FALSE
+  patient$private <- FALSE
   return(patient)
 }
 
@@ -94,12 +96,29 @@ updateNowDate <- function(patient, now) {
 #' 
 jsonToDoseModel <- function(doseJson) {
   if (is.null(doseJson) || length(doseJson$date) == 0) {
-    return(tibble(date=date(), time=character(), dose=numeric()))
+    emptyTibble <- tibble(date=date(), time=character(), dose=numeric(), formulation=character())
+    emptyTibble$date <- as.Date(labResults$date)
+    return(emptyTibble)
   }
-  datePosix <- as.POSIXct(unlist(doseJson$date))
+  datePosix <- stringToPOSIX(unlist(doseJson$date))
   date <- POSIXToDate(datePosix)
   time <- POSIXToTime(datePosix)
-  return(tibble(date=date, time=time, dose=as.numeric(unlist(doseJson$amount))))
+  
+  # Backwards compatibility for formulations
+  if (is.null(doseJson$formulation)) {
+    formulation <- rep("Unknown", length(date)) # By default, form is 'Unknown'
+  } else {
+    formulation <- unlist(doseJson$formulation)
+    formulation <- as.character(formulation)
+  }
+  
+  # Backwards compatibility for fix
+  if (is.null(doseJson$fix)) {
+    fix <- rep(FALSE, length(date)) # By default, don't fix doses
+  } else {
+    fix <- unlist(doseJson$fix)
+  }
+  return(tibble(date=date, time=time, dose=as.numeric(unlist(doseJson$amount)), formulation=formulation, fix=fix))
 }
 
 #' Convert dose model to JSON structure.
@@ -110,10 +129,10 @@ jsonToDoseModel <- function(doseJson) {
 #' 
 doseModelToJson <- function(doseModel) {
   if (is.null(doseModel)) {
-    return(data.frame(date=character(), amount=numeric()))
+    return(data.frame(date=character(), amount=numeric(), formulation=character(), fix=logical()))
   }
   datePosix <- dateAndTimeToPOSIX(doseModel$date, doseModel$time)
-  return(data.frame(date=POSIXToString(datePosix), amount=doseModel$dose))
+  return(data.frame(date=POSIXToString(datePosix), amount=doseModel$dose, formulation=doseModel$formulation, fix=doseModel$fix))
 }
 
 #' Convert measures (JSON) to dose model.
@@ -124,9 +143,11 @@ doseModelToJson <- function(doseModel) {
 #' 
 jsonToMeasureModel <- function(measureJson) {
   if (is.null(measureJson) || length(measureJson$date) == 0) {
-    return(tibble(date=date(), time=character(), measure=numeric()))
+    emptyTibble <- tibble(date=date(), time=character(), measure=numeric())
+    emptyTibble$date <- as.Date(emptyTibble$date)
+    return(emptyTibble)
   }
-  datePosix <- as.POSIXct(unlist(measureJson$date))
+  datePosix <- stringToPOSIX(unlist(measureJson$date))
   date <- POSIXToDate(datePosix)
   time <- POSIXToTime(datePosix)
   return(tibble(date=date, time=time, measure=as.numeric(unlist(measureJson$measure))))
@@ -154,9 +175,11 @@ measureModelToJson <- function(measureModel) {
 #' 
 jsonToCovariateModel <- function(covariateJson) {
   if (is.null(covariateJson) || length(covariateJson$date) == 0) {
-    return(tibble(date=date(), time=character()))
+    emptyTibble <- tibble(date=date(), time=character())
+    emptyTibble$date <- as.Date(emptyTibble$date)
+    return(emptyTibble)
   }
-  datePosix <- as.POSIXct(unlist(covariateJson$date))
+  datePosix <- stringToPOSIX(unlist(covariateJson$date))
   date <- POSIXToDate(datePosix)
   time <- POSIXToTime(datePosix)
   tibble <- tibble(date=date, time=time)
@@ -193,10 +216,10 @@ covariateModelToJson <- function(covariateModel) {
 #' @param patientModel the patient model
 #' @return the patient, JSON form
 #' @importFrom rjson toJSON
+#' @export
 #' 
 patientModelToJson <- function(patientModel) {
   patientJson <- patientModel
-  patientJson$read_only <- patientModel$read_only
   patientJson$doses <- doseModelToJson(patientModel$doses)
   patientJson$measures <- measureModelToJson(patientModel$measures)
   patientJson$covariates <- covariateModelToJson(patientModel$covariates)
@@ -211,6 +234,7 @@ patientModelToJson <- function(patientModel) {
 #'
 #' @param patientJson the patient, JSON form
 #' @return the patient model
+#' @export
 #' 
 jsonToPatientModel <- function(patientJson) {
   if(is.string(patientJson)) patientJson <- rjson::fromJSON(patientJson)
@@ -221,10 +245,13 @@ jsonToPatientModel <- function(patientJson) {
   patientModel$created_at <- stringToPOSIX(patientJson$created_at)
   patientModel$modified_at <- stringToPOSIX(patientJson$modified_at)
   patientModel$now_date <- if(is.null(patientJson$now_date)){Sys.time()} else {stringToPOSIX(patientJson$now_date)}
+  patientModel$read_only <- if(is.null(patientJson$read_only)){FALSE} else {patientJson$read_only}
+  patientModel$private <- if(is.null(patientJson$private)){FALSE} else {patientJson$private}
   return(patientModel)
 }
 
 #' Make a patient read-only.
+#' A read-only patient cannot be modified in shinytdmore.
 #'
 #' @param patientModel the patient model
 #' @return the patient model
@@ -235,6 +262,18 @@ toReadOnlyPatient <- function(patientModel) {
   return(patientModel)
 }
 
+#' Classify a patient as private.
+#' These patients will not appear in the patients tab.
+#'
+#' @param patientModel the patient model
+#' @return the patient model
+#' @export
+#' 
+toPrivatePatient <- function(patientModel) {
+  patientModel$private <- T
+  return(patientModel)
+}
+
 #' Say if the given patient is read-only.
 #'
 #' @param patientModel the patient model
@@ -242,10 +281,30 @@ toReadOnlyPatient <- function(patientModel) {
 #' @export
 #' 
 isReadOnlyPatient <- function(patientModel) {
-  if (is.null(patientModel$read_only)) {
-    return(FALSE)  
-  }
   return(patientModel$read_only)
+}
+
+#' Say if the given patient is private.
+#'
+#' @param patientModel the patient model
+#' @return a logical value
+#' @export
+#' 
+isPrivatePatient <- function(patientModel) {
+  return(patientModel$private)
+}
+
+#' Export patient to JSON file.
+#'
+#' @param filePath the file path (including file name)
+#' @param patientModel the patient model to be exported
+#' @export
+#' 
+exportPatientToJsonFile <- function(filePath, patientModel) {
+  jsonPatient <- patientModelToJson(patientModel)
+  fileConn <- file(filePath)
+  writeLines(jsonPatient, fileConn)
+  close(fileConn)
 }
 
 

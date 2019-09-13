@@ -110,7 +110,6 @@ updateModelInSelectInput <- function(selectedModel, session) {
 #'
 #' Say if the user went out of the 'Model' tab.
 #'
-#' @param input shiny input object
 #' @param onTabChanged onTabChanged reactive values
 #' @return a logical value
 #'

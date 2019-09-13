@@ -39,7 +39,7 @@ patientModel <- updatePatientCovariates(patientModel, covariateModel)
 db <- InMemoryDatabase$new()
 # Add patient to the database
 #debugonce(shinytdmore:::jsonToCovariateModel)
-idInDB <- db$add(patientModel)$id
+idInDB <- db$add(patientModel)
 expect_equal(idInDB, 1)
 
 # Add patient to DB and find it back from DB

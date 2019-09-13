@@ -8,6 +8,8 @@ initDataTable(ns, db)
 }
 \arguments{
 \item{ns}{namespace}
+
+\item{db}{database}
 }
 \description{
 Collect data from the mongoDB.

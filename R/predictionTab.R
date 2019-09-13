@@ -300,8 +300,10 @@ predictionTab <- function(input, output, session, val) {
   output$hotdose <- rhandsontable::renderRHandsontable({
     borderRow <- getTableBorderIndex(val$doses, val$now, T)
     rhandsontable::rhandsontable(val$doses, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
-                  colHeaders = c("Date", "Time", getDoseColumnLabel(val$model))) %>%
-      rhandsontable::hot_col(col="Time", type="dropdown", source=hoursList()) %>%
+                  colHeaders = c("Date", "Time", getDoseColumnLabel(val$model),"Formulation", "Fix")) %>%
+      rhandsontable::hot_col(col="Time", type="dropdown", source=hoursList(), autocomplete=F, strict=F) %>%
+      rhandsontable::hot_col(col="Formulation", type="dropdown", source=getFormulationList(val$model), autocomplete=TRUE, strict=TRUE) %>%
+      rhandsontable::hot_col(col = 'Fix', colWidths=0.1) %>% # Trick to hide column, see https://github.com/jrowen/rhandsontable/issues/249
       rhandsontable::hot_table(customBorders = list(list(
                     range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(val$doses)-1)),
                     top=list(width=2, color=nowColorHex()))))
@@ -312,7 +314,8 @@ predictionTab <- function(input, output, session, val) {
   })
   
   addDose <- function(val) {
-    doseMetadata <- getMetadataByName(val$model, "DOSE")
+    formulations <- getMetadataByClass(val$model,"tdmore_formulation")
+    doseMetadata <- getMetadataByName(val$model, formulations[[1]]$name)
     dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
     
     if(nrow(val$doses) > 0) {
@@ -340,11 +343,14 @@ predictionTab <- function(input, output, session, val) {
   renderHotDoseFuture <- function(data) {
     borderRow <- getTableBorderIndex(data, val$now, T)
     output$hotdosefuture <- rhandsontable::renderRHandsontable({
-      recColumnLabel <- getRecommendedDoseColumnLabel(val$model)
+      defaultModel <- getDefaultModel(val$model)
+      recColumnLabel <- getRecommendedDoseColumnLabel(defaultModel)
       rhandsontable::rhandsontable(data, useTypes=TRUE, stretchH="all", rowHeaders=NULL, readOnly=FALSE,
-                    colHeaders = c("Date", "Time", getDoseColumnLabel(val$model), recColumnLabel)) %>%
+                    colHeaders = c("Date", "Time", getDoseColumnLabel(defaultModel), "Formulation", "Fix", recColumnLabel)) %>%
         rhandsontable::hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE ) %>%
         rhandsontable::hot_col(col="Time", type="dropdown", source=hoursList()) %>%
+        rhandsontable::hot_col(col="Formulation", type="dropdown", source=getFormulationList(val$model), autocomplete=TRUE, strict=TRUE) %>%
+        rhandsontable::hot_col(col = 'Fix', colWidths=0.1) %>% # Trick to hide column, see https://github.com/jrowen/rhandsontable/issues/249
         rhandsontable::hot_col(col=recColumnLabel, readOnly = TRUE) %>%
         rhandsontable::hot_table(customBorders = list(list(
           range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(data)-1)),
@@ -374,7 +380,8 @@ predictionTab <- function(input, output, session, val) {
   })
   
   addCovariate <- function(val) {
-    doseMetadata <- getMetadataByName(val$model, "DOSE")
+    formulations <- getMetadataByClass(val$model,"tdmore_formulation")
+    doseMetadata <- getMetadataByName(val$model, formulations[[1]]$name)
     dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval}
     
     if(nrow(val$covs) > 0) {
@@ -411,7 +418,7 @@ predictionTab <- function(input, output, session, val) {
     plots <- preparePredictionPlots(doses=react()$doses, obs=react()$obs, model=react()$model,
                                     covs=react()$covs, target=react()$target, population=T, now=react()$now)
     progress$set(message = "Rendering plot...", value = 1)
-    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(react()$model))
+    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(react()$model)))
   })
   output$populationPlot <- plotly::renderPlotly(populationPlot())
   
@@ -424,7 +431,7 @@ predictionTab <- function(input, output, session, val) {
     plots <- preparePredictionPlots(doses=react()$doses, obs=react()$obs, model=react()$model,
                                     covs=react()$covs, target=react()$target, population=F, now=react()$now)
     progress$set(message = "Rendering plot...", value = 1)
-    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(react()$model))
+    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(react()$model)))
   })
   output$fitPlot <- plotly::renderPlotly(fitPlot())
   
@@ -434,17 +441,17 @@ predictionTab <- function(input, output, session, val) {
     progress <- shiny::Progress$new(max = 2)
     on.exit(progress$close())
     progress$set(message = "Preparing...", value = 0.5)
-    recommendation <- prepareRecommendation(doses=react()$doses, obs=react()$obs, model=react()$model,
+    recommendationData <- prepareRecommendation(doses=react()$doses, obs=react()$obs, model=react()$model,
                                             covs=react()$covs, target=react()$target, now=react()$now)
-    recommendedRegimen <- recommendation$recommendedRegimen
+    recommendedRegimen <- recommendationData$recommendedRegimen
     data <- react()$doses
     data$rec <- ifelse(recommendedRegimen$PAST, "/", round(recommendedRegimen$AMT, 2))
     renderHotDoseFuture(data)
     
     plots <- prepareRecommendationPlots(doses=react()$doses, obs=react()$obs, model=react()$model,
-                                        covs=react()$covs, target=react()$target, recommendation=recommendation, now=react()$now)
+                                        covs=react()$covs, target=react()$target, recommendationData=recommendationData, now=react()$now)
     progress$set(message = "Rendering plot...", value = 1)
-    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(react()$model))
+    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(react()$model)))
   })
   output$recommendationPlot <- plotly::renderPlotly(recommendationPlot())
   

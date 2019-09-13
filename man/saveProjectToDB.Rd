@@ -8,6 +8,8 @@ saveProjectToDB(val, db)
 }
 \arguments{
 \item{val}{main reactive container}
+
+\item{db}{database}
 }
 \description{
 Save project into DB (measures and doses from shiny are saved).

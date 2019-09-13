@@ -2,7 +2,8 @@
 % Please edit documentation in R/patientModel.R
 \name{toReadOnlyPatient}
 \alias{toReadOnlyPatient}
-\title{Make a patient read-only.}
+\title{Make a patient read-only.
+A read-only patient cannot be modified in shinytdmore.}
 \usage{
 toReadOnlyPatient(patientModel)
 }
@@ -14,4 +15,5 @@ the patient model
 }
 \description{
 Make a patient read-only.
+A read-only patient cannot be modified in shinytdmore.
 }
