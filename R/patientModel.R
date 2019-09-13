@@ -96,8 +96,7 @@ updateNowDate <- function(patient, now) {
 #' 
 jsonToDoseModel <- function(doseJson) {
   if (is.null(doseJson) || length(doseJson$date) == 0) {
-    emptyTibble <- tibble(date=date(), time=character(), dose=numeric(), formulation=character())
-    emptyTibble$date <- as.Date(labResults$date)
+    emptyTibble <- tibble(date=as.Date(character()), time=character(), dose=numeric(), formulation=character())
     return(emptyTibble)
   }
   datePosix <- stringToPOSIX(unlist(doseJson$date))
@@ -143,8 +142,7 @@ doseModelToJson <- function(doseModel) {
 #' 
 jsonToMeasureModel <- function(measureJson) {
   if (is.null(measureJson) || length(measureJson$date) == 0) {
-    emptyTibble <- tibble(date=date(), time=character(), measure=numeric())
-    emptyTibble$date <- as.Date(emptyTibble$date)
+    emptyTibble <- tibble(date=as.Date(character()), time=character(), measure=numeric())
     return(emptyTibble)
   }
   datePosix <- stringToPOSIX(unlist(measureJson$date))
@@ -175,8 +173,7 @@ measureModelToJson <- function(measureModel) {
 #' 
 jsonToCovariateModel <- function(covariateJson) {
   if (is.null(covariateJson) || length(covariateJson$date) == 0) {
-    emptyTibble <- tibble(date=date(), time=character())
-    emptyTibble$date <- as.Date(emptyTibble$date)
+    emptyTibble <- tibble(date=as.Date(character()), time=character())
     return(emptyTibble)
   }
   datePosix <- stringToPOSIX(unlist(covariateJson$date))

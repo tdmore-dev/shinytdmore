@@ -4,7 +4,7 @@
 \name{MongoDatabase}
 \alias{MongoDatabase}
 \title{MongoDatabase Class}
-\format{An object of class \code{R6ClassGenerator} of length 24.}
+\format{An object of class \code{R6ClassGenerator} of length 25.}
 \usage{
 MongoDatabase
 }
