@@ -1,0 +1,96 @@
+---
+title: "shinytdmore modules"
+author: "Ruben Faelens"
+date: "09/07/2019"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{shinytdmore modules}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r setup, echo=FALSE}
+library(shinytest)
+
+pkg <- devtools::as.package(".")
+tmp_lib <- tempfile("R_LIBS")
+dir.create(tmp_lib)
+
+utils::install.packages(repos = NULL,
+                          lib = tmp_lib,
+                          pkg$path,
+                          type = "source",
+                          INSTALL_opts = c("--example",
+                                           "--install-tests",
+                                           "--with-keep.source",
+                                           "--with-keep.parse.data",
+                                           "--no-multiarch"),
+                          quiet = F)
+app <- withr::with_libpaths(tmp_lib, {
+      ShinyDriver$new(path="shinytdmoreApp", debug="all")
+    }, action="prefix")
+
+file <- knitr::fig_path("png")
+dir.create(dirname(file), recursive = TRUE, showWarnings = FALSE) #create dir if not exists yet
+```
+
+## Introduction
+Shinytdmore helps you build an application for dose adaptation. This vignette will take you through the application step-by-step.
+
+## Application definition
+```{r eval=FALSE, code = readLines("shinytdmoreApp/app.R")}
+```
+
+## Patient selection screen
+```{r}
+Sys.sleep(2)
+file <- knitr::fig_path("png")
+app$takeScreenshot(file)
+knitr::include_graphics(file)
+```
+
+
+## Create new patient
+```{r}
+app$setInputs(`patientsTabId-newPatientButton`="click")
+Sys.sleep(2)
+file <- knitr::fig_path("png")
+app$takeScreenshot(file)
+knitr::include_graphics(file)
+```
+
+```{r}
+app$setInputs(`newPatientDialogId-firstname`="Ruben", `newPatientDialogId-lastname`="Faelens")
+app$setInputs(`newPatientDialogId-modalFormOK`="click")
+Sys.sleep(2)
+file <- knitr::fig_path("png")
+app$takeScreenshot(file)
+knitr::include_graphics(file)
+```
+
+## Prediction screen
+```{r}
+link <- app$findElement(linkText='Ruben Faelens')
+link$click()
+Sys.sleep(10)
+#app$getDebugLog()
+file <- knitr::fig_path("png")
+app$takeScreenshot(file)
+knitr::include_graphics(file)
+```
+  
+## Prediction graph
+```{r}
+app$setInputs(`predictionTabId-next_plot` = "click")
+#app$getDebugLog()
+Sys.sleep(5)
+file <- knitr::fig_path("png")
+app$takeScreenshot(file)
+knitr::include_graphics(file)
+```
+
+
+## Final debug log
+```{r}
+app$getDebugLog()
+app$stop()
+```
