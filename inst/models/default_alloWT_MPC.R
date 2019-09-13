@@ -1,8 +1,8 @@
 library(tdmore)
 library(shinytdmore)
-library(nlmixr)
+library(magrittr)
 
-nlmixrUI(function(){
+nlmixr::nlmixrUI(function(){
   ini({
     TVKA <- 3.7
     TVQ <- 10

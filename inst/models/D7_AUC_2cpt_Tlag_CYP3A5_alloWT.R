@@ -1,9 +1,14 @@
 library(tdmore)
 library(shinytdmore)
-library(RxODE)
-library(tidyverse)
+library(magrittr)
 
-populationParameters <- "parameter,value,se_sa,rse_sa,pvalue_sa
+#'
+#' Build 'D7_AUC_2cpt_Tlag_CYP3A5_alloWT' model.
+#'
+#' @return a tdmore model
+#'
+buildModel <- function() {
+  populationParameters <- "parameter,value,se_sa,rse_sa,pvalue_sa
 Tlag_pop,0.287576060336467,0.0294240188688738,10.2317344616403,
 ka_pop,1.7752875182154,0.317880614766599,17.9058665993522,
 Cl_pop,0.0240068493206146,0.000388924978411163,1.62005839757237,
@@ -26,25 +31,25 @@ omega_F,0.456255314817847,0.0375146861501613,8.2223011835245,
 corr1_F_Cl,-0.999,0.00131901306663682,0.132033340003686,
 a,0.091576598147651,0.0980750674290549,107.096211710033,
 b,0.104066412486623,0.00850598873968704,8.17361580594546,"
-
-monolixValues <-
-  read.csv(text = populationParameters) %>%
-  mutate(
-    OMEGA=str_detect(parameter,"^omega"),
-    GAMMA=str_detect(parameter, "^gamma"),
-    CORR=str_detect(parameter, "^corr"),
-    THETA=str_detect(parameter, "_pop$"),
-    BETA=str_detect(parameter, "^beta_"),
-    RE= (parameter %in% c("a", "b"))
-  )
-
-thetaValues = monolixValues %>%
-  filter(BETA) %>%
-  mutate(text=paste0(parameter, "=", value)) %>%
-  pull(text) %>%
-  paste(collapse="\n")
-
-m1Code <- thetaValues %>% paste("
+  
+  monolixValues <-
+    read.csv(text = populationParameters) %>%
+    dplyr::mutate(
+      OMEGA=stringr::str_detect(parameter,"^omega"),
+      GAMMA=stringr::str_detect(parameter, "^gamma"),
+      CORR=stringr::str_detect(parameter, "^corr"),
+      THETA=stringr::str_detect(parameter, "_pop$"),
+      BETA=stringr::str_detect(parameter, "^beta_"),
+      RE= (parameter %in% c("a", "b"))
+    )
+  
+  thetaValues = monolixValues %>%
+    dplyr::filter(BETA) %>%
+    dplyr::mutate(text=paste0(parameter, "=", value)) %>%
+    dplyr::pull(text) %>%
+    paste(collapse="\n")
+  
+  m1Code <- thetaValues %>% paste("
 allo_WT = log( WT / 70 );
 
 CYP3A5Expressor=0;
@@ -88,45 +93,47 @@ d/dt(A1) = ka*A0 - k*A1 - k12*A1 +k21*A2;
 d/dt(A2) = k12*A1 - k21*A2;
 
 Cwb = A1 / V;")
-message("Loading OMEGA matrix")
-omegaMonolix <- monolixValues %>% filter(OMEGA | GAMMA) %>% mutate(
-  parameterName = substr(parameter, 7, 999),
-  etaName = ifelse(OMEGA,
-                   paste0("eta_ID_", parameterName),
-                   paste0("eta_OCC_", parameterName)
+  #message("Loading OMEGA matrix")
+  omegaMonolix <- monolixValues %>% dplyr::filter(OMEGA | GAMMA) %>% dplyr::mutate(
+    parameterName = substr(parameter, 7, 999),
+    etaName = ifelse(OMEGA,
+                     paste0("eta_ID_", parameterName),
+                     paste0("eta_OCC_", parameterName)
+    )
   )
-)
-omega <- diag( omegaMonolix$value**2 )
-colnames(omega) <- omegaMonolix$etaName
-rownames(omega) <- omegaMonolix$etaName
-
-message("Loading Correlations")
-corrMonolix <- monolixValues %>% filter(CORR) %>%
-  tidyr::extract(parameter, regex="^corr(\\d*)_(.*)_(.*)$", into=c("i", "par1", "par2"))
-for(i in seq_len(nrow(corrMonolix))) {
-  par1 <- omegaMonolix %>% filter(parameterName == corrMonolix$par1[i] ) %>%
-    filter(row_number() == corrMonolix$i[i] )
-  par2 <- omegaMonolix %>% filter(parameterName == corrMonolix$par2[i] ) %>%
-    filter(row_number() == corrMonolix$i[i] )
-  covValue <- corrMonolix$value[i] * par1$value * par2$value
-  omega[ par1$etaName, par2$etaName ] <- covValue
-  omega[ par2$etaName, par1$etaName ] <- covValue
+  omega <- diag( omegaMonolix$value**2 )
+  colnames(omega) <- omegaMonolix$etaName
+  rownames(omega) <- omegaMonolix$etaName
+  
+  #message("Loading Correlations")
+  corrMonolix <- monolixValues %>% dplyr::filter(CORR) %>%
+    tidyr::extract(parameter, regex="^corr(\\d*)_(.*)_(.*)$", into=c("i", "par1", "par2"))
+  for(i in seq_len(nrow(corrMonolix))) {
+    par1 <- omegaMonolix %>% dplyr::filter(parameterName == corrMonolix$par1[i] ) %>%
+      dplyr::filter(dplyr::row_number() == corrMonolix$i[i] )
+    par2 <- omegaMonolix %>% dplyr::filter(parameterName == corrMonolix$par2[i] ) %>%
+      dplyr::filter(dplyr::row_number() == corrMonolix$i[i] )
+    covValue <- corrMonolix$value[i] * par1$value * par2$value
+    omega[ par1$etaName, par2$etaName ] <- covValue
+    omega[ par2$etaName, par1$etaName ] <- covValue
+  }
+  
+  thetaDf <- monolixValues %>% dplyr::filter(THETA)
+  theta <- thetaDf$value
+  names(theta) <- paste0("TV", thetaDf$parameter %>% stringr::str_match("(.*)_pop$") %>% .[,2])
+  
+  RxODE::RxODE(m1Code) %>% tdmore(
+    parameters=rownames(omega),
+    omega=omega,
+    res_var=list( errorModel(var="Cwb",
+                             add=monolixValues %>% dplyr::filter(parameter=="a") %>% dplyr::pull(value),
+                             prop=monolixValues %>% dplyr::filter(parameter=="b") %>% dplyr::pull(value)) )
+  ) %>% metadata(covariate(name="WT", label="Weight", unit="kg", min=20, max=150)) %>%
+    metadata(covariate("CYP3A5", label="CYP3A5 expressor", choices=list(Fast=0, Slow=1))) %>%
+    metadata(output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
+    metadata(formulation(name="Prograft", unit="mg", dosing_interval=12, default_value=5, round_function=function(x){round(x/0.5)*0.5})) %>%
+    metadata(formulation(name="Advagraf", unit="mg", dosing_interval=24, default_value=5, round_function=function(x){round(x/0.5)*0.5})) %>%
+    metadata(target(min=12, max=15)) %>%
+    metadata(observed_variables(c("ka", "Cl", "V1", "Q", "V2", "F")))
 }
-
-thetaDf <- monolixValues %>% dplyr::filter(THETA)
-theta <- thetaDf$value
-names(theta) <- paste0("TV", thetaDf$parameter %>% str_match("(.*)_pop$") %>% .[,2])
-
-D7_AUC_2cpt_Tlag_CYP3A5_alloWT <- RxODE::RxODE(m1Code) %>% tdmore(
-  parameters=rownames(omega),
-  omega=omega,
-  res_var=list( errorModel(var="Cwb",
-                           add=monolixValues %>% dplyr::filter(parameter=="a") %>% pull(value),
-                           prop=monolixValues %>% dplyr::filter(parameter=="b") %>% pull(value)) )
-) %>% metadata(covariate(name="WT", label="Weight", unit="kg", min=20, max=150)) %>%
-  metadata(covariate("CYP3A5", label="CYP3A5 expressor", choices=list(Fast=0, Slow=1))) %>%
-  metadata(output(name="CONC", label="Tacrolimus concentration", unit="ng/mL", default_value=5)) %>%
-  metadata(formulation(name="Prograft", unit="mg", dosing_interval=12, default_value=5, round_function=function(x){round(x/0.5)*0.5})) %>%
-  metadata(formulation(name="Advagraf", unit="mg", dosing_interval=24, default_value=5, round_function=function(x){round(x/0.5)*0.5})) %>%
-  metadata(target(min=12, max=15)) %>%
-  metadata(observed_variables(c("ka", "Cl", "V1", "Q", "V2", "F")))
+buildModel()

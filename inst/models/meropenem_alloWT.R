@@ -1,8 +1,8 @@
 library(tdmore)
 library(shinytdmore)
-library(nlmixr)
+library(magrittr)
 
-nlmixrUI(function(){
+nlmixr::nlmixrUI(function(){
   ini({
     TVV1 <- 24.4;
     TVV2 <- 7.01;
