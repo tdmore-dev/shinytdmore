@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 ^Dockerfile$
 ^data-raw$
+^pkgdown$
