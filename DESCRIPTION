@@ -17,7 +17,7 @@ Depends: R (>= 3.5.0)
 Imports: assertthat, plyr, dplyr, tdmore, rjson, jsonlite, lubridate, mongolite, 
   shiny, shinyBS, DT, tidyverse, plotly, crosstalk,
   rhandsontable, R6, ggplot2, purrr, tidyr
-Remotes: tdmore-dev/shinytdmore
+Remotes: tdmore-dev/tdmore
 License: file LICENSE
 Encoding: UTF-8
 Language: en-US
