@@ -21,12 +21,12 @@ patient4 <- createPatient("Thomas", "Bouillon") %>%
   updatePatientModel("") %>%
   updatePatientCovariates(data.frame(date="11/07/2019", time="12:00", AGE=30, WT=63))
 
-db <- MongoDatabase$new(collection="test", db="test")
+dbLocation <- tempfile(pattern = "FileDatabase")
+dir.create(dbLocation)
+db <- FileDatabase$new(folder=dbLocation)
 
 # Remove everything from the database
-db$.__enclos_env__$private$db$drop()
-
-#debug(db$.__enclos_env__$private$doAdd)
+#db$.__enclos_env__$private$db$drop()
 
 # Add these 4 patients in the database
 pt1 <- db$add(patient1)
@@ -41,7 +41,9 @@ expect_equal(patient$lastname, "Luyckx")
 
 # Remove a patient
 db$remove(pt4$id)
-expect_error(db$get(pt4$id)) #  Error: $ operator is invalid for atomic vectors 
+expect_warning(
+  expect_error(db$get(pt4$id))
+)
 
 # Update a patient & check
 patient <- db$add(createPatient("Nicolas", "Luyckx"))
@@ -52,5 +54,5 @@ patient <- db$get(patient$id)
 expect_equal(patient$model, "blabla")
 
 # Get all patients
-patients <- db$patients[[4]]
+#patients <- db$patients[[4]]
 
