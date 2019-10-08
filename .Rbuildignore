@@ -3,3 +3,5 @@
 ^Dockerfile$
 ^data-raw$
 ^pkgdown$
+^.travis.yml$
+^logo.svg$

@@ -27,7 +27,7 @@ a,0.0125709661320684,0.100796056016528,801.816303994318
 b,0.17921378237182,0.0088165277259459,4.91955898104643"
   
   monolixValues <-
-    read.csv(text = populationParameters) %>%
+    utils::read.csv(text = populationParameters) %>%
     dplyr::mutate(
       OMEGA=stringr::str_detect(parameter,"^omega"),
       GAMMA=stringr::str_detect(parameter, "^gamma"),

@@ -125,20 +125,24 @@ FileDatabase <- R6::R6Class("FileDatabase", inherit=JsonDatabase,
   private=list(folder=list(),
   doGet=function(id) {
     fileName <- file.path(private$folder, sprintf('%s.json', id))
+    if(!file.exists(fileName)) stop("Invalid id `", id, "'; file `", fileName, "' does not exist")
     readChar(fileName, file.info(fileName)$size)
   },
   doUpdate=function(id,patient) {
     fileName <- file.path(private$folder, sprintf('%s.json', id))
+    if(!file.exists(fileName)) stop("Invalid id `", id, "'; file `", fileName, "' does not exist")
     writeChar(patient, fileName)
   },
   doRemove=function(id) {
     fileName <- file.path(private$folder, sprintf('%s.json', id))
+    if(!file.exists(fileName)) stop("Invalid id `", id, "'; file `", fileName, "' does not exist")
     unlink(fileName)
   },
   doAdd=function(patient) {
     id <- floor(runif(n=1, max = .Machine$integer.max))
     fileName <- file.path(private$folder, sprintf('%s.json', id))
     if(file.exists(fileName)) return(doAdd(patient)) #try again
+    file.create(fileName)
     private$doUpdate(id, patient)
     id
   },

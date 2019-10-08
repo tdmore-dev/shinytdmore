@@ -41,9 +41,7 @@ expect_equal(patient$lastname, "Luyckx")
 
 # Remove a patient
 db$remove(pt4$id)
-expect_warning(
-  expect_error(db$get(pt4$id))
-)
+expect_error(db$get(pt4$id))
 
 # Update a patient & check
 patient <- db$add(createPatient("Nicolas", "Luyckx"))

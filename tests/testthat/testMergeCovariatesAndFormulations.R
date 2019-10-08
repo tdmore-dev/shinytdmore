@@ -25,4 +25,8 @@ expected <- tibble(date=as.Date(c("2019-09-05","2019-09-05","2019-09-05","2019-0
                    time=c('08:00','19:00','20:00','08:00','08:00','20:00','08:00','20:00','20:00'),
                    CYP3A5=c(0,1,1,0,0,0,0,1,1),
                    formulation=c("Prograft","Prograft","Advagraf","Advagraf","Prograft","Advagraf","Advagraf","Advagraf","Prograft"))
+message("---- EXPECTED: -----")
+print(expected)
+message("---- GOT: -----")
+print(covsMerge)
 expect_equal(covsMerge, expected)

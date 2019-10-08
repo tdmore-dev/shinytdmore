@@ -42,9 +42,8 @@ pt4File <- file.path(tmp, sprintf("%s.json", pt4$id))
 expect_true(file.exists(pt4File))
 db$remove(pt4$id)
 expect_false(file.exists(pt4File))
-expect_warning(
-  expect_error(db$get(pt4$id))
-)
+expect_error(db$get(pt4$id))
+
 
 # Update a patient & check
 patient <- db$add(createPatient("Nicolas", "Luyckx"))

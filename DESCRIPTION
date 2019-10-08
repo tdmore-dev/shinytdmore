@@ -22,7 +22,7 @@ License: file LICENSE
 Encoding: UTF-8
 Language: en-US
 LazyData: true
-Suggests: stringr, knitr, rmarkdown, testthat, roxygen2, devtools, vdiffr, svglite, pkgdown, bookdown, webshot, shinytest, rprojroot
+Suggests: stringr, knitr, rmarkdown, testthat, roxygen2, devtools, vdiffr, svglite, pkgdown, bookdown, webshot, shinytest, rprojroot, withr
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
 URL: https://github.com/tdmore-dev/shinytdmore
