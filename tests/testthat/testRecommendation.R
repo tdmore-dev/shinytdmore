@@ -8,7 +8,7 @@ library(tidyverse)
 
 context("Test the recommendation")
 
-db <- MongoDatabase$new(collection="patients", db="shinytdmore")
+#db <- MongoDatabase$new(collection="patients", db="shinytdmore")
 
 # Very useful to test the recommendation without running the shiny app
 
