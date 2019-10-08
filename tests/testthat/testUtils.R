@@ -10,11 +10,11 @@
 #'
 #' Find a patient from the file database.
 #'
-#' @param db a file database
 #' @param patientId file identifier
 #' @return the shiny patient
 #'
-findPatient <- function(db, patientId) {
+findPatient <- function(patientId) {
+  db <- FileDatabase$new(rprojroot::find_testthat_root_file("patients"))
   index <- which(sapply(db$patients, function(patient) patient$id==patientId))
   if(length(index) == 0) stop(paste("Patient", patientId, "not found"))
   

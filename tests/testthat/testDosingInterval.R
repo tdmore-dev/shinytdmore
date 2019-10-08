@@ -7,7 +7,7 @@ context("Test the dosing interval is taken into account correctly.
 
 source("testUtils.R")
 
-patient <- findPatient(FileDatabase$new("patients"), "dosing_interval")
+patient <- findPatient("dosing_interval")
 
 # Prepare recommendation
 data <- prepareRecommendationTest(patient)

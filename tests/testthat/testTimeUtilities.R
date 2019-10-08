@@ -104,7 +104,7 @@ source("testUtils.R")
 test_that("String dates correctly converted in patient model", {
   Sys.setenv(TZ="Europe/Paris")
   
-  patient <- findPatient(FileDatabase$new("patients"), "reading_timezones")
+  patient <- findPatient("reading_timezones")
   
   pos1 <- dateAndTimeToPOSIX(patient$doses$date[1], patient$doses$time[1])
   pos1Ref <- stringToPOSIX("2019-09-05 07:00:00 +0200")

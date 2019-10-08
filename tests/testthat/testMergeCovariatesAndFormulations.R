@@ -6,7 +6,7 @@ context("Test the merge of covariates and formulations")
 
 source("testUtils.R")
 
-patient <- findPatient(FileDatabase$new("patients"), "covs_and_formus")
+patient <- findPatient("covs_and_formus")
 
 doses <- patient$doses
 covs <- patient$covariates
