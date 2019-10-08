@@ -27,7 +27,6 @@ library(rhandsontable)
 library(tdmore)
 library(shinytdmore)
 library(assertthat)
-library(data.table)
 
 # Default config added to environment
 db <- MongoDatabase$new(collection="test", db="test")

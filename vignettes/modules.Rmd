@@ -26,7 +26,7 @@ utils::install.packages(repos = NULL,
                                            "--no-multiarch"),
                           quiet = F)
 app <- withr::with_libpaths(tmp_lib, {
-      ShinyDriver$new(path="shinytdmoreApp", debug="all")
+      ShinyDriver$new(path="shinytdmoreApp", debug="all", shinyOptions = list(test.mode=TRUE))
     }, action="prefix")
 
 file <- knitr::fig_path("png")

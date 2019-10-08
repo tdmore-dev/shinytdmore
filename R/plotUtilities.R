@@ -260,7 +260,9 @@ prepareParametersPlot <- function(data, parameters, population) {
     return(NULL) # makes no sense to prepare this plot for population
   }
   # Keep useful parameters and melt data (ids: TIME and PRED_ columns)
-  data <- data %>% dplyr::select(c("TIME", parameters, paste0("PRED_", parameters))) %>% data.table::melt(c("TIME", paste0("PRED_", parameters)))
+  data <- data %>% 
+    dplyr::select(c("TIME", parameters, paste0("PRED_", parameters))) %>% 
+    tidyr::pivot_longer(parameters, names_to="variable", values_to="value")
   
   # As data is molten, only 1 population column is needed (get rid of all PRED_ columns)
   data$Population <- 0
