@@ -2,16 +2,18 @@
 % Please edit documentation in R/aboutTab.R
 \name{aboutTabUI}
 \alias{aboutTabUI}
-\title{About tab user interface.}
+\title{This tab shows general information out the application.}
 \usage{
-aboutTabUI(id)
+aboutTabUI(id, htmlFile)
 }
 \arguments{
 \item{id}{namespace id}
+
+\item{htmlFile}{the html file to use for the contents of the about tab. If missing, we use the default about.html from the package directory.}
 }
 \value{
-the about tab panel
+a tabPanel with HTML content
 }
 \description{
-About tab user interface.
+This tab shows general information out the application.
 }

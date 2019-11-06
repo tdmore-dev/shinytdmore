@@ -1,35 +1,20 @@
-#' About tab user interface.
+#' This tab shows general information out the application.
 #'
 #' @param id namespace id
+#' @param htmlFile the html file to use for the contents of the about tab. If missing, we use the default about.html from the package directory.
 #' 
-#' @return the about tab panel
+#' @return a tabPanel with HTML content
 #' @export
 #' 
-aboutTabUI <- function(id) {
+aboutTabUI <- function(id, htmlFile) {
   ns <- NS(id)
+  if(missing(htmlFile)) htmlFile <- system.file(package="shinytdmore", "about.html")
+  htmlContent <- readLines(htmlFile, warn=FALSE)
   tabPanel(
     "About",
     icon = icon("question"),
-    HTML(
-      "
-    This is a demo application to show the possibilities of TDMore.<br/>
-    The user interface can of course be adapted as required. We may even provide an API to transfer data. As an example:
-    <p><b>Pull/push initiated by TDM app:</b> The TDM application runs
-    as a client application. It polls Wintermute at specific timepoints,
-    downloads the required data (patient information, patient covariates, dosing history and
-    concentration samples), calculates the optimal next dose (and associated graphs and report),
-    and automatically sends this back to Wintermute.</p>
-    <p>Many alternatives for this 'upload results' exist:
-    <ol>
-    <li>Upload only the dose recommendation to Wintermute</li>
-    <li>Upload only a warning to Wintermute 'New dosing recommendation available',
-    with an associated ID. From the KWS, doctors can click the link and connect to
-    a web app to further analyze the dosing recommendation.</li>
-    <li>
-    
-    <p><b>Pull/push initiated by Wintermute:
-    "
-    )
+    value=id,
+    HTML(htmlContent)
   )
 }
 
