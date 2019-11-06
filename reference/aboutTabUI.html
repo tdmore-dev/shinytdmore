@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>About tab user interface. — aboutTabUI • shinytdmore</title>
+<title>This tab shows general information out the application. — aboutTabUI • shinytdmore</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -42,8 +42,8 @@
 
 
 
-<meta property="og:title" content="About tab user interface. — aboutTabUI" />
-<meta property="og:description" content="About tab user interface." />
+<meta property="og:title" content="This tab shows general information out the application. — aboutTabUI" />
+<meta property="og:description" content="This tab shows general information out the application." />
 <meta property="og:image" content="/logo.png" />
 <meta name="twitter:card" content="summary" />
 
@@ -128,16 +128,16 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>About tab user interface.</h1>
+    <h1>This tab shows general information out the application.</h1>
     <small class="dont-index">Source: <a href='https://github.com/tdmore-dev/shinytdmore/blob/master/R/aboutTab.R'><code>R/aboutTab.R</code></a></small>
     <div class="hidden name"><code>aboutTabUI.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>About tab user interface.</p>
+    <p>This tab shows general information out the application.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>aboutTabUI</span>(<span class='no'>id</span>)</pre>
+    <pre class="usage"><span class='fu'>aboutTabUI</span>(<span class='no'>id</span>, <span class='no'>htmlFile</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -146,11 +146,15 @@
       <th>id</th>
       <td><p>namespace id</p></td>
     </tr>
+    <tr>
+      <th>htmlFile</th>
+      <td><p>the html file to use for the contents of the about tab. If missing, we use the default about.html from the package directory.</p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>the about tab panel</p>
+    <p>a tabPanel with HTML content</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
