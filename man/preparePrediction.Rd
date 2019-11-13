@@ -2,7 +2,7 @@
 % Please edit documentation in R/predictionCore.R
 \name{preparePrediction}
 \alias{preparePrediction}
-\title{Prepare population OR individual prediction data.}
+\title{Prepare population OR individual prediction data}
 \usage{
 preparePrediction(doses, obs, model, covs, target, population, now)
 }
@@ -25,5 +25,5 @@ preparePrediction(doses, obs, model, covs, target, population, now)
 the prediction data and the tdmore data
 }
 \description{
-Prepare population OR individual prediction data.
+Prepare population OR individual prediction data
 }

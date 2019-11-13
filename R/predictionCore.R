@@ -53,7 +53,7 @@ getRoundFunction <- function(model, formulation=NULL) {
   }
 }
 
-#' Prepare population OR individual prediction data.
+#' Prepare population OR individual prediction data
 #' 
 #' @param doses doses
 #' @param obs observations
@@ -86,10 +86,10 @@ preparePrediction <- function(doses, obs, model, covs, target, population, now) 
   # Compute fit (even for population)
   if (population) {
     # Population 'fit'
-    object <- estimate(model, regimen=regimen, covariates=covariates)
+    object <- tdmore::estimate(model, regimen=regimen, covariates=covariates)
   } else {
     # Fit
-    object <- estimate(model, observed=filteredObserved, regimen=regimen, covariates=covariates)
+    object <- tdmore::estimate(model, observed=filteredObserved, regimen=regimen, covariates=covariates, se.fit=!isMpc)
   }
   
   # Predictions
@@ -149,7 +149,7 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   }
   
   # Compute fit
-  fit <- estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST, -FORM, -FIX), covariates=covariates)
+  fit <- tdmore::estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST, -FORM, -FIX), covariates=covariates)
   winningFit <- getWinnerFit(fit)
   
   # Implementing the iterative process

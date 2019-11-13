@@ -2,7 +2,7 @@
 % Please edit documentation in R/shinyTdmore.R
 \name{shinyTdmore}
 \alias{shinyTdmore}
-\title{Get server component of Shiny TDMore.}
+\title{Server component of Shiny TDMore.}
 \usage{
 shinyTdmore(input, output, session, conf, db)
 }
@@ -13,7 +13,9 @@ shinyTdmore(input, output, session, conf, db)
 
 \item{session}{shiny session}
 
-\item{conf}{modules configuration}
+\item{conf}{modules configuration
+This is a named list of extra shiny modules to load. Each module will receive the arguments 
+`val` (a reactiveValues() set) and `db` (the database)}
 
 \item{db}{database, uses in-memory database if missing}
 }
@@ -21,5 +23,7 @@ shinyTdmore(input, output, session, conf, db)
 server component
 }
 \description{
-Get server component of Shiny TDMore.
+The server expects the following UI elements:
+- input$tabs
+-
 }

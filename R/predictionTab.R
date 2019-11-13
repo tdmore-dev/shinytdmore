@@ -177,6 +177,7 @@ previousNextLogic <- function(input, output, session, val, outputReact, ns) {
 }
 
 forceUpdateNowDate <- function(session, val, date, ns) {
+  if(is.null(date)) return()
   minute <- lubridate::minute(date) %/% 5
   value <- paste0(format(date, format = paste(getDateFormat(), "%H"), tz=getAppTimeZone()), ":", pad(minute*5))
   updateTextInput(session=session, inputId="nowDate", value=value) # This updates the 'visual' text
@@ -299,14 +300,17 @@ predictionTab <- function(input, output, session, val) {
   # Doses table logic
   output$hotdose <- rhandsontable::renderRHandsontable({
     borderRow <- getTableBorderIndex(val$doses, val$now, T)
-    rhandsontable::rhandsontable(val$doses, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
-                  colHeaders = c("Date", "Time", getDoseColumnLabel(val$model),"Formulation", "Fix")) %>%
-      rhandsontable::hot_col(col="Time", type="dropdown", source=hoursList(), autocomplete=F, strict=F) %>%
-      rhandsontable::hot_col(col="Formulation", type="dropdown", source=getFormulationList(val$model), autocomplete=TRUE, strict=TRUE) %>%
-      rhandsontable::hot_col(col = 'Fix', colWidths=0.1) %>% # Trick to hide column, see https://github.com/jrowen/rhandsontable/issues/249
-      rhandsontable::hot_table(customBorders = list(list(
+    
+    z <- rhandsontable::rhandsontable(val$doses, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
+                  colHeaders = c("Date", "Time", getDoseColumnLabel(val$model),"Formulation", "Fix"))
+    z <- z %>% rhandsontable::hot_col(col="Time", type="dropdown", source=hoursList(), autocomplete=F, strict=F)
+    
+    z <- z %>% rhandsontable::hot_col(col="Formulation", type="dropdown", source=getFormulationList(val$model), autocomplete=TRUE, strict=TRUE) 
+    z <- z %>% rhandsontable::hot_col(col = 'Fix', colWidths=0.1) # Trick to hide column, see https://github.com/jrowen/rhandsontable/issues/249
+    z <- z %>% rhandsontable::hot_table(customBorders = list(list(
                     range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(val$doses)-1)),
                     top=list(width=2, color=nowColorHex()))))
+    z
   })
   
   observeEvent(input$hotdose, {

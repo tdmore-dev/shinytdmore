@@ -10,12 +10,15 @@ context("Test the patient model")
 # Create a patient and update the TDM model
 patientModel <- createPatient("Nicolas", "Luyckx")
 patientModel <- updatePatientModel(patientModel, "")
+patientModel$now_date <- Sys.time()
 
 # Add doses
 doseModel <- tibble(
   date=as.Date(c("2018/06/25","2018/06/25","2018/06/26","2018/06/26", "2018/06/27")),
   time=c("08:00", "20:00","08:00", "20:00", "08:00"),
-  dose=c(6, 6, 7, 7, 7)
+  dose=c(6, 6, 7, 7, 7),
+  formulation="Tacrolimus",
+  fix=c(TRUE, TRUE, FALSE, FALSE, FALSE)
 )
 patientModel <- updatePatientDoses(patientModel, doseModel)
 
@@ -32,9 +35,14 @@ covariateModel <- tibble(
   date=as.Date(c("2018/06/25", "2018/06/25")),
   time=c("08:00", "09:00"),
   WT=c(60, 61),
-  AGE=c(30, 30)
+  AGE=c(30, 30),
+  CYP3A5=1
 )
 patientModel <- updatePatientCovariates(patientModel, covariateModel)
+
+patientModel$model <- "bergmann2014_base"
+
+#showPatient(patientModel)
 
 db <- InMemoryDatabase$new()
 # Add patient to the database

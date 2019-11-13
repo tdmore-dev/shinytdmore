@@ -83,8 +83,12 @@ setPatient <- function(patient, val) {
 
   # Copy model
   model_id <- patient$model
-  model <- get(model_id)
-  if(is.null(model)) stop("Model ", model_id, " not available...")
+  tryCatch({
+    model <- get(model_id)
+    if(is.null(model)) stop("Model `", model_id, "' not available...")
+  }, error=function(e) {
+    stop("Model `", model_id, "' not available...")
+  })
   val$model <- model
   val$model_id <- model_id
   
@@ -115,7 +119,8 @@ setPatient <- function(patient, val) {
     val$target <- list(min=10, max=15) # Default values
   }
   
-  # Set patient counter
+  # This is a counter that increments whenever "setPatient" is called
+  # We can use this to inform other modules that a new patient was selected in the UI
   if(is.null(val$set_patient_counter)) {
     val$set_patient_counter <- 1
   } else {

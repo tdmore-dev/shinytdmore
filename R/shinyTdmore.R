@@ -1,3 +1,34 @@
+#' Launches the shiny app for a single patient
+#' 
+#' @export
+showPatient <- function(patient) {
+  dir <- tempfile()
+  dir.create(dir)
+  db <- FileDatabase$new(dir)
+  
+  ui <- predictionTabUI(id="predictionTabId")
+  
+  conf <- list(save=list(module=saveProject, id="saveProjectId"),
+               new_patient=list(module=newPatientDialog, id="newPatientDialogId"),
+               patients=list(module=patientsTab, id="patientsTabId"),
+               prediction=list(module=predictionTab, id="predictionTabId"),
+               model=list(module=modelTab, id="modelTabId"),
+               reports=list(module=reportsTab, id="reportsTabId"),
+               about=list(module=aboutTab, id="aboutTabId"))
+  conf$selectPatient <- list(module=function(input, output, session, val, db) {
+    observeEvent(session$clientData, {
+      setPatient(patient, val)
+    })
+  }, id="selectPatient")
+  
+  server <- function(input, output, session) {
+    shinyTdmore(input, output, session, conf, db)
+  }
+  
+  app <- shiny::shinyApp(ui = ui, server = server)
+  shiny::runGadget(app)
+}
+
 #' Get UI component of Shiny TDMore.
 #'
 #' @param title shiny app title
@@ -14,12 +45,18 @@ shinyTdmoreUI <- function(title, ...) {
                    theme="bootstrap.css")
 }
 
-#' Get server component of Shiny TDMore.
+#' Server component of Shiny TDMore.
+#' 
+#' The server expects the following UI elements:
+#' - input$tabs
+#' - 
 #'
 #' @param input shiny input
 #' @param output shiny output
 #' @param session shiny session
 #' @param conf modules configuration
+#' This is a named list of extra shiny modules to load. Each module will receive the arguments 
+#' `val` (a reactiveValues() set) and `db` (the database)
 #' @param db database, uses in-memory database if missing
 #' @return server component
 #' @export
@@ -38,7 +75,11 @@ shinyTdmore <- function(input, output, session, conf, db) {
   callModule(module=conf$new_patient$module, id=conf$new_patient$id, onNewPatientAdded, db=db)
   
   # Create the main reactive container
-  val <- reactiveValues()
+  val <- reactiveValues(
+    doses=tibble(date=numeric(), time=numeric(), dose=numeric(), fix=logical()),
+    obs=tibble(date=numeric(), time=numeric(), measure=numeric(), use=logical()),
+    now=Sys.time()
+    )
   
   # Call module patients tab
   callModule(module=conf$patients$module, id=conf$patients$id, parentSession=session, val, onNewPatientAdded, db=db)
@@ -58,8 +99,11 @@ shinyTdmore <- function(input, output, session, conf, db) {
   # Call save module
   callModule(module=conf$save$module, id=conf$save$id, onTabChanged, val, db=db)
   
+  if(is.null(conf$selectPatient)) {
+    conf$selectPatient <- list(module=selectPatient, id="selectPatient")
+  }
   # Select a patient (last in DB or from URL)
-  selectPatient(session, val, db)
+  callModule(module=conf$selectPatient$module, id=conf$selectPatient$id, val, db=db)
 }
 
 #' Select patient (last in DB or from URL).
@@ -68,7 +112,7 @@ shinyTdmore <- function(input, output, session, conf, db) {
 #' @param val main reactive container
 #' @param db database
 #' 
-selectPatient <- function(session, val, db) {
+selectPatient <- function(input, output, session, val, db) {
   observeEvent(session$clientData$url_search, {
     query <- parseQueryString(session$clientData$url_search)
     value <- query[["patient"]]
