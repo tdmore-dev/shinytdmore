@@ -149,7 +149,7 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   }
   
   # Compute fit
-  fit <- tdmore::estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST, -FORM, -FIX), covariates=covariates)
+  fit <- tdmore::estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST, -FORM, -FIX), covariates=covariates, se.fit=F)
   winningFit <- getWinnerFit(fit)
   
   # Implementing the iterative process
