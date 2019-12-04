@@ -1,5 +1,4 @@
 library(tdmore)
-library(shinytdmore)
 library(magrittr)
 
 #' Build 'bergmann2014_base' model.

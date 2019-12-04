@@ -5,8 +5,15 @@
 \title{Prepare recommendation plots (to be refactored).
 This includes the recommendation plot and the timeline plot.}
 \usage{
-prepareRecommendationPlots(doses, obs, model, covs, target,
-  recommendationData, now)
+prepareRecommendationPlots(
+  doses,
+  obs,
+  model,
+  covs,
+  target,
+  recommendationData,
+  now
+)
 }
 \arguments{
 \item{doses}{doses}

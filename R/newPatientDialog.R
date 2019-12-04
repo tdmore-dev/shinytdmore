@@ -101,11 +101,10 @@ createCovariateForm <- function(ns, input) {
 #' Create a patient form in a modal dialog.
 #' 
 #' @param id namespace id
-#' @param failed logical value, can be true if there was an error in the form
 #' 
 #' @export
 #'
-newPatientDialogUI <- function(id, failed=FALSE) {
+newPatientDialogUI <- function(id) {
   ns <- NS(id)
   modalDialog(
     h4("Patient"),
@@ -114,8 +113,6 @@ newPatientDialogUI <- function(id, failed=FALSE) {
     selectInput(ns("modelCombobox"), "Choose your model", getModelList()),
     h4("Covariates"),
     tags$div(id="placeholder"),
-    if (failed)
-      div(tags$b("Some covariates are missing or not numeric", style = "color: red;")),
     footer = tagList(
       actionButton(ns("modalFormCancel"), "Cancel"),
       actionButton(ns("modalFormOK"), "OK")
@@ -197,7 +194,8 @@ newPatientDialog <- function(input, output, session, onNewPatientAdded, db) {
         removeModal(session)
       } else {
         selectedModel <- input$modelCombobox
-        showModal(newPatientDialogUI(id="newPatientDialogId", failed = TRUE))
+        ## TODO: we should modify the existing one with a FAILED state, instead of showing a NEW modal dialog...
+        showModal(newPatientDialogUI(id="newPatientDialogId"))
         hackSelectInput(session)
         updateSelectInput(session, "modelCombobox",
                           label = "Choose your model",

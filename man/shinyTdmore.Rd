@@ -4,7 +4,7 @@
 \alias{shinyTdmore}
 \title{Server component of Shiny TDMore.}
 \usage{
-shinyTdmore(input, output, session, conf, db)
+shinyTdmore(input, output, session, modules, db)
 }
 \arguments{
 \item{input}{shiny input}
@@ -13,17 +13,13 @@ shinyTdmore(input, output, session, conf, db)
 
 \item{session}{shiny session}
 
-\item{conf}{modules configuration
-This is a named list of extra shiny modules to load. Each module will receive the arguments 
-`val` (a reactiveValues() set) and `db` (the database)}
-
 \item{db}{database, uses in-memory database if missing}
+
+\item{conf}{named list with modules}
 }
 \value{
 server component
 }
 \description{
-The server expects the following UI elements:
-- input$tabs
--
+Server component of Shiny TDMore.
 }

@@ -1,5 +1,4 @@
 library(tdmore)
-library(shinytdmore)
 library(magrittr)
 
 nlmixr::nlmixrUI(function(){

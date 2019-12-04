@@ -11,4 +11,8 @@ el$findElement(xpath="p")$getText()
 destDir <- paste0(app$getSnapshotDir(), "-current")
 writeLines( app$getSource(), file.path(destDir, "source.html.download") )
 
-app$stop()
+p <- app$.__enclos_env__$private$shinyProcess
+p$interrupt()
+p$wait()
+
+Sys.sleep(120)

@@ -4,12 +4,10 @@
 \alias{newPatientDialogUI}
 \title{Create a patient form in a modal dialog.}
 \usage{
-newPatientDialogUI(id, failed = FALSE)
+newPatientDialogUI(id)
 }
 \arguments{
 \item{id}{namespace id}
-
-\item{failed}{logical value, can be true if there was an error in the form}
 }
 \description{
 Create a patient form in a modal dialog.

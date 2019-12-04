@@ -4,14 +4,62 @@
 \name{FileDatabase}
 \alias{FileDatabase}
 \title{FileDatabase Class}
-\format{An object of class \code{R6ClassGenerator} of length 24.}
-\usage{
-FileDatabase
-}
 \description{
-FileDatabase class description
+FileDatabase stores objects as JSON on disk
 }
 \details{
 File database class
 }
-\keyword{datasets}
+\section{Super classes}{
+\code{\link[shinytdmore:Database]{shinytdmore::Database}} -> \code{\link[shinytdmore:JsonDatabase]{shinytdmore::JsonDatabase}} -> \code{FileDatabase}
+}
+\section{Methods}{
+\subsection{Public methods}{
+\itemize{
+\item \href{#method-new}{\code{FileDatabase$new()}}
+\item \href{#method-clone}{\code{FileDatabase$clone()}}
+}
+}
+\if{html}{
+\out{<details open ><summary>Inherited methods</summary>}
+\itemize{
+\item \out{<span class="pkg-link" data-pkg="shinytdmore" data-topic="JsonDatabase" data-id="add">}\href{../../shinytdmore/html/JsonDatabase.html#method-add}{\code{shinytdmore::JsonDatabase$add()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="shinytdmore" data-topic="JsonDatabase" data-id="get">}\href{../../shinytdmore/html/JsonDatabase.html#method-get}{\code{shinytdmore::JsonDatabase$get()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="shinytdmore" data-topic="JsonDatabase" data-id="remove">}\href{../../shinytdmore/html/JsonDatabase.html#method-remove}{\code{shinytdmore::JsonDatabase$remove()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="shinytdmore" data-topic="JsonDatabase" data-id="update">}\href{../../shinytdmore/html/JsonDatabase.html#method-update}{\code{shinytdmore::JsonDatabase$update()}}\out{</span>}
+}
+\out{</details>}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-new"></a>}}
+\subsection{Method \code{new()}}{
+Create a new FileDatabase
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{FileDatabase$new(folder)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{folder}}{folder in which to store the JSON files}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\subsection{Method \code{clone()}}{
+The objects of this class are cloneable with this method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{FileDatabase$clone(deep = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{deep}}{Whether to make a deep clone.}
+}
+\if{html}{\out{</div>}}
+}
+}
+}

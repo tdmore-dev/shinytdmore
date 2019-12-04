@@ -18,10 +18,7 @@
 ##
 ## ---------------------------
 
-#' Mongo database class
-#' @title MongoDatabase Class
-#' @docType class
-#' @description MongoDatabase class description
+#' Mongo database
 #' @export
 #' @importFrom mongolite mongo
 #' @importFrom R6 R6Class
@@ -63,7 +60,7 @@ MongoDatabase <- R6::R6Class("MongoDatabase", inherit=JsonDatabase,
     },
     doGetPatients=function() {
       it <- private$db$iterate(
-        # no need to exclude fields; include everything!
+        # no need to select specific fields; include everything!
         #fields = '{"id":true, "firstname":true, "lastname":true, "model":true, "created_at":true, "modified_at":true}', 
         fields='{}', #include everything, including $id !
         sort = '{"created_at": -1}'
@@ -83,7 +80,6 @@ MongoDatabase <- R6::R6Class("MongoDatabase", inherit=JsonDatabase,
     },
     toJson=function(x) {
       ## Swap `id` to `_id`
-      ## TODO: should not be necessary...
       json <- super$toJson(x)
       x2 <- rjson::fromJSON(json)
       x2[["_id"]] <- NULL
@@ -91,6 +87,12 @@ MongoDatabase <- R6::R6Class("MongoDatabase", inherit=JsonDatabase,
     }
   ),
   public=list(
+    #' @description
+    #' Create a new mongodb connection
+    #' @param collection mongo collection, string
+    #' @param db database name, string
+    #' @param url connection url
+    #' @return A new `MongoDb` object.
     initialize=function(collection, db, url="mongodb://localhost") {
       private$db <- mongolite::mongo(collection = collection,
         db=db,
@@ -100,6 +102,14 @@ MongoDatabase <- R6::R6Class("MongoDatabase", inherit=JsonDatabase,
   )
 )
 
+#' @name composeUrl
+#' @title composeUrl
+#' @description
+#' This is a function to easily compose a URL for MongoDB
+#' @param host hostname
+#' @param user username, or NULL for no user
+#' @param password password, or NULL for no password
+#' @return composes a url of mongodb://user:password@host
 MongoDatabase$composeUrl <- function(host="localhost", user=NULL, password=NULL) {
   url <- "mongodb://"
   if(!is.null(user) && user != "") {

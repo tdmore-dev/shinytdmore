@@ -4,8 +4,13 @@
 \alias{prepareRecommendedTimelinePlot}
 \title{Prepare the timeline with both original and recommended doses.}
 \usage{
-prepareRecommendedTimelinePlot(originalDoses, recommendedDoses, xlim,
-  model, now)
+prepareRecommendedTimelinePlot(
+  originalDoses,
+  recommendedDoses,
+  xlim,
+  model,
+  now
+)
 }
 \arguments{
 \item{originalDoses}{dataframe containing the original entered doses}
