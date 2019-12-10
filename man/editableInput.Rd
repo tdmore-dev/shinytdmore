@@ -2,22 +2,31 @@
 % Please edit documentation in R/xEditableInput.R
 \name{editableInput}
 \alias{editableInput}
-\title{Get editable input.}
+\title{Create an in-place editable input control}
 \usage{
 editableInput(inputId, type, value = "", options = list())
 }
 \arguments{
-\item{inputId}{inputId}
+\item{inputId}{The `input` slot that will be used to access the value.}
 
-\item{type}{type}
+\item{type}{Type of input. One of "text", "textarea", "select", "date",
+"checklist", "combodate"}
 
-\item{value}{value}
+\item{value}{Initial value.}
 
-\item{options}{options}
+\item{options}{A list of general and input-type-dependent options for
+[X-editable](http://github.com/vitalets/x-editable). Details
+[here](http://vitalets.github.io/x-editable/docs.html#editable).}
 }
 \value{
-an editable input
+An in-place editable input control that can be added to a UI definition.
 }
 \description{
-Get editable input.
+Create an in-place editable input control
+}
+\note{
+Inspired from https://github.com/Yang-Tang/shinyEditable/blob/master/R/editableInput.R and adapted to include combodate
+}
+\examples{
+editableInput("foo", "text", "bar")
 }

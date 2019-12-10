@@ -1,4 +1,7 @@
-
+/**
+ * Inspired from https://github.com/Yang-Tang/shinyEditable/blob/master/R/editableInput.R
+ * MIT licensed by Yang Tang, 2018
+ */
 var editableInputBinding = new Shiny.InputBinding();
 
 $.extend(editableInputBinding, {
