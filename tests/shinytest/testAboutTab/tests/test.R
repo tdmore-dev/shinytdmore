@@ -9,7 +9,7 @@ el <- app$findElement(xpath="//div[@data-value='aboutTabId']")
 el$findElement(xpath="p")$getText()
 
 destDir <- paste0(app$getSnapshotDir(), "-current")
-writeLines( app$getSource(), file.path(destDir, "source.html.download") )
+writeLines( app$getSource(), file.path(destDir, "source.html.download") ) #make sure downloaded HTML matches
 
 p <- app$.__enclos_env__$private$shinyProcess
 p$interrupt()
