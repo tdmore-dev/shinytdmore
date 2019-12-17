@@ -16,7 +16,13 @@ Description: The functions in this package allow you to quickly create a shiny a
 Depends: R (>= 3.5.0)
 Imports: assertthat, plyr, dplyr, tdmore, rjson, jsonlite, lubridate, mongolite, 
   shiny, shinyBS, DT, tidyverse, plotly, crosstalk,
-  rhandsontable, R6, ggplot2, purrr, tidyr, htmltools, tibble, rlang
+  rhandsontable (<= 0.3.7), R6, ggplot2, purrr, tidyr, htmltools, tibble, rlang
+Note: The dependency on rhandsontable is limited to version 0.3.7, because of a
+  particular licensing issue. Rhandsontable depends on handsontable.js, which changed
+  from an MIT license to a proprietary license in version 7.0.0. This proprietary license
+  prohibits commercial use, and is therefore not compatible with GPL.
+  We are only compatible with rhandsontable <= 0.3.7 to ensure the proprietary license will not 
+  cause licensing problems down the road.
 Remotes: tdmore-dev/tdmore
 License: file LICENSE
 Encoding: UTF-8
