@@ -42,7 +42,7 @@ doseTable <- function(input, output, session, state) {
     if(is.null(now)) now <- Sys.time()
     model <- state$model
     
-    borderRow <- getTableBorderIndex(doses, now, T)
+    borderRow <- getTableBorderIndex(doses, now)
     doseLabel <- getDoseColumnLabel(model)
     
     ## you need to format the dates manually to a character string
@@ -126,13 +126,109 @@ dateColumn <- function(hot, ...) {
                          allowInvalid = FALSE,...)
 }
 
-observationHot <- function(observed, now) {
-  borderRow <- getTableBorderIndex(observed, now, F)
-  rhandsontable::rhandsontable(observed, useTypes = TRUE, stretchH = "all", rowHeaders = NULL,
-                               colHeaders = c("Date", "Time", getMeasureColumnLabel(val$model), "Use")) %>%
-    rhandsontable::hot_col("Use", halign = "htCenter") %>%
-    timeColumn() %>%
-    rhandsontable::hot_table(customBorders = list(list(
-      range=list(from=list(row=borderRow-1, col=0), to=list(row=borderRow, col=ncol(observed)-1)),
-      top=list(width=2, color=nowColorHex()))))
+
+
+
+
+
+
+#' Create a user interface to represent the observations
+#' 
+#' The interface consists of a *table* (rhandsontable) that reads from the `state$observed` data.frame. It has five columns:
+#' 
+#' 1. `date` is a POSIXct date that is represented as YYYY/MM/DD in the table
+#' 2. `time` is a character string HH:MM that is represented as a dropdown box
+#' 3. `dose` is a numeric vector. If the `state$model` is available, the column title is adapted.
+#' 4. `form` is a factor that shows the formulation used. If the `state$model` is available, the options are taken from the model. If not, this is free-form.
+#' 5. `fix` is a logical that shows whether the dose can be modified by the recommendation algorithm. The column is hidden from view.
+#' 
+#' The table has a horizontal line to reflect where `state$now` is situated. If `state$now` is empty, the line is not shown.
+#' 
+#' Edits to this observed table are automatically synchronized back to `state$observed`. The element ensures the rows are chronological.
+#' 
+#' The user interface also features a button to **add** new observations. Adding to an empty table creates a line for an administration at **state$now**.
+#' Adding to an existing table duplicates the last row. The time is shifted by `24 hours`.
+#' 
+#' @md
+#' @name observationTable
+#' @export
+observationTableUI <- function(id) {
+  ns <- NS(id)
+  div(
+    rhandsontable::rHandsontableOutput(ns("table")),
+    actionButton(ns("add"), "Add observation", style="margin-top: 5px;")
+  )
+}
+
+#' @name observationTable
+#' @param state `reactiveValues` object with at least the values `now`, `observed` and `model`
+#' 
+#' @export
+observationTable <- function(input, output, session, state) {
+  ns <- session$ns
+  output$table <- rhandsontable::renderRHandsontable({
+    df <- state$observed
+    if(is.null(df)) df <- tibble(
+      date=as.POSIXct(character(0)), 
+      time=character(0), 
+      dv=numeric(0),
+      use=logical(0))
+    now <- state$now
+    if(is.null(now)) now <- Sys.time()
+    model <- state$model
+    
+    ## you need to format the dates manually to a character string
+    df$date <- format(df$date, format="%Y-%m-%d")
+    
+    borderRow <- getTableBorderIndex(df, now)
+    observedLabel <- getMeasureColumnLabel(model)
+    z <- rhandsontable::rhandsontable(df,
+                                 useTypes = TRUE, 
+                                 stretchH = "all", 
+                                 rowHeaders = NULL,
+                                 colHeaders = c("Date", "Time", observedLabel, "Use")) %>%
+      rhandsontable::hot_col("Use", halign = "htCenter") %>%
+      timeColumn() %>%
+      dateColumn(dateFormat = "YYYY-MM-DD") %>%
+      rhandsontable::hot_table(customBorders = list(list(
+        range=list(
+          from=list(row=borderRow-1, col=0), 
+          to=list(row=borderRow, col=ncol(df)-1)
+        ),
+        top=list(width=2, color=nowColorHex()))))
+    z
+  })
+  observeEvent(input$table, {
+    # if the table changes, update the state
+    # but only if they are different!!
+    df <- rhandsontable::hot_to_r(input$table) #careful, 'date' is a string
+    df$date <- as.POSIXct(df$date, format="%Y-%m-%d")
+    value <- autoSortByDate(df)
+    if(!isTRUE(all.equal( state$observed, value ))) {
+      # they do not match... update!
+      state$observed <- value
+    }
+  })
+  observeEvent(input$add, {
+    addObservation(state)
+  })
+}
+
+addObservation <- function(state) {
+  model <- state$model
+  df <- state$observed
+  
+  dosingInterval <- 24 #in hours
+  
+  if(nrow(df) > 0) {
+    newrow <- df[ nrow(df), ] #last dose
+    dosetime <- dateAndTimeToPOSIX(newrow$date, newrow$time) + dosingInterval*3600
+  } else {
+    newrow <- tibble(date="", time="", dv=0, use=TRUE)
+    dosetime <- Sys.time()
+  }
+  newrow$date <- POSIXToDate(dosetime)
+  newrow$time <- POSIXToTime(dosetime)
+  
+  state$observed <- rbind(state$observed, newrow)
 }
