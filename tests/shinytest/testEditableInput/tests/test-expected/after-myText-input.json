@@ -1,0 +1,13 @@
+{
+  "input": {
+    "myDateCombodate": "2019-12-10 20:00",
+    "myDateHtml5": "Empty",
+    "myText": "Example Text"
+  },
+  "output": {
+    "bar": "myText --> Example Text  of class  character\nmyDateHtml5 --> Empty  of class  character\nmyDateCombodate --> 2019-12-10 20:00  of class  character"
+  },
+  "export": {
+
+  }
+}

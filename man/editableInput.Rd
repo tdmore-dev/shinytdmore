@@ -9,8 +9,7 @@ editableInput(inputId, type, value = "", options = list())
 \arguments{
 \item{inputId}{The `input` slot that will be used to access the value.}
 
-\item{type}{Type of input. One of "text", "textarea", "select", "date",
-"checklist", "combodate"}
+\item{type}{Type of input. See [X-editable](http://github.com/vitalets/x-editable) for supported input types.}
 
 \item{value}{Initial value.}
 

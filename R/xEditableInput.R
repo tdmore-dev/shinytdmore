@@ -7,8 +7,7 @@
 #' Create an in-place editable input control
 #'
 #' @param inputId The `input` slot that will be used to access the value.
-#' @param type Type of input. One of "text", "textarea", "select", "date",
-#'   "checklist", "combodate"
+#' @param type Type of input. See [X-editable](http://github.com/vitalets/x-editable) for supported input types.
 #' @param value Initial value.
 #' @param options A list of general and input-type-dependent options for
 #'   [X-editable](http://github.com/vitalets/x-editable). Details
@@ -23,16 +22,6 @@
 #' @examples
 #' editableInput("foo", "text", "bar")
 editableInput <- function(inputId, type, value = "", options = list()) {
-  type <- match.arg(
-    type,
-    c("text",
-      "textarea",
-      "select",
-      "date",
-      "combodate",
-      "checklist")
-  )
-
   element    <- buildElement(inputId, value)
   script     <- buildScript(inputId, type, options)
   dependency <- buildDependency()
@@ -48,14 +37,24 @@ editableInput <- function(inputId, type, value = "", options = list()) {
 #' @inheritParams editableInput
 #' @export
 editableCombodate <- function(inputId, value="", options=list()) {
-  defaultOptions <- list(format="YYYY-MM-DD HH:mm", template="YYYY/MM/DD HH:mm",viewformat="YYYY/MM/DD HH:mm")
+  defaultOptions <- list(format="YYYY-MM-DD HH:mm", template="YYYY/MM/DD HH:mm",viewformat="YYYY/MM/DD HH:mm",
+                         combodate=list(minYear=1970, maxYear=2030))
   undefinedOptions <- setdiff(names(defaultOptions), names(options))
   options[undefinedOptions] <- defaultOptions[undefinedOptions]
   
   editableInput(inputId, type="combodate", value=value, options)
 }
 
-
+#' Create an in-place editable html5 element.
+#' This creates an X-editable of type `text`, with the appropriate template for the input element.
+#' 
+#' @param type an allowed html5 [input type](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input)
+#' @inheritParams editableInput
+#' @export
+editableHtml5 <- function(inputId, type="text", options=list()) {
+  if(! "tpl" %in% options) options["tpl"] <- paste0('<input type="', type, '">')
+  editableInput(inputId, type="text", options=options)
+}
 
 
 buildScript <- function(inputId, type, options) {
@@ -64,8 +63,7 @@ buildScript <- function(inputId, type, options) {
   
   selector <- sprintf("[id='%s']", inputId)
   js <- sprintf("$(\"%s\").editable(%s);", selector, optionsJson)
-  
-  htmltools::tags$script(js)
+  htmltools::tags$script(HTML(js)) #do not perform HTML escaping on the javascript!
 }
 
 buildElement <- function(inputId, value) {
@@ -110,12 +108,19 @@ buildDependency <- function() {
     src        = c(href = "shinyEditable"),
     script     = "editableInput.js"
   )
+  momentjs_dep <- htmltools::htmlDependency(
+    name       = "momentJs",
+    version    = "2.24.0",
+    src        = c(href = "shinyEditable"),
+    script     = "moment-with-locales.min.js"
+  )
   
   htmltools::tagList(
     jquery_dep,
     bs_dep,
     editable_dep,
-    editableInput_dep
+    editableInput_dep,
+    momentjs_dep
   )
 }
 
