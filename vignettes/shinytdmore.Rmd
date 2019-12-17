@@ -11,26 +11,7 @@ vignette: >
 ```{r setup, echo=FALSE}
 library(shinytest)
 
-pkg <- devtools::as.package(".")
-tmp_lib <- tempfile("R_LIBS")
-dir.create(tmp_lib)
-
-#knitr::knit_hooks$set(document=function(x) {
-#  app$stop()
-#  unlink(tmp_lib, recursive=TRUE)
-#  x
-#})
-
-utils::install.packages(repos = NULL,
-                          lib = tmp_lib,
-                          pkg$path,
-                          type = "source",
-                          INSTALL_opts = c("--example",
-                                           "--install-tests",
-                                           "--with-keep.source",
-                                           "--with-keep.parse.data",
-                                           "--no-multiarch"),
-                          quiet = F)
+tmp_lib <- tdmore::ensurePackagePresent("shinytdmore", quiet=F)
 app <- withr::with_libpaths(tmp_lib, {
       ShinyDriver$new(path="shinytdmoreApp", debug="all", shinyOptions = list(test.mode=TRUE))
     }, action="prefix")
