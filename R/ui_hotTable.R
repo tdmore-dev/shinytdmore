@@ -1,14 +1,40 @@
 ## This file contains modules for a dose editing table or observation editing table
+# TODO: handle the debounce problem elegantly
+# RHandsontable can be edited while the interface is updating.
+# It can even be edited WHILE a Reactive path is still being updated.
+# This results in the following situation:
+# Edit action 1 occurs
+# HOT sends a Change message
+# input$table updates state$regimen
+#                                         Edit action 2 occurs
+# state$regimen updates output$table
+# Table is re-rendered, which is treated as an update of the contents
+# The update is considered as a new modification
+
+# The elegant way to solve this, may lie in one of several solutions:
+# 0) Debug the core of rhandsontable
+# 1) Try to detect whether a re-render of the table is really necessary.
+# We can do this by comparing the state$regimen to output$table.
+# Problem is that this only sidesteps the problem: there are still changes in the table
+# that may require a re-render...
+# 2) Add some sort of intermediate reactive.
+# 3) Disable EDIT on the table while it rerenders.
+# 4) play with priority?
+# The core of the problem is difficult to solve: a well-skilled timing
+# can result in a loop of updates.
+
+### TODO: add support for futureDoses and covariates tables
+
+
 
 #' Create a user interface to represent the doses for a patient
 #' 
 #' The interface consists of a *table* (rhandsontable) that reads from the `state$regimen` data.frame. It has five columns:
 #' 
-#' 1. `date` is a POSIXct date that is represented as YYYY/MM/DD in the table
-#' 2. `time` is a character string HH:MM that is represented as a dropdown box
-#' 3. `dose` is a numeric vector. If the `state$model` is available, the column title is adapted.
-#' 4. `form` is a factor that shows the formulation used. If the `state$model` is available, the options are taken from the model. If not, this is free-form.
-#' 5. `fix` is a logical that shows whether the dose can be modified by the recommendation algorithm. The column is hidden from view.
+#' 1. `time` is a POSIXct date that is represented as two seperate columns YYYY/MM/DD and HH:MM in the table
+#' 2. `dose` is a numeric vector. If the `state$model` is available, the column title is adapted.
+#' 3. `formulation` is a factor that shows the formulation used. If the `state$model` is available, the options are taken from the model. If not, this is free-form.
+#' 4. `fix` is a logical that shows whether the dose can be modified by the recommendation algorithm. The column is hidden from view.
 #' 
 #' The table has a horizontal line to reflect where `state$now` is situated. If `state$now` is empty, the line is not shown.
 #' 
@@ -18,35 +44,60 @@
 #' Adding to an existing table duplicates the last row. The time is shifted by either the inter-dose interval defined in the model meta-data for
 #' the given formulation, or by `24` if this is not available.
 #' 
+#' @param id identifier for the encapsulating div
+#' @param ... applied to the encapsulating div
 #' @md
 #' @name doseTable
 #' @export
 doseTableUI <- function(id) {
   ns <- NS(id)
   div(
+    id=id,
     rhandsontable::rHandsontableOutput(ns("table")),
     actionButton(ns("add"), "Add dose", style="margin-top: 5px;")
   )
 }
 
 #' @name doseTable
-#' @param state `reactiveValues` object with at least the values `now`, `regimen` and `model`
+#' @param state `reactiveValues` object with the values `now`, `regimen` and `model`
 #' 
 #' @export
 doseTable <- function(input, output, session, state) {
   ns <- session$ns
+  toRegimen <- function(table) {
+    df <- rhandsontable::hot_to_r(table)
+    #careful, 'date' is a string
+    df$time <- as.POSIXct(paste(df$date, df$time), format="%Y-%m-%d %H:%M")
+    value <- df %>% select(-date) %>% arrange(time)
+    value
+  }
+  tableInvalidation <- reactiveVal()
+  toHot <- function(doses) {
+    if(is.null(doses)) doses <- tibble(time=as.POSIXct(character(0)), dose=numeric(0), formulation=numeric(0), fix=logical(0))
+    ## you need to format the dates manually to a character string
+    doses$date <- format(doses$time, format="%Y-%m-%d")
+    doses$time <- format(doses$time, format="%H:%M")
+    doses <- doses[, c("date", "time", "dose", "formulation", "fix")]
+    doses
+  }
+  observeEvent(state$regimen, {
+    # decide whether to update output$table
+    srcValue <- NULL
+    if(!is.null(input$table)) rhandsontable::hot_to_r(input$table)
+    dstValue <- toHot(state$regimen)
+    if( !isTRUE(all.equal(srcValue, dstValue)) ) {
+      tableInvalidation(runif(1))
+    }
+  })
   output$table <- rhandsontable::renderRHandsontable({
-    doses <- state$regimen
-    if(is.null(doses)) doses <- tibble(date=as.POSIXct(character(0)), time=character(0), dose=numeric(0), form=numeric(0), fix=logical(0))
+    tableInvalidation() # allow invalidation by other reactives
+    doses <- toHot( isolate({ state$regimen }) )
     now <- state$now
-    if(is.null(now)) now <- Sys.time()
     model <- state$model
     
-    borderRow <- getTableBorderIndex(doses, now)
+    #borderRow <- getTableBorderIndex(doses, now)  ##TODO
+    borderRow <- numeric()
     doseLabel <- getDoseColumnLabel(model)
-    
-    ## you need to format the dates manually to a character string
-    doses$date <- format(doses$date, format="%Y-%m-%d")
     
     z <- rhandsontable::rhandsontable(
       doses,
@@ -68,15 +119,19 @@ doseTable <- function(input, output, session, state) {
           top=list(width=2, color=nowColorHex())
       ))
     )
-    
     z
   })
-  observeEvent(input$table, {
+  outputOptions(output, "table", priority=-10) #lower priority
+  
+  ## The table input is debounced, because multiple
+  ## updates may follow shortly after each other.
+  ## We want the user edit action to be FINISHED
+  ## before we actually update the state (and plot)
+  dbTable <- debounce(reactive({input$table}), millis = 1000)
+  observeEvent(dbTable(), {
     # if the table changes, update the state
     # but only if they are different!!
-    df <- rhandsontable::hot_to_r(input$table) #careful, 'date' is a string
-    df$date <- as.POSIXct(df$date, format="%Y-%m-%d")
-    value <- autoSortByDate(df)
+    value <- toRegimen(input$table)
     if(!isTRUE(all.equal( state$regimen, value ))) {
       # they do not match... update!
       state$regimen <- value
@@ -97,13 +152,10 @@ addDose <- function(state) {
   
   if(nrow(doses) > 0) {
     newdose <- doses[ nrow(doses), ] #last dose
-    dosetime <- dateAndTimeToPOSIX(newdose$date, newdose$time) + dosingInterval*3600
+    newdose$time <- newdose$time + dosingInterval*3600
   } else {
-    newdose <- tibble(date="", time="", dose=if(is.null(doseMetadata)) {0} else {doseMetadata$default_value}, form="", fix=FALSE)
-    dosetime <- Sys.time()
+    newdose <- tibble(time=state$now, dose=if(is.null(doseMetadata)) {0} else {doseMetadata$default_value}, formulation="", fix=FALSE)
   }
-  newdose$date <- POSIXToDate(dosetime)
-  newdose$time <- POSIXToTime(dosetime)
   
   state$regimen <- rbind(state$regimen, newdose)
 }
@@ -138,9 +190,8 @@ dateColumn <- function(hot, ...) {
 #' 
 #' 1. `date` is a POSIXct date that is represented as YYYY/MM/DD in the table
 #' 2. `time` is a character string HH:MM that is represented as a dropdown box
-#' 3. `dose` is a numeric vector. If the `state$model` is available, the column title is adapted.
-#' 4. `form` is a factor that shows the formulation used. If the `state$model` is available, the options are taken from the model. If not, this is free-form.
-#' 5. `fix` is a logical that shows whether the dose can be modified by the recommendation algorithm. The column is hidden from view.
+#' 3. `dv` is a numeric vector. If the `state$model` is available, the column title is adapted.
+#' 5. `use` is a logical that shows whether the observation will be used by the recommendation algorithm.
 #' 
 #' The table has a horizontal line to reflect where `state$now` is situated. If `state$now` is empty, the line is not shown.
 #' 
@@ -169,19 +220,21 @@ observationTable <- function(input, output, session, state) {
   output$table <- rhandsontable::renderRHandsontable({
     df <- state$observed
     if(is.null(df)) df <- tibble(
-      date=as.POSIXct(character(0)), 
-      time=character(0), 
+      time=as.POSIXct(character(0)), 
       dv=numeric(0),
       use=logical(0))
     now <- state$now
     if(is.null(now)) now <- Sys.time()
     model <- state$model
     
-    ## you need to format the dates manually to a character string
-    df$date <- format(df$date, format="%Y-%m-%d")
-    
     borderRow <- getTableBorderIndex(df, now)
     observedLabel <- getMeasureColumnLabel(model)
+    
+    ## you need to format the dates manually to a character string
+    df$date <- format(df$time, format="%Y-%m-%d")
+    df$time <- format(df$time, format="%H:%M")
+    df <- df[, c("date", "time", "dv", "use")]
+    
     z <- rhandsontable::rhandsontable(df,
                                  useTypes = TRUE, 
                                  stretchH = "all", 
@@ -198,12 +251,17 @@ observationTable <- function(input, output, session, state) {
         top=list(width=2, color=nowColorHex()))))
     z
   })
-  observeEvent(input$table, {
+  ## The table input is debounced, because multiple
+  ## updates may follow shortly after each other.
+  ## We want the user edit action to be FINISHED
+  ## before we actually update the state
+  dbTable <- debounce(reactive({input$table}), millis = 1000)
+  observeEvent(dbTable(), {
     # if the table changes, update the state
     # but only if they are different!!
-    df <- rhandsontable::hot_to_r(input$table) #careful, 'date' is a string
-    df$date <- as.POSIXct(df$date, format="%Y-%m-%d")
-    value <- autoSortByDate(df)
+    df <- rhandsontable::hot_to_r(dbTable()) #careful, 'date' is a string
+    df$time <- as.POSIXct(paste(df$date, df$time), format="%Y-%m-%d %H:%M")
+    value <- df %>% select(-date) %>% arrange(time)
     if(!isTRUE(all.equal( state$observed, value ))) {
       # they do not match... update!
       state$observed <- value
@@ -222,13 +280,45 @@ addObservation <- function(state) {
   
   if(nrow(df) > 0) {
     newrow <- df[ nrow(df), ] #last dose
-    dosetime <- dateAndTimeToPOSIX(newrow$date, newrow$time) + dosingInterval*3600
+    newrow$time <- newrow$time + dosingInterval*3600
   } else {
-    newrow <- tibble(date="", time="", dv=0, use=TRUE)
-    dosetime <- Sys.time()
+    newrow <- tibble(time=state$now, dv=0, use=TRUE)
   }
-  newrow$date <- POSIXToDate(dosetime)
-  newrow$time <- POSIXToTime(dosetime)
   
   state$observed <- rbind(state$observed, newrow)
+}
+
+
+#'
+#' Utility function to know where the horizontal line corresponding to the now date should be.
+#'
+#' @param data a data frame that has a date and time column
+#' @param now now date
+#' @param dose logical value, true if doses table, false if measures table
+#' @return index of this horizontal line or integer(0) if not pertinent
+#'
+getTableBorderIndex <- function(data, now) {
+  if(is.null(now)) return(integer())
+  if(is.null(data)) return(integer())
+  
+  length <- nrow(data)
+  if (length==0) {
+    return(integer())
+  }
+  index <- which(data$time >= now)
+  
+  if (length(index)!=0) {
+    if (length(index) > 1) {
+      index <- index[1]
+    }
+    if (index==1) {
+      return(integer())
+    }
+    else {
+      return(index)
+    }
+    return(index)
+  } else {
+    return(integer())
+  }
 }

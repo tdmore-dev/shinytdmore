@@ -10,17 +10,20 @@ doseTableUI(id)
 doseTable(input, output, session, state)
 }
 \arguments{
-\item{state}{`reactiveValues` object with at least the values `now`, `regimen` and `model`}
+\item{id}{identifier for the encapsulating div}
+
+\item{state}{`reactiveValues` object with the values `now`, `regimen` and `model`}
+
+\item{...}{applied to the encapsulating div}
 }
 \description{
 The interface consists of a \emph{table} (rhandsontable) that reads from the \code{state$regimen} data.frame. It has five columns:
 }
 \details{
 \enumerate{
-\item \code{date} is a POSIXct date that is represented as YYYY/MM/DD in the table
-\item \code{time} is a character string HH:MM that is represented as a dropdown box
+\item \code{time} is a POSIXct date that is represented as two seperate columns YYYY/MM/DD and HH:MM in the table
 \item \code{dose} is a numeric vector. If the \code{state$model} is available, the column title is adapted.
-\item \code{form} is a factor that shows the formulation used. If the \code{state$model} is available, the options are taken from the model. If not, this is free-form.
+\item \code{formulation} is a factor that shows the formulation used. If the \code{state$model} is available, the options are taken from the model. If not, this is free-form.
 \item \code{fix} is a logical that shows whether the dose can be modified by the recommendation algorithm. The column is hidden from view.
 }
 

@@ -1,0 +1,22 @@
+---
+title: ""
+output: md_document
+params:
+   modelId: NA
+   dir: NA
+---
+
+```{r, echo=F, message=F}
+# Loading all necessary libraries
+library(tdmore)
+library(shinytdmore)
+library(knitr)
+library(tidyverse)
+library(assertthat)
+```
+
+
+```{r, echo=F, comment=NA}
+model <- getModel(name=params$modelId, dir=params$dir)
+print(model)
+```

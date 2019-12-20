@@ -18,7 +18,7 @@ getModelOutput <- function(model) {
 #' @return a dosing interval, numeric value
 #'
 getDosingInterval <- function(model, formulation=NULL) {
-  formulations <- getMetadataByClass(model, "tdmore_formulation")
+  formulations <- tdmore::getMetadataByClass(model, "tdmore_formulation")
   
   results <- formulations[sapply(formulations, function(x) {!is.null(formulation) && x$name==formulation})]
   if (length(results) > 0) {
@@ -42,7 +42,7 @@ getDosingInterval <- function(model, formulation=NULL) {
 #' @return a round function, nevel NULL
 #'
 getRoundFunction <- function(model, formulation=NULL) {
-  formulations <- getMetadataByClass(model, "tdmore_formulation")
+  formulations <- tdmore::getMetadataByClass(model, "tdmore_formulation")
   
   results <- formulations[sapply(formulations, function(x) {!is.null(formulation) && x$name==formulation})]
   if (length(results) > 0) {
@@ -65,12 +65,13 @@ getRoundFunction <- function(model, formulation=NULL) {
 #' @return the prediction data and the tdmore data
 #' @export
 #'
-preparePrediction <- function(doses, obs, model, covs, target, population, now) {
-  if(nrow(doses)==0) {
-    stop("Please add a dose in the left panel")
-  }
-  defaultModel <- getDefaultModel(model)
-  tdmoreData <- convertDataToTdmore(defaultModel, doses, obs, covs, now)
+preparePrediction <- function(state, population) {
+  shiny::req(nrow( state$regimen ) > 0)
+  shiny::req( tdmore::is.tdmore( state$model ))
+  model <- state$model
+  defaultModel <- model
+  #  defaultModel <- getDefaultModel(model) #TODO: mixture models
+  tdmoreData <- convertDataToTdmore(state)
   
   # Retrieving data
   regimen <- tdmoreData$regimen %>% dplyr::select(-PAST, -FORM, -FIX)
@@ -81,7 +82,7 @@ preparePrediction <- function(doses, obs, model, covs, target, population, now) 
   # Model info
   isMixture <- inherits(model, "tdmore_mixture")
   isMpc <- inherits(defaultModel, "tdmore_mpc")
-  observedVariables <- getObservedVariables(defaultModel)
+  observedVariables <- tdmore::getObservedVariables(defaultModel)
   
   # Compute fit (even for population)
   if (population) {
@@ -113,7 +114,15 @@ preparePrediction <- function(doses, obs, model, covs, target, population, now) 
     }
   }
   
-  return(list(predictionData=data, tdmoreData=tdmoreData, fit=getWinnerFit(object)))
+  c(
+    as.list(state),
+    list(
+      predictionData=data, 
+      tdmoreData=tdmoreData, 
+      fit=getWinnerFit(object),
+      population=population
+    )
+  )
 }
 
 #'
@@ -130,12 +139,22 @@ preparePrediction <- function(doses, obs, model, covs, target, population, now) 
 #' @export
 #' @importFrom dplyr last mutate pull select
 #'
-prepareRecommendation <- function(doses, obs, model, covs, target, now) {
+prepareRecommendation <- function(predictionData) {
+  data <- predictionData$predictionData
+  fit <- predictionData$fit
+  doses <- predictionData$regimen
+  obs <- predictionData$observed
+  model <- predictionData$model
+  covs <- predictionData$covs
+  target <- predictionData$target
+  now <- predictionData$now
+  population <- predictionData$population
+  
   if (nrow(doses)==0) {
     stop("Please add a dose in the left panel")
   }
   defaultModel <- getDefaultModel(model)
-  tdmoreData <- convertDataToTdmore(defaultModel, doses, obs, covs, now)
+  tdmoreData <- convertDataToTdmore(predictionData)
   regimen <- tdmoreData$regimen
   covariates <- tdmoreData$covariates
   filteredObserved <- tdmoreData$filteredObserved
@@ -148,8 +167,6 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
     stop("There is no dose in the future")
   }
   
-  # Compute fit
-  fit <- tdmore::estimate(model, observed=filteredObserved, regimen=regimen %>% dplyr::select(-PAST, -FORM, -FIX), covariates=covariates, se.fit=F)
   winningFit <- getWinnerFit(fit)
   
   # Implementing the iterative process
@@ -193,5 +210,20 @@ prepareRecommendation <- function(doses, obs, model, covs, target, now) {
   # Back compute to POSIXct
   recommendedRegimen <- recommendation$regimen %>% dplyr::mutate(TIME=firstDoseDate + TIME*3600, PAST=regimen$PAST)
   
-  return(list(ipred=ipred, ipredNew=ipredNew, recommendedRegimen=recommendedRegimen, tdmoreData=tdmoreData, fit=winningFit))
+  return(list(
+    ipred=ipred, 
+    ipredNew=ipredNew, 
+    recommendedRegimen=recommendedRegimen, 
+    tdmoreData=tdmoreData, 
+    fit=winningFit,
+    predictionData=data, 
+    tdmoreData=tdmoreData, 
+    doses=doses, 
+    observed=obs, 
+    model=model, 
+    covs=covs, 
+    target=target, 
+    population=population, 
+    now=now
+    ))
 }

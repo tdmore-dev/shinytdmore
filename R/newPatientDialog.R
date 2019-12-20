@@ -20,8 +20,8 @@ saveData <- function(userData, modelName, covariateData, db) {
 
   patient <- createPatient(firstname = userData[["firstname"]], lastname = userData[["lastname"]])
   patient <- updatePatientModel(patient, modelName)
-  formulations <- getMetadataByClass(get(modelName),"tdmore_formulation")
-  doseMetadata <- getMetadataByName(get(modelName), formulations[[1]]$name)
+  formulations <- tdmore::getMetadataByClass(get(modelName),"tdmore_formulation")
+  doseMetadata <- tdmore::getMetadataByName(get(modelName), formulations[[1]]$name)
   dose <- if(is.null(doseMetadata)) {0} else {doseMetadata$default_value}
   formulation <- if(is.null(doseMetadata)) {"Unknown"} else {doseMetadata$name}
     
@@ -81,7 +81,7 @@ createCovariateForm <- function(ns, input) {
   covariates <- getCovariateNames(model)
   retValue <- NULL
   for (covariate in covariates) {
-    metadata <- getMetadataByName(model, covariate)
+    metadata <- tdmore::getMetadataByName(model, covariate)
     if (inherits(metadata, "tdmore_covariate")) {
       choices <- metadata$choices
       if (is.null(choices)) {
@@ -118,17 +118,6 @@ newPatientDialogUI <- function(id) {
       actionButton(ns("modalFormOK"), "OK")
     )
   )
-}
-
-#'
-#' Get the list of available models in this package.
-#'
-#' @return a list of all model names
-#'
-getModelList <- function() {
-  models <- modelLibrary
-  toDelete <- c()
-  return(models[!(models %in% toDelete)])
 }
 
 #'

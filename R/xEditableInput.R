@@ -37,7 +37,7 @@ editableInput <- function(inputId, type, value = "", options = list()) {
 #' @inheritParams editableInput
 #' @export
 editableCombodate <- function(inputId, value="", options=list()) {
-  defaultOptions <- list(format="YYYY-MM-DD HH:mm", template="YYYY/MM/DD HH:mm",viewformat="YYYY/MM/DD HH:mm",
+  defaultOptions <- list(format="YYYY-MM-DD HH:mm", template="YYYY-MM-DD HH:mm",viewformat="YYYY-MM-DD HH:mm",
                          combodate=list(minYear=1970, maxYear=2030))
   undefinedOptions <- setdiff(names(defaultOptions), names(options))
   options[undefinedOptions] <- defaultOptions[undefinedOptions]

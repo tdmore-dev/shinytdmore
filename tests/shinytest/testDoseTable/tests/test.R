@@ -14,13 +14,13 @@ snapshot <- function(text, id) {
 }
 
 ## Filenames should end in either .json, .download or .png
-app$snapshot(filename="start.json")
 app$waitFor("$('.recalculating').length == 0")
+app$snapshot(filename="start.json")
 snapshotSource("start")
 
 ## table starts out blank
 regimen <- app$getAllValues()$export$regimen
-expect_equal(colnames(regimen), c("date", "time", "dose", "form", "fix"))
+expect_equal(colnames(regimen), c("date", "time", "dose", "formulation", "fix"))
 expect_equal(nrow(regimen), 0)
 
 ## Add a new dose
@@ -28,12 +28,12 @@ time <- Sys.time()
 app$setInputs(`myDose-add`="click") #also ensures there is an update
 
 regimen <- app$getAllValues()$export$regimen
-expect_equal(colnames(regimen), c("date", "time", "dose", "form", "fix"))
+expect_equal(colnames(regimen), c("date", "time", "dose", "formulation", "fix"))
 expect_equal(nrow(regimen), 1)
 expect_equal(as.Date(regimen$date), as.Date(time), tol=1E-3)
 expect_equal(regimen$time, format(time, format="%H:%M") )
 expect_equal(regimen$dose, 0)
-expect_equal(regimen$form, "")
+expect_equal(regimen$formulation, "")
 expect_equal(regimen$fix, FALSE)
 
 ## Fill in table

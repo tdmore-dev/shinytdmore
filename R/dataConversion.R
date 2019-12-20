@@ -10,7 +10,13 @@
 #' @importFrom dplyr filter mutate select
 #' @export
 #'
-convertDataToTdmore <- function(model, doses, obs, covs, now) {
+convertDataToTdmore <- function(state) {
+  model <- state$model
+  doses <- state$regimen
+  obs <- state$observed
+  covs <- state$covs
+  now <- state$now
+  
   # Model output
   output <- getModelOutput(model)
   
@@ -18,7 +24,7 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
   iov <- !is.null(model$iov)
   
   # Important dates
-  doseDates <- dateAndTimeToPOSIX(doses$date, doses$time)
+  doseDates <- doses$time
   firstDoseDate <- min(doseDates)
   
   # Now but in hours compared to the reference time
@@ -44,9 +50,9 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
   
   # Make observed and filtered observed dataframes
   if (nrow(obs) > 0) {
-    obsDates <- dateAndTimeToPOSIX(obs$date, obs$time)
+    obsDates <- obs$time
     observed <- data.frame(TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")), USE=obs$use)
-    observed[, output] <- obs$measure
+    observed[, output] <- obs$dv
     observed <- observed %>% dplyr::mutate(PAST=nearEqual(TIME, relativeNow, mode="ne.lt")) # sign '<=' used on purpose (through concentration can be used for recommendation dose at same time)
     filteredObserved <- observed %>% dplyr::filter(PAST & USE) %>% dplyr::select(-PAST, -USE)
     if (nrow(filteredObserved %>% dplyr::filter(TIME < 0)) > 0) {
@@ -71,8 +77,8 @@ convertDataToTdmore <- function(model, doses, obs, covs, now) {
 #'
 covsToTdmore <- function(covs, firstDoseDate) {
   covsNames <- colnames(covs)
-  covsNames <- covsNames[!(covsNames %in% c("date", "time"))]
-  covsDates <- dateAndTimeToPOSIX(covs$date, covs$time)
+  covsNames <- covsNames[!(covsNames %in% "time")]
+  covsDates <- covs$time
   if (length(covsNames) > 0) {
     covariates <- dplyr::bind_cols(data.frame(TIME=as.numeric(difftime(covsDates, firstDoseDate, units="hour"))),
                             covs %>% dplyr::select(covsNames))
@@ -110,9 +116,9 @@ covsToTdmore <- function(covs, firstDoseDate) {
 #'
 mergeFormAndCov <- function(covs, doses) {
   joinedCov <- dplyr::bind_rows(covs, doses %>% select(-dose, -fix)) %>%
-                  dplyr::arrange( date, time ) %>%
-                  tidyr::fill(c(-date,-time)) %>%
-                  tidyr::fill(c(-date,-time), .direction = 'up') %>%
+                  dplyr::arrange( time ) %>%
+                  tidyr::fill(-time) %>%
+                  tidyr::fill(-time, .direction = 'up') %>%
                   dplyr::distinct()
   return(joinedCov)
 }

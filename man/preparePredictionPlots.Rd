@@ -5,7 +5,7 @@
 \title{Prepare population OR individual prediction plots.
 This includes the prediction plot and the timeline plot.}
 \usage{
-preparePredictionPlots(doses, obs, model, covs, target, population, now)
+preparePredictionPlots(predictionData)
 }
 \arguments{
 \item{doses}{doses}

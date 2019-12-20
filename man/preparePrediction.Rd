@@ -4,9 +4,11 @@
 \alias{preparePrediction}
 \title{Prepare population OR individual prediction data}
 \usage{
-preparePrediction(doses, obs, model, covs, target, population, now)
+preparePrediction(state, population)
 }
 \arguments{
+\item{population}{logical value, true for population, false for individual}
+
 \item{doses}{doses}
 
 \item{obs}{observations}
@@ -16,8 +18,6 @@ preparePrediction(doses, obs, model, covs, target, population, now)
 \item{covs}{covariates}
 
 \item{target}{numeric vector of size 2, min and max value}
-
-\item{population}{logical value, true for population, false for individual}
 
 \item{now}{now date, POSIXlt date}
 }

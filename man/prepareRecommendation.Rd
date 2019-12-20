@@ -4,7 +4,7 @@
 \alias{prepareRecommendation}
 \title{Prepare recommendation.}
 \usage{
-prepareRecommendation(doses, obs, model, covs, target, now)
+prepareRecommendation(predictionData)
 }
 \arguments{
 \item{doses}{doses}

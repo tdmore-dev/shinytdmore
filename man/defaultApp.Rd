@@ -2,10 +2,10 @@
 % Please edit documentation in R/defaultApp.R
 \name{defaultApp}
 \alias{defaultApp}
-\title{List of default server modules}
+\title{Default full-featured application}
 \usage{
-defaultApp(db)
+defaultApp(...)
 }
 \description{
-List of default server modules
+Default full-featured application
 }

@@ -1,15 +1,3 @@
-#'
-#' Generate the list of hours that can be picked in the 'hours' combobox.
-#' 
-#' @return a list of all the hours
-#'
-hoursList <- function() {
-  grid <- expand.grid(pad(c(0,30)), pad(0:23))
-  hours <- paste0(grid$Var2, ":", grid$Var1)
-  return(hours)
-}
-
-#'
 #' Pad integer with a zero if needed.
 #' 
 #' @param integer the integer to be padded
@@ -60,7 +48,8 @@ getTimeFormat <- function() {
 #' @export
 #'
 dateAndTimeToPOSIX <- function(date, time) {
-  return(as.POSIXct(strftime(paste(date, time), format=getDatetimeFormat(), tz=getAppTimeZone(), usetz=T)))
+  strvalue <- paste(date, time)
+  anytime::anytime(strvalue)
 }
 
 #' Convert POSIX date to hours (numeric).

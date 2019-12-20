@@ -14,19 +14,33 @@ shinyTdmoreUI <- function(title, ...) {
                    theme="bootstrap.css")
 }
 
-#' Server component of Shiny TDMore.
+#' Server component of shinytdmore
+#' 
+#' @details 
+#' This function is the core server function for shiny tdmore. It expects a named list with modules to be called.
+#' All modules are called with arguments `id`, `state` and `db`.
+#' 
+#' `db` represents a backend database connection. If missing, an In-Memory database is used.
+#' 
+#' Every application session uses a reactiveValues `state` that captures
+#' the application state. All modules can use this `state` to communicate amongst each other.
+#' 
+#' `state` contains the following values:
+#' - `doses`
+#' - `obs`
+#' - `now`
+#' - `currentTab`
+#' - `onNewPatientAdded`
 #' 
 #' @param input shiny input
 #' @param output shiny output
 #' @param session shiny session
 #' @param conf named list with modules
-#' @param db database, uses in-memory database if missing
+#' @param db database
 #' @return server component
 #' @export
 #' 
-shinyTdmore <- function(input, output, session, modules, db) {
-  if(missing(db)) db <- InMemoryDatabase$new()
-  
+shinyTdmore <- function(input, output, session, modules, db=InMemoryDatabase$new()) {
   # Create the main reactive container
   val <- reactiveValues(
     doses=tibble(date=numeric(), time=numeric(), dose=numeric(), fix=logical()),

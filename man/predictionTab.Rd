@@ -4,7 +4,7 @@
 \alias{predictionTab}
 \title{Prediction tab server.}
 \usage{
-predictionTab(input, output, session, val)
+predictionTab(input, output, session, state)
 }
 \arguments{
 \item{input}{shiny input}
@@ -13,7 +13,7 @@ predictionTab(input, output, session, val)
 
 \item{session}{shiny session}
 
-\item{val}{main reactive container}
+\item{state}{program state, containing the fields `now`, `model`, `regimen`, `observed`}
 }
 \description{
 Prediction tab server.

@@ -1,33 +1,32 @@
-### This file contains a default, full-featured application using the shinytdmore framework
-
-#' List of default server modules
+#' Default full-featured application
 #' @export
-defaultApp <- function(db) {
-  if(missing(db)) db <- InMemoryDatabase$new()
+defaultApp <- function(...) {
+  defaultValues <- list(...)
+  ui <- navbarPage(
+    "Shinytdmore",
+                   predictionTabUI("prediction"),
+                   modelTabUI("model"),
+                   aboutTabUI("about")
+                   )
+  server <- function(input, output, session) {
+    state <- do.call(reactiveValues, defaultValues)
+    callModule(predictionTab, "prediction", state)
+    callModule(modelTab, "model", state)
+    callModule(aboutTab, "about")
+  }
   
-  list(selectPatient=loadPatientFromUrl)
+  app <- shiny::shinyApp(ui = ui, server = server)
 }
 
-#' Launches the shiny app for a single patient
+#' Launches the shiny app for a single patient as a gadget
+#' This allows you to easily explore a patient data.
 #' @export
 showPatient <- function(patient) {
   ui <- predictionTabUI(id="predictionTabId")
-  
-  conf <- list(save=list(module=saveProject, id="saveProjectId"),
-               new_patient=list(module=newPatientDialog, id="newPatientDialogId"),
-               patients=list(module=patientsTab, id="patientsTabId"),
-               prediction=list(module=predictionTab, id="predictionTabId"),
-               model=list(module=modelTab, id="modelTabId"),
-               reports=list(module=reportsTab, id="reportsTabId"),
-               about=list(module=aboutTab, id="aboutTabId"))
-  conf$selectPatient <- list(module=function(input, output, session, val, db) {
-    observeEvent(session$clientData, {
-      setPatient(patient, val)
-    })
-  }, id="selectPatient")
-  
   server <- function(input, output, session) {
-    shinyTdmore(input, output, session, conf)
+    state <- reactiveValues()
+    setPatient(patient, val)
+    callModule(predictionTab, state)
   }
   
   app <- shiny::shinyApp(ui = ui, server = server)

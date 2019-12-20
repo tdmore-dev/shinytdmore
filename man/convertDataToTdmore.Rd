@@ -4,7 +4,7 @@
 \alias{convertDataToTdmore}
 \title{Convert shinyTDMore domain to TDMore domain.}
 \usage{
-convertDataToTdmore(model, doses, obs, covs, now)
+convertDataToTdmore(state)
 }
 \arguments{
 \item{model}{model}

@@ -19,9 +19,8 @@ The interface consists of a \emph{table} (rhandsontable) that reads from the \co
 \enumerate{
 \item \code{date} is a POSIXct date that is represented as YYYY/MM/DD in the table
 \item \code{time} is a character string HH:MM that is represented as a dropdown box
-\item \code{dose} is a numeric vector. If the \code{state$model} is available, the column title is adapted.
-\item \code{form} is a factor that shows the formulation used. If the \code{state$model} is available, the options are taken from the model. If not, this is free-form.
-\item \code{fix} is a logical that shows whether the dose can be modified by the recommendation algorithm. The column is hidden from view.
+\item \code{dv} is a numeric vector. If the \code{state$model} is available, the column title is adapted.
+\item \code{use} is a logical that shows whether the observation will be used by the recommendation algorithm.
 }
 
 The table has a horizontal line to reflect where \code{state$now} is situated. If \code{state$now} is empty, the line is not shown.

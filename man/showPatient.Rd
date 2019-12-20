@@ -2,10 +2,12 @@
 % Please edit documentation in R/defaultApp.R
 \name{showPatient}
 \alias{showPatient}
-\title{Launches the shiny app for a single patient}
+\title{Launches the shiny app for a single patient as a gadget
+This allows you to easily explore a patient data.}
 \usage{
 showPatient(patient)
 }
 \description{
-Launches the shiny app for a single patient
+Launches the shiny app for a single patient as a gadget
+This allows you to easily explore a patient data.
 }

@@ -2,9 +2,9 @@
 % Please edit documentation in R/shinyTdmore.R
 \name{shinyTdmore}
 \alias{shinyTdmore}
-\title{Server component of Shiny TDMore.}
+\title{Server component of shinytdmore}
 \usage{
-shinyTdmore(input, output, session, modules, db)
+shinyTdmore(input, output, session, modules, db = InMemoryDatabase$new())
 }
 \arguments{
 \item{input}{shiny input}
@@ -13,7 +13,7 @@ shinyTdmore(input, output, session, modules, db)
 
 \item{session}{shiny session}
 
-\item{db}{database, uses in-memory database if missing}
+\item{db}{database}
 
 \item{conf}{named list with modules}
 }
@@ -21,5 +21,21 @@ shinyTdmore(input, output, session, modules, db)
 server component
 }
 \description{
-Server component of Shiny TDMore.
+Server component of shinytdmore
+}
+\details{
+This function is the core server function for shiny tdmore. It expects a named list with modules to be called.
+All modules are called with arguments `id`, `state` and `db`.
+
+`db` represents a backend database connection. If missing, an In-Memory database is used.
+
+Every application session uses a reactiveValues `state` that captures
+the application state. All modules can use this `state` to communicate amongst each other.
+
+`state` contains the following values:
+- `doses`
+- `obs`
+- `now`
+- `currentTab`
+- `onNewPatientAdded`
 }

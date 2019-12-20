@@ -23,7 +23,6 @@ updatePlot <- function(plot, outputId) {
   )
 }
 
-#'
 #' Get a nice Y-axis label.
 #' 
 #' @param model tdmore model
@@ -31,7 +30,7 @@ updatePlot <- function(plot, outputId) {
 #'
 getYAxisLabel <- function(model) {
   output <- getModelOutput(model)
-  outputMetadata <- getMetadataByName(model, output)
+  outputMetadata <- tdmore::getMetadataByName(model, output)
   label <- if(!is.null(outputMetadata)) {toString(outputMetadata)} else {"Concentration"}
   return(label)
 }
@@ -44,8 +43,8 @@ getYAxisLabel <- function(model) {
 #' @return a label
 #'
 getDoseColumnLabel <- function(model, breakLine=T) {
-  formulations <- getMetadataByClass(model,"tdmore_formulation")
-  doseMetadata <- getMetadataByName(model, formulations[[1]]$name)
+  formulations <- tdmore::getMetadataByClass(model,"tdmore_formulation")
+  doseMetadata <- tdmore::getMetadataByName(model, formulations[[1]]$name)
   separator <- if(breakLine){"\n"} else{" "}
   label <- if(!is.null(doseMetadata)) {paste0("Dose", separator, "(", doseMetadata$unit, ")")} else {"Dose"}
   return(label)
@@ -59,8 +58,8 @@ getDoseColumnLabel <- function(model, breakLine=T) {
 #' @return a label
 #'
 getRecommendedDoseColumnLabel <- function(model, breakLine=T) {
-  formulations <- getMetadataByClass(model,"tdmore_formulation")
-  doseMetadata <- getMetadataByName(model, formulations[[1]]$name)
+  formulations <- tdmore::getMetadataByClass(model,"tdmore_formulation")
+  doseMetadata <- tdmore::getMetadataByName(model, formulations[[1]]$name)
   separator <- if(breakLine){"\n"} else{" "}
   label <- if(!is.null(doseMetadata)) {paste0("Rec. dose", separator, "(", doseMetadata$unit, ")")} else {"Dose"}
   return(label)
@@ -75,7 +74,7 @@ getRecommendedDoseColumnLabel <- function(model, breakLine=T) {
 #'
 getMeasureColumnLabel <- function(model, breakLine=T) {
   separator <- if(breakLine){"\n"} else{" "}
-  outputMetadata <- getMetadataByName(model, getModelOutput(model))
+  outputMetadata <- tdmore::getMetadataByName(model, getModelOutput(model))
   label <- if(!is.null(outputMetadata)) {paste0("Measure", separator, "(", outputMetadata$unit, ")")} else {"Measure"}
   return(label)
 }
@@ -88,7 +87,7 @@ getMeasureColumnLabel <- function(model, breakLine=T) {
 #' @return a label
 #'
 getFormulationList <- function(model) {
-  allFormulations <- getMetadataByClass(model, "tdmore_formulation")
+  allFormulations <- tdmore::getMetadataByClass(model, "tdmore_formulation")
   list <- plyr::laply(allFormulations, function(form) {form$name})
   return(list)
 }
@@ -169,12 +168,18 @@ addNowLabelAndIntercept <- function(plot, now) {
 #' @return a list of two plots
 #' @export
 #'
-preparePredictionPlots <- function(doses, obs, model, covs, target, population, now) {
-  predictionData <- preparePrediction(doses, obs, model, covs, target, population, now)
+preparePredictionPlots <- function(predictionData) {
   data <- predictionData$predictionData
   fit <- predictionData$fit
+  doses <- predictionData$regimen
+  obs <- predictionData$observed
+  model <- predictionData$model
+  covs <- predictionData$covs
+  target <- predictionData$target
+  now <- predictionData$now
+  population <- predictionData$population
   selectedModel <- fit$tdmore
-  observedVariables <- getObservedVariables(selectedModel)
+  observedVariables <- tdmore::getObservedVariables(selectedModel)
   
   return(list(p1=preparePredictionPlot(data=data, obs=obs, target=target, population=population, model=selectedModel, now=now),
               p2=prepareTimelinePlot(doses=doses, xlim=c(predictionData$tdmoreData$firstDoseDate, max(data$TIME)), model=selectedModel, now=now),
@@ -194,7 +199,7 @@ preparePredictionPlots <- function(doses, obs, model, covs, target, population, 
 preparePredictionPlot <- function(data, obs, target, population, model, now) {
   color <- if(population) {predColor()} else {ipredColor()}
   obs <- obs %>% dplyr::filter(use==TRUE) # Plot only 'used' observations
-  obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
+  obs$datetime <- obs$time
   data <- data %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)
@@ -207,7 +212,7 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
   }
   plot <- plot +
     geom_line(data=data, color=color) +
-    geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
+    geom_point(data=obs, aes(x=datetime, y=dv), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
     labs(y=getYAxisLabel(defaultModel))
@@ -233,7 +238,7 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
 #'
 prepareTimelinePlot <- function(doses, xlim, model, now) {
   doses_copy <- doses 
-  doses_copy$TIME <- dateAndTimeToPOSIX(doses$date, doses$time) # Hover same as in prediction plot
+  doses_copy$TIME <- doses$time # Hover same as in prediction plot
   doses_copy$AMT <- doses$dose
   doses_copy$DOSE <- doses$dose # Duplicated so that 'AMT' does not appear twice in tooltip
   maxDose <- if(nrow(doses) > 0) {max(doses$dose)} else {0}
@@ -259,6 +264,8 @@ prepareParametersPlot <- function(data, parameters, population) {
   if (population) {
     return(NULL) # makes no sense to prepare this plot for population
   }
+  if(length(parameters)==0)
+    return(NULL) # no parameters, so no interest
   # Keep useful parameters and melt data (ids: TIME and PRED_ columns)
   data <- data %>% 
     dplyr::select(c("TIME", parameters, paste0("PRED_", parameters))) %>% 
@@ -338,7 +345,20 @@ prepareRecommendedTimelinePlot <- function(originalDoses, recommendedDoses, xlim
 #' 
 #' @return a list of two plots
 #'
-prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommendationData, now) {
+prepareRecommendationPlots <- function(recommendationData) {
+  data <- recommendationData$predictionData
+  fit <- recommendationData$fit
+  doses <- recommendationData$doses
+  obs <- recommendationData$observed
+  model <- recommendationData$model
+  covs <- recommendationData$covs
+  target <- recommendationData$target
+  now <- recommendationData$now
+  
+  selectedModel <- fit$tdmore
+  
+  
+  
   firstDoseDate <- recommendationData$tdmoreData$firstDoseDate
   ipred <- recommendationData$ipred %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   ipredNew <- recommendationData$ipredNew %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
@@ -350,11 +370,10 @@ prepareRecommendationPlots <- function(doses, obs, model, covs, target, recommen
   
   ggplotTarget <- data.frame(lower=target$min, upper=target$max)
   output <- getModelOutput(defaultModel)
-  
   p1 <- ggplot(mapping=aes_string(x="TIME", y=output)) +
     geom_line(data=ipred, color=ipredColor(), alpha=0.2) +
     geom_line(data=ipredNew, color=recommendationColor()) +
-    geom_point(data=obs, aes(x=datetime, y=measure), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
+    geom_point(data=obs, aes(x=datetime, y=dv), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
     labs(y=getYAxisLabel(defaultModel))

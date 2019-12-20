@@ -112,7 +112,7 @@ setPatient <- function(patient, val) {
   val$now <- patient$now_date
   
   # Define target
-  target <- getMetadataByName(val$model, "TARGET")
+  target <- tdmore::getMetadataByName(val$model, "TARGET")
   if(!is.null(target)) {
     val$target <- list(min=target$min, max=target$max)
   } else {
