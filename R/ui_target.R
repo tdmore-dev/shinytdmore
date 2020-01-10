@@ -15,7 +15,7 @@ targetInput <- function(input, output, session, state) {
   # link targetDown
   observeEvent(input$targetDown, {
     if(is.null(state$target)) state$target <- list(min=0, max=0)
-    if(state$target$min != input$targetDown) state$target$min <- input$targetDown
+    if(state$target$min != input$targetDown) state$target$min <- as.numeric(input$targetDown)
   })
   observeEvent(state$target, {
     if(state$target$min != input$targetDown) updateNumericInput(session=session, inputId="targetDown", value=state$target$min)
@@ -24,7 +24,7 @@ targetInput <- function(input, output, session, state) {
   # link targetUp
   observeEvent(input$targetUp, {
     if(is.null(state$target)) state$target <- list(min=0, max=0)
-    if(state$target$max != input$targetUp) state$target$max <- input$targetUp
+    if(state$target$max != input$targetUp) state$target$max <- as.numeric(input$targetUp)
   })
   observeEvent(state$target, {
     if(state$target$max != input$targetUp) updateNumericInput(session=session, inputId="targetUp", value=state$target$max)

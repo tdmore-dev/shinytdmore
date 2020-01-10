@@ -37,7 +37,7 @@ convertDataToTdmore <- function(state) {
   covariates <- covsToTdmore(covsMerge, firstDoseDate)
   
   # Make regimen and filtered regimen dataframes
-  regimen <- data.frame(
+  regimen <- tibble(
     TIME=as.numeric(difftime(doseDates, firstDoseDate, units="hour")),
     AMT=doses$dose,
     FORM=doses$formulation,
@@ -51,7 +51,7 @@ convertDataToTdmore <- function(state) {
   # Make observed and filtered observed dataframes
   if (nrow(obs) > 0) {
     obsDates <- obs$time
-    observed <- data.frame(TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")), USE=obs$use)
+    observed <- tibble(TIME=as.numeric(difftime(obsDates, firstDoseDate, units="hour")), USE=obs$use)
     observed[, output] <- obs$dv
     observed <- observed %>% dplyr::mutate(PAST=nearEqual(TIME, relativeNow, mode="ne.lt")) # sign '<=' used on purpose (through concentration can be used for recommendation dose at same time)
     filteredObserved <- observed %>% dplyr::filter(PAST & USE) %>% dplyr::select(-PAST, -USE)
@@ -80,7 +80,7 @@ covsToTdmore <- function(covs, firstDoseDate) {
   covsNames <- covsNames[!(covsNames %in% "time")]
   covsDates <- covs$time
   if (length(covsNames) > 0) {
-    covariates <- dplyr::bind_cols(data.frame(TIME=as.numeric(difftime(covsDates, firstDoseDate, units="hour"))),
+    covariates <- dplyr::bind_cols(tibble(TIME=as.numeric(difftime(covsDates, firstDoseDate, units="hour"))),
                             covs %>% dplyr::select(covsNames))
     hasCovariatesAfterT0 <- nrow(covariates %>% filter(TIME >= 0)) > 0
     hasCovariatesAtT0 <- nrow(covariates %>% filter(TIME == 0)) > 0
@@ -138,7 +138,7 @@ getNewdata <- function(start, stop, output, observedVariables=NULL) {
   if (length(times) < minSamples) {
     times <- seq(start, stop, length.out=minSamples)
   }
-  newdata <- data.frame(TIME=times)
+  newdata <- tibble(TIME=times)
   newdata[, output] <- NA
   newdata[, observedVariables] <- NA
   return(newdata)

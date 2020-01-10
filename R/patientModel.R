@@ -128,10 +128,10 @@ jsonToDoseModel <- function(doseJson) {
 #' 
 doseModelToJson <- function(doseModel) {
   if (is.null(doseModel)) {
-    return(data.frame(date=character(), amount=numeric(), formulation=character(), fix=logical()))
+    return(tibble(date=character(), amount=numeric(), formulation=character(), fix=logical()))
   }
   datePosix <- dateAndTimeToPOSIX(doseModel$date, doseModel$time)
-  return(data.frame(date=POSIXToString(datePosix), amount=doseModel$dose, formulation=doseModel$formulation, fix=doseModel$fix))
+  return(tibble(date=POSIXToString(datePosix), amount=doseModel$dose, formulation=doseModel$formulation, fix=doseModel$fix))
 }
 
 #' Convert measures (JSON) to dose model.
@@ -159,10 +159,10 @@ jsonToMeasureModel <- function(measureJson) {
 #' 
 measureModelToJson <- function(measureModel) {
   if (is.null(measureModel)) {
-    return(data.frame(date=character(), measure=numeric()))
+    return(tibble(date=character(), measure=numeric()))
   }
   datePosix <- dateAndTimeToPOSIX(measureModel$date, measureModel$time)
-  return(data.frame(date=POSIXToString(datePosix), measure=measureModel$measure))
+  return(tibble(date=POSIXToString(datePosix), measure=measureModel$measure))
 }
 
 #' Convert covariates (JSON) to covariates model.
@@ -198,10 +198,10 @@ jsonToCovariateModel <- function(covariateJson) {
 #' 
 covariateModelToJson <- function(covariateModel) {
   if (is.null(covariateModel)) {
-    return(data.frame(date=character()))
+    return(tibble(date=character()))
   }
   datePosix <- dateAndTimeToPOSIX(covariateModel$date, covariateModel$time)
-  df <- data.frame(date=POSIXToString(datePosix))
+  df <- tibble(date=POSIXToString(datePosix))
   covsNames <- colnames(covariateModel)
   covsNames <- covsNames[!(covsNames %in% c("date", "time"))]
   df <- bind_cols(df, covariateModel %>% dplyr::select(covsNames))

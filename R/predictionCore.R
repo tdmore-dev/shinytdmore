@@ -20,7 +20,8 @@ getModelOutput <- function(model) {
 getDosingInterval <- function(model, formulation=NULL) {
   formulations <- tdmore::getMetadataByClass(model, "tdmore_formulation")
   
-  results <- formulations[sapply(formulations, function(x) {!is.null(formulation) && x$name==formulation})]
+  myFilter <- vapply(formulations, function(x) {!is.null(formulation) && x$name==formulation}, FUN.VALUE=logical(1))
+  results <- formulations[myFilter]
   if (length(results) > 0) {
     return(results[[1]]$dosing_interval)
   
@@ -43,13 +44,12 @@ getDosingInterval <- function(model, formulation=NULL) {
 #'
 getRoundFunction <- function(model, formulation=NULL) {
   formulations <- tdmore::getMetadataByClass(model, "tdmore_formulation")
-  
-  results <- formulations[sapply(formulations, function(x) {!is.null(formulation) && x$name==formulation})]
+  myFilter <- vapply(formulations, function(x) {!is.null(formulation) && x$name==formulation}, FUN.VALUE=logical(1))
+  results <- formulations[myFilter]
   if (length(results) > 0) {
     return(results[[1]]$round_function)
-    
   } else {
-    return(function(x){x})
+    return(identity)
   }
 }
 
@@ -65,7 +65,7 @@ getRoundFunction <- function(model, formulation=NULL) {
 #' @return the prediction data and the tdmore data
 #' @export
 #'
-preparePrediction <- function(state, population) {
+preparePrediction <- function(state, population=FALSE) {
   shiny::req(nrow( state$regimen ) > 0)
   shiny::req( tdmore::is.tdmore( state$model ))
   model <- state$model
@@ -108,7 +108,7 @@ preparePrediction <- function(state, population) {
   # In case of fit, compute PRED median as well (blue line in fit plot)
   if (!population) {
     pred <- predict(model, newdata=newdata, regimen=regimen, covariates=covariates, se=F)
-    data$PRED <- pred[, getModelOutput(defaultModel)]
+    data[, "PRED"] <- pred[, getModelOutput(defaultModel)]
     for (parameter in observedVariables) {
       data[, paste0("PRED_", parameter)] <- pred[, parameter]
     }
@@ -185,10 +185,10 @@ prepareRecommendation <- function(predictionData) {
     } else {
       nextTime <- regimen[doseRows[index + 1],]$TIME - 0.001 # Just before the next dose
     }
-    targetDf <- data.frame(TIME=nextTime)
+    targetDf <- tibble(TIME=nextTime)
     targetDf[, output] <- (target$min + target$max)/2
     currentDoseRows <- doseRows[(index:length(doseRows))]
-    recommendation <- findDose(winningFit, regimen=nextRegimen, doseRows=currentDoseRows, target=targetDf)
+    recommendation <- tdmore::findDose(winningFit, regimen=nextRegimen, doseRows=currentDoseRows, target=targetDf)
     roundFun <- getRoundFunction(model, row$FORM)
     recommendation$regimen[currentDoseRows, "AMT"] <- roundFun(recommendation$regimen[currentDoseRows, "AMT"])
     nextRegimen <- recommendation$regimen

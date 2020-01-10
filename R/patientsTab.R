@@ -27,7 +27,7 @@ patientsTabUI <- function(id) {
 #' @importFrom purrr map_dfr
 #'
 initDataTable <- function(ns, db) {
-  displayPatientsDf <- data.frame(
+  displayPatientsDf <- tibble(
     ID=character(),
     NameNoHyperlink=character(),
     Name=character(),

@@ -53,7 +53,7 @@ doseTableUI <- function(id) {
   ns <- NS(id)
   div(
     id=id,
-    rhandsontable::rHandsontableOutput(ns("table")),
+    synchronizedHotUi(ns("table")),
     actionButton(ns("add"), "Add dose", style="margin-top: 5px;")
   )
 }
@@ -63,40 +63,35 @@ doseTableUI <- function(id) {
 #' 
 #' @export
 doseTable <- function(input, output, session, state) {
-  ns <- session$ns
-  toRegimen <- function(table) {
-    df <- rhandsontable::hot_to_r(table)
-    #careful, 'date' is a string
+  hot_to_r <- function(x){
+    if(is.null(x)) {
+      return( tibble(time=as.POSIXct(character(0)), dose=numeric(0), formulation=numeric(0), fix=logical(0)) )
+    }
+    df <- rhandsontable::hot_to_r(x)
     df$time <- as.POSIXct(paste(df$date, df$time), format="%Y-%m-%d %H:%M")
-    value <- df %>% select(-date) %>% arrange(time)
+    value <- df %>% select(-date)
     value
   }
-  tableInvalidation <- reactiveVal()
-  toHot <- function(doses) {
-    if(is.null(doses)) doses <- tibble(time=as.POSIXct(character(0)), dose=numeric(0), formulation=numeric(0), fix=logical(0))
-    ## you need to format the dates manually to a character string
+  stateDf = function(x) {
+    if(missing(x)) return(state$regimen)
+    else {
+      x <- arrange(x, time) #always sort the input before writing it to the state regimen
+      state$regimen <- x
+    }
+  }
+  callModule(synchronizedHot, "table", stateDf=stateDf, expr={
+    doses <- isolate({state$regimen})
+    if(is.null(doses)) doses <- hot_to_r(NULL)
+    now <- state$now
+    
+    borderRow <- getTableBorderIndex(doses, now)
+    
+    model <- state$model
+    
     doses$date <- format(doses$time, format="%Y-%m-%d")
     doses$time <- format(doses$time, format="%H:%M")
     doses <- doses[, c("date", "time", "dose", "formulation", "fix")]
-    doses
-  }
-  observeEvent(state$regimen, {
-    # decide whether to update output$table
-    srcValue <- NULL
-    if(!is.null(input$table)) rhandsontable::hot_to_r(input$table)
-    dstValue <- toHot(state$regimen)
-    if( !isTRUE(all.equal(srcValue, dstValue)) ) {
-      tableInvalidation(runif(1))
-    }
-  })
-  output$table <- rhandsontable::renderRHandsontable({
-    tableInvalidation() # allow invalidation by other reactives
-    doses <- toHot( isolate({ state$regimen }) )
-    now <- state$now
-    model <- state$model
     
-    #borderRow <- getTableBorderIndex(doses, now)  ##TODO
-    borderRow <- numeric()
     doseLabel <- getDoseColumnLabel(model)
     
     z <- rhandsontable::rhandsontable(
@@ -104,7 +99,8 @@ doseTable <- function(input, output, session, state) {
       useTypes = TRUE,
       stretchH = "all",
       rowHeaders = NULL,
-      colHeaders = c("Date", "Time", doseLabel,"Formulation", "Fix")
+      colHeaders = c("Date", "Time", doseLabel,"Formulation", "Fix"),
+      selectCallback=TRUE #force callback on every select, see https://github.com/jrowen/rhandsontable/issues/325
     )
     z <- timeColumn(z)
     z <- dateColumn(z, dateFormat = "YYYY-MM-DD")
@@ -116,57 +112,36 @@ doseTable <- function(input, output, session, state) {
         range=list(
           from=list(row=borderRow-1, col=0), 
           to=list(row=borderRow, col=ncol(doses)-1)),
-          top=list(width=2, color=nowColorHex())
+        top=list(width=2, color=nowColorHex())
       ))
     )
     z
-  })
-  outputOptions(output, "table", priority=-10) #lower priority
-  
-  ## The table input is debounced, because multiple
-  ## updates may follow shortly after each other.
-  ## We want the user edit action to be FINISHED
-  ## before we actually update the state (and plot)
-  dbTable <- debounce(reactive({input$table}), millis = 1000)
-  observeEvent(dbTable(), {
-    # if the table changes, update the state
-    # but only if they are different!!
-    value <- toRegimen(input$table)
-    if(!isTRUE(all.equal( state$regimen, value ))) {
-      # they do not match... update!
-      state$regimen <- value
-    }
-  })
+  }, hot_to_r=hot_to_r)
   observeEvent(input$add, {
-    addDose(state)
+    model <- state$model
+    doses <- if(is.null(state$regimen)) tibble() else state$regimen
+    now <- if(is.null(state$now)) as.POSIXct(NA) else state$now
+    
+    formulations <- tdmore::getMetadataByClass(model,"tdmore_formulation")
+    doseMetadata <- tdmore::getMetadataByName(model, formulations[[1]]$name)
+    dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval} #in hours
+    
+    if(nrow(doses) > 0) {
+      newdose <- doses[ nrow(doses), ] #last dose
+      newdose$time <- newdose$time + dosingInterval*3600
+    } else {
+      newdose <- tibble(time=now, dose=if(is.null(doseMetadata)) {0} else {doseMetadata$default_value}, formulation="", fix=FALSE)
+    }
+    state$regimen <- rbind(doses, newdose)
   })
-}
-
-addDose <- function(state) {
-  model <- state$model
-  doses <- state$regimen
-  
-  formulations <- tdmore::getMetadataByClass(model,"tdmore_formulation")
-  doseMetadata <- tdmore::getMetadataByName(model, formulations[[1]]$name)
-  dosingInterval <- if(is.null(doseMetadata)) {24} else {doseMetadata$dosing_interval} #in hours
-  
-  if(nrow(doses) > 0) {
-    newdose <- doses[ nrow(doses), ] #last dose
-    newdose$time <- newdose$time + dosingInterval*3600
-  } else {
-    newdose <- tibble(time=state$now, dose=if(is.null(doseMetadata)) {0} else {doseMetadata$default_value}, formulation="", fix=FALSE)
-  }
-  
-  state$regimen <- rbind(state$regimen, newdose)
 }
 
 timeColumn <- function(hot, ...) {
   #grid <- expand.grid(pad(c(0,30)), pad(0:23))
   grid <- expand.grid(pad(0:59), pad(0:23) )
   source <- paste0(grid$Var2, ":", grid$Var1)
-  rhandsontable::hot_col(hot, col="Time", source=source, allowInvalid=FALSE, strict = TRUE, ...)
+  rhandsontable::hot_col(hot, col="Time", source=source, allowInvalid=FALSE, strict = TRUE, autocomplete=TRUE, ...)
 }
-
 
 dateColumn <- function(hot, ...) {
   ## rhandsontable formats all dates as "MM/DD/YYYY" by default...
@@ -206,7 +181,7 @@ dateColumn <- function(hot, ...) {
 observationTableUI <- function(id) {
   ns <- NS(id)
   div(
-    rhandsontable::rHandsontableOutput(ns("table")),
+    synchronizedHotUi(ns("table")),
     actionButton(ns("add"), "Add observation", style="margin-top: 5px;")
   )
 }
@@ -216,15 +191,26 @@ observationTableUI <- function(id) {
 #' 
 #' @export
 observationTable <- function(input, output, session, state) {
-  ns <- session$ns
-  output$table <- rhandsontable::renderRHandsontable({
-    df <- state$observed
-    if(is.null(df)) df <- tibble(
-      time=as.POSIXct(character(0)), 
-      dv=numeric(0),
-      use=logical(0))
+  hot_to_r <- function(x){
+    if(is.null(x)) {
+      return( tibble(time=as.POSIXct(character(0)), dv=numeric(0), use=logical(0)) )
+    }
+    df <- rhandsontable::hot_to_r(x)
+    df$time <- as.POSIXct(paste(df$date, df$time), format="%Y-%m-%d %H:%M")
+    value <- df %>% select(-date)
+    value
+  }
+  stateDf = function(x) {
+    if(missing(x)) return(state$observed)
+    else {
+      x <- arrange(x, time) #always sort the input before writing it to the state regimen
+      state$observed <- x
+    }
+  }
+  callModule(synchronizedHot, "table", stateDf=stateDf, expr={
+    df <- isolate({ state$observed })
+    if(is.null(df)) df <- hot_to_r(NULL)
     now <- state$now
-    if(is.null(now)) now <- Sys.time()
     model <- state$model
     
     borderRow <- getTableBorderIndex(df, now)
@@ -236,10 +222,10 @@ observationTable <- function(input, output, session, state) {
     df <- df[, c("date", "time", "dv", "use")]
     
     z <- rhandsontable::rhandsontable(df,
-                                 useTypes = TRUE, 
-                                 stretchH = "all", 
-                                 rowHeaders = NULL,
-                                 colHeaders = c("Date", "Time", observedLabel, "Use")) %>%
+                                      useTypes = TRUE, 
+                                      stretchH = "all", 
+                                      rowHeaders = NULL,
+                                      colHeaders = c("Date", "Time", observedLabel, "Use")) %>%
       rhandsontable::hot_col("Use", halign = "htCenter") %>%
       timeColumn() %>%
       dateColumn(dateFormat = "YYYY-MM-DD") %>%
@@ -250,44 +236,23 @@ observationTable <- function(input, output, session, state) {
         ),
         top=list(width=2, color=nowColorHex()))))
     z
-  })
-  ## The table input is debounced, because multiple
-  ## updates may follow shortly after each other.
-  ## We want the user edit action to be FINISHED
-  ## before we actually update the state
-  dbTable <- debounce(reactive({input$table}), millis = 1000)
-  observeEvent(dbTable(), {
-    # if the table changes, update the state
-    # but only if they are different!!
-    df <- rhandsontable::hot_to_r(dbTable()) #careful, 'date' is a string
-    df$time <- as.POSIXct(paste(df$date, df$time), format="%Y-%m-%d %H:%M")
-    value <- df %>% select(-date) %>% arrange(time)
-    if(!isTRUE(all.equal( state$observed, value ))) {
-      # they do not match... update!
-      state$observed <- value
-    }
-  })
+  }, hot_to_r=hot_to_r, debug=TRUE)
+  
   observeEvent(input$add, {
-    addObservation(state)
+    df <- if(is.null(state$observed)) tibble() else state$observed
+    now <- if(is.null(state$now)) as.POSIXct(NA) else state$now
+    dosingInterval <- 24 #in hours
+    
+    if(nrow(df) > 0) {
+      newrow <- df[ nrow(df), ] #last dose
+      newrow$time <- newrow$time + dosingInterval*3600
+    } else {
+      newrow <- tibble(time=now, dv=0, use=TRUE)
+    }
+    
+    state$observed <- rbind(state$observed, newrow)
   })
 }
-
-addObservation <- function(state) {
-  model <- state$model
-  df <- state$observed
-  
-  dosingInterval <- 24 #in hours
-  
-  if(nrow(df) > 0) {
-    newrow <- df[ nrow(df), ] #last dose
-    newrow$time <- newrow$time + dosingInterval*3600
-  } else {
-    newrow <- tibble(time=state$now, dv=0, use=TRUE)
-  }
-  
-  state$observed <- rbind(state$observed, newrow)
-}
-
 
 #'
 #' Utility function to know where the horizontal line corresponding to the now date should be.

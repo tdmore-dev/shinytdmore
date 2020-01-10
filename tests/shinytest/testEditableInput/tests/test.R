@@ -14,7 +14,6 @@ app$takeScreenshot()
 el <- app$findElement(xpath="//input")
 el$setValue("Example Text")
 app$findElement(xpath="//button[@type='submit']")$click()
-app$takeScreenshot()
 
 el <- app$findElement(xpath="//pre[@id='bar']")
 writeLines( el$getText(), file.path(destDir, "verbatimOut.download") ) #make sure downloaded HTML matches

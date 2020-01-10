@@ -1,0 +1,19 @@
+<!DOCTYPE html><html><head>
+
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <script type="application/shiny-singletons"></script>
+  <script type="application/html-dependencies">json2[2014.02.04];jquery[3.4.1];shiny[1.4.0];shiny-testmode[1.4.0]</script>
+<script src="shared/json2-min.js"></script>
+<script src="shared/jquery.min.js"></script>
+<link href="shared/shiny.css" rel="stylesheet">
+<script src="shared/shiny.min.js"></script>
+<script src="shared/shiny-testmode.js"></script>
+
+</head>
+
+<body>
+  <div class="tab-pane" title="About" data-value="aboutTabId" data-icon-class="fa fa-question"><p>   This is a demo application to show the possibilities of TDMore.<br>   The user interface can be adapted as required. </p>  <p>   For more information, check out the <a href="https://tdmore-dev.github.io/tdmore/">tdmore</a> and <a href="https://tdmore-dev.github.io/shinytdmore/">shinytdmore</a> pages on github. </p></div>
+
+
+
+</body></html>

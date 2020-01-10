@@ -1,6 +1,7 @@
 library(shinytest)
 app <- ShinyDriver$new("..", loadTimeout = 30000, seed=1234)
 app$snapshotInit("test")
+app$waitFor("$('.ht_master').length > 0") #wait until rhandsontable rendered
 
 snapshotSource <- function(id) {
   source <- app$getSource()

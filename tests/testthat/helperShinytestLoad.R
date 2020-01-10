@@ -10,24 +10,37 @@
 ## We recommend to *ignore* all plots, but instead to do one of the following
 ##    a) export the source data of the plot using exportTestValues()
 ##    b) use a htmlwidget (like plotly) to render the plot
-
 library(shinytest)
 library(testthat)
 
-context("Perform all shinytest tests")
-
 tmp_lib <- tdmore::ensurePackagePresent("shinytdmore", quiet=F)
+getFilename <- function(reporter) {
+  filenames <- lapply(reporter$reporters, getFilename)
+  filename <- c(list(reporter$file_name), filenames) %>%
+    purrr::flatten_chr() %>%
+    purrr::compact() %>%
+    na.omit()
+  filename[1]
+}
 
-testpath <- rprojroot::find_package_root_file("tests/shinytest")
-tests <- dir(testpath)
-for(appDir in tests) {
-  appDir <- appDir
+testShiny <- function(appDir) {
+  if(missing(appDir)) {
+    filename <- getFilename(get_reporter())
+    appDir <- sub("\\.[rR]$", "", filename)
+  }
   test_that(paste0("shinytest for ", appDir, "..."), {
-    expect_pass(
-      withr::with_libpaths(tmp_lib, {
-        appDir <- file.path(testpath, appDir)
-        testApp(appDir=appDir, compareImages=!testthat::is_testing())
-      }, action="prefix")
-    )
+    appDir <- testthat::test_path("../shinytest/", appDir)
+    results <- withr::with_libpaths(tmp_lib, {
+      shinytest::testApp(appDir=appDir, compareImages=!testthat::is_testing(), quiet=FALSE)
+    }, action="prefix")
+    shinytest::expect_pass(results)
   })
+}
+
+testShiny_dir <- function() {
+  testpath <- testthat::test_path("../shinytest/")
+  tests <- dir(testpath)
+  for(appDir in tests) {
+    testApp(appDir)
+  }
 }

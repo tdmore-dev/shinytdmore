@@ -38,13 +38,22 @@ pagerPanel <- function(id, ...) {
 }
 
 fitPlot <- function(input, output, session, state) {
+  stateDebounced <- debounce(reactive({
+    list(regimen=state$regimen,
+         model=state$model,
+         regimen=state$regimen,
+         observed=state$observed,
+         covs=state$covs,
+         now=state$now,
+         target=state$target)
+  }), millis=500)
   if(is.null( isolate({state$populationData}) ))
     state$populationData <- reactive({
-      preparePrediction(state, population=TRUE)
+      preparePrediction(stateDebounced(), population=TRUE)
     })
   if(is.null(isolate({state$individualData})))
     state$individualData <- reactive({
-      preparePrediction(state, population=FALSE)
+      preparePrediction(stateDebounced(), population=FALSE)
     })
   if(is.null(isolate({state$recommendationData})))
     state$recommendationData <- reactive({
@@ -57,12 +66,14 @@ fitPlot <- function(input, output, session, state) {
     z1 <- mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
     z1
   })
+  outputOptions(output, "population", priority = -10)
   output$fit <- plotly::renderPlotly({
     data <- state$individualData()
     plots <- preparePredictionPlots(data)
     z1 <- mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
     z1
   })
+  outputOptions(output, "fit", priority = -10)
   ##
   ##recommendedRegimen <- recommendationData$recommendedRegimen
   ##data <- state$regimen
@@ -74,4 +85,5 @@ fitPlot <- function(input, output, session, state) {
     z1 <- mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
     z1
   })
+  outputOptions(output, "recommendation", priority = -10)
 }

@@ -1,9 +1,9 @@
 {
   "input": {
-    "myObs-add": 0
+    "myDose-add": 0
   },
   "output": {
-    "myObs-table": {
+    "myDose-table-table": {
       "x": {
         "data": [
 
@@ -16,32 +16,36 @@
         "rColClasses": {
           "date": "character",
           "time": "character",
-          "dv": "numeric",
-          "use": "logical"
+          "dose": "numeric",
+          "formulation": "numeric",
+          "fix": "logical"
         },
         "rColnames": [
           "date",
           "time",
-          "dv",
-          "use"
+          "dose",
+          "formulation",
+          "fix"
         ],
         "rColHeaders": [
           "date",
           "time",
-          "dv",
-          "use"
+          "dose",
+          "formulation",
+          "fix"
         ],
         "rRowHeaders": null,
         "rDataDim": [
           0,
-          4
+          5
         ],
-        "selectCallback": false,
+        "selectCallback": true,
         "colHeaders": [
           "Date",
           "Time",
-          "Measure",
-          "Use"
+          "Dose",
+          "Formulation",
+          "Fix"
         ],
         "rowHeaders": null,
         "columns": [
@@ -1511,10 +1515,23 @@
             "default": null
           },
           {
+            "type": "dropdown",
+            "numericFormat": {
+              "pattern": "0.00"
+            },
+            "renderer": "customRenderer",
+            "default": null,
+            "source": [
+
+            ],
+            "strict": true,
+            "autocomplete": true
+          },
+          {
             "type": "checkbox",
             "renderer": "customRenderer",
             "default": null,
-            "className": "htCenter"
+            "colWidths": 0.1
           }
         ],
         "width": null,
@@ -1573,7 +1590,7 @@
                 "row": [
 
                 ],
-                "col": 3
+                "col": 4
               }
             },
             "top": {
@@ -1587,7 +1604,8 @@
         "columns.0.renderer",
         "columns.1.renderer",
         "columns.2.renderer",
-        "columns.3.renderer"
+        "columns.3.renderer",
+        "columns.4.renderer"
       ],
       "jsHooks": [
 
@@ -1598,6 +1616,6 @@
     }
   },
   "export": {
-    "observed": null
+    "regimen": null
   }
 }

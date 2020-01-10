@@ -4,7 +4,7 @@
 \alias{preparePrediction}
 \title{Prepare population OR individual prediction data}
 \usage{
-preparePrediction(state, population)
+preparePrediction(state, population = FALSE)
 }
 \arguments{
 \item{population}{logical value, true for population, false for individual}

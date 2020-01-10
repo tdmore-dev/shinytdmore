@@ -25,4 +25,5 @@ pheno <- function() {
   })
 }
 
-nlmixr::nlmixr(pheno) %>% tdmore::tdmore()
+nlmixr::nlmixr(pheno) %>% tdmore::tdmore() %>%
+  tdmore::metadata(tdmore::observed_variables("cp"))

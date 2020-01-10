@@ -61,7 +61,7 @@ predictionTab <- function(input, output, session, state) {
   callModule(fitPlot, "plots", state=state)
   
   # adapt visibility of input elements
-  visibilityStates <- data.frame(
+  visibilityStates <- tibble(
     row.names=c("population", "fit", "recommendation"),
     doses=c(TRUE, TRUE, FALSE),
     recommendation=c(FALSE, FALSE, TRUE)

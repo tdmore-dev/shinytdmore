@@ -44,9 +44,11 @@ getYAxisLabel <- function(model) {
 #'
 getDoseColumnLabel <- function(model, breakLine=T) {
   formulations <- tdmore::getMetadataByClass(model,"tdmore_formulation")
+  if(length(formulations)==0) return("Dose")
   doseMetadata <- tdmore::getMetadataByName(model, formulations[[1]]$name)
-  separator <- if(breakLine){"\n"} else{" "}
-  label <- if(!is.null(doseMetadata)) {paste0("Dose", separator, "(", doseMetadata$unit, ")")} else {"Dose"}
+  if(is.null(doseMetadata)) return("Dose")
+  separator <- if(breakLine) "\n" else " "
+  label <- paste0("Dose", separator, "(", doseMetadata$unit, ")")
   return(label)
 }
 
@@ -198,23 +200,23 @@ preparePredictionPlots <- function(predictionData) {
 #'
 preparePredictionPlot <- function(data, obs, target, population, model, now) {
   color <- if(population) {predColor()} else {ipredColor()}
-  obs <- obs %>% dplyr::filter(use==TRUE) # Plot only 'used' observations
+  obs <- obs %>% dplyr::filter(.data$use==TRUE) # Plot only 'used' observations
   obs$datetime <- obs$time
   data <- data %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   
-  ggplotTarget <- data.frame(lower=target$min, upper=target$max)
+  ggplotTarget <- tibble(lower=target$min, upper=target$max)
   defaultModel <- getDefaultModel(model)
   output <- getModelOutput(defaultModel)
   
   plot <- ggplot(mapping=aes_string(x="TIME", y=output))
   if (!population) {
-    plot <- plot + geom_line(data=data, mapping=aes(y=PRED), color=predColor(), alpha=0.25)
+    plot <- plot + geom_line(data=data, mapping=aes_string(y="PRED"), color=predColor(), alpha=0.25)
   }
   plot <- plot +
     geom_line(data=data, color=color) +
-    geom_point(data=obs, aes(x=datetime, y=dv), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
-    geom_hline(data=ggplotTarget, aes(yintercept=lower), color=targetColor(), lty=2) +
-    geom_hline(data=ggplotTarget, aes(yintercept=upper), color=targetColor(), lty=2) +
+    geom_point(data=obs, aes_string(x="datetime", y="dv"), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
+    geom_hline(data=ggplotTarget, aes_string(yintercept="lower"), color=targetColor(), lty=2) +
+    geom_hline(data=ggplotTarget, aes_string(yintercept="upper"), color=targetColor(), lty=2) +
     labs(y=getYAxisLabel(defaultModel))
   
   ribbonLower <- paste0(output, ".lower") # Not there in MPC fit
@@ -304,12 +306,12 @@ prepareParametersPlot <- function(data, parameters, population) {
 #'
 prepareRecommendedTimelinePlot <- function(originalDoses, recommendedDoses, xlim, model, now) {
   doses_copy <- recommendedDoses
-  doses_copy$TIME <- dateAndTimeToPOSIX(recommendedDoses$date, recommendedDoses$time) # Hover same as in prediction plot
+  doses_copy$TIME <- recommendedDoses$time # Hover same as in prediction plot
   doses_copy$AMT <- recommendedDoses$dose
   doses_copy$TYPE <- "Recommended"
   doses_copy$DOSE <- recommendedDoses$dose # Duplicated so that 'AMT' does not appear twice in tooltip
   doses_copy2 <- originalDoses 
-  doses_copy2$TIME <- dateAndTimeToPOSIX(originalDoses$date, originalDoses$time) # Hover same as in prediction plot
+  doses_copy2$TIME <- originalDoses$time # Hover same as in prediction plot
   doses_copy2$AMT <- originalDoses$dose
   doses_copy2$TYPE <- "Original"
   doses_copy2$DOSE <- originalDoses$dose # Duplicated so that 'AMT' does not appear twice in tooltip
@@ -362,13 +364,11 @@ prepareRecommendationPlots <- function(recommendationData) {
   firstDoseDate <- recommendationData$tdmoreData$firstDoseDate
   ipred <- recommendationData$ipred %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   ipredNew <- recommendationData$ipredNew %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
-  recommendedRegimen <- recommendationData$recommendedRegimen
-  recommendedRegimen$dose <- round(recommendedRegimen$AMT, digits=2)
   defaultModel <- getDefaultModel(model)
   obs <- obs %>% dplyr::filter(use==TRUE) # Plot only used observations
-  obs$datetime <- dateAndTimeToPOSIX(obs$date, obs$time)
+  obs$datetime <- obs$time
   
-  ggplotTarget <- data.frame(lower=target$min, upper=target$max)
+  ggplotTarget <- tibble(lower=target$min, upper=target$max)
   output <- getModelOutput(defaultModel)
   p1 <- ggplot(mapping=aes_string(x="TIME", y=output)) +
     geom_line(data=ipred, color=ipredColor(), alpha=0.2) +
@@ -386,7 +386,9 @@ prepareRecommendationPlots <- function(recommendationData) {
   p1 <- addNowLabelAndIntercept(p1, now)
   
   # We have to be very careful with as.Date(), zone should be always taken into account
-  newDoses <- recommendedRegimen %>% mutate(date=as.Date(TIME, tz=Sys.timezone()), time=strftime(TIME,"%H:%M"))
+  recommendedRegimen <- recommendationData$recommendedRegimen
+  recommendedRegimen$dose <- round(recommendedRegimen$AMT, digits=2)
+  newDoses <- recommendedRegimen %>% dplyr::mutate(time=TIME)
   p2 <- prepareRecommendedTimelinePlot(recommendedDoses=newDoses, originalDoses= doses, xlim=c(firstDoseDate, max(ipredNew$TIME)), model=model, now=now)
   
   return(list(p1=p1, p2=p2))
