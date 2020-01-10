@@ -1504,7 +1504,8 @@
               "23:59"
             ],
             "strict": true,
-            "allowInvalid": false
+            "allowInvalid": false,
+            "autocomplete": true
           },
           {
             "type": "numeric",
