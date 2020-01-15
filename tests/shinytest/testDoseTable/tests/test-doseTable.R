@@ -7,7 +7,7 @@ source("../../../testthat/helperShinytest.R")
 
 tableId <- "myDose-table-table"
 
-app$snapshot(filename = "start.json")
+app$snapshot(filename="start.json")
 
 regimen <- app$getAllValues()$export$regimen ## table starts out blank
 expect_null(regimen)

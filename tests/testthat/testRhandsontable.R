@@ -1,1 +1,1 @@
-testShiny()
+testShiny("testRhandsontable")

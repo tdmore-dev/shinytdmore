@@ -1,1 +1,1 @@
-testShiny()
+testShiny("testEditableInput")

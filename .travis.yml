@@ -33,6 +33,7 @@ before_install:
 
 apt_packages:
   - libudunits2-dev
+  - libgit2-dev
 
 r_packages:
   - covr

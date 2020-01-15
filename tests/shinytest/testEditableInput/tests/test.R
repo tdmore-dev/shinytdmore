@@ -15,13 +15,11 @@ el <- app$findElement(xpath="//input")
 el$setValue("Example Text")
 app$findElement(xpath="//button[@type='submit']")$click()
 
+Sys.sleep(2) #make sure all animations have completed...
+
 el <- app$findElement(xpath="//pre[@id='bar']")
 writeLines( el$getText(), file.path(destDir, "verbatimOut.download") ) #make sure downloaded HTML matches
 app$snapshot(filename="after-myText-input.json")
-
-
-## make sure download HTML matches
-Sys.sleep(1) #make sure all animations have completed...
 writeLines( app$getSource(), file.path(destDir, "source.html.download") ) #make sure downloaded HTML matches
 
 p <- app$.__enclos_env__$private$shinyProcess
