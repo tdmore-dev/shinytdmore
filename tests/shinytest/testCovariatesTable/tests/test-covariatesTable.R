@@ -85,6 +85,51 @@ Sys.sleep(1) #allow enough time for values to update
 covs <- app$getAllValues()$export$covs
 expect_equal(covs$WT, 15) #WT remains the same, you cannot enter an invalid weight (out of range)
 
+# cancel the attempted edit
+cell(3)$sendKeys(webdriver::key$escape) #ESCAPE, see https://selenium.dev/selenium/docs/api/py/webdriver/selenium.webdriver.common.keys.html
+
+
+## Now let's try a different model
+app$setInputs(`alternate`=TRUE)
+  # the covariates table should be maintained unchanged
+
+headers <- app$findElements("#myCovs-table-table > div.ht_master.handsontable > div > div > div > table > thead > tr > th > div > span.colHeader")
+expect_equal(length(headers), 3) #only 3 columns
+expect_equal(app$getAllValues()$export$covs,
+             data.frame(time=as.POSIXct("1987-12-11 12:15"),
+                    WT=15
+             )
+)
+
+### Add row
+app$setInputs(`myCovs-add` = "click")
+# there should now be an extra SEX column
+headers <- app$findElements("#myCovs-table-table > div.ht_master.handsontable > div > div > div > table > thead > tr > th > div > span.colHeader")
+expect_equal(length(headers), 4) #only 3 columns
+expect_equal(
+  headers[[4]]$getAttribute("innerHTML"),
+  "Sex"
+)
+expect_equal(app$getAllValues()$export$covs,
+             data.frame(time=c(as.POSIXct("1987-12-11 12:15"), as.POSIXct("1987-12-12 12:15")),
+                        WT=rep(15, 2),
+                        SEX=rep(as.numeric(NA), 2)
+             )
+)
+
+# set first cell as Male
+cell(4)$click()
+cell(4)$sendKeys("Ma", webdriver::key$enter)
+app$takeScreenshot()
+
+expect_equal(app$getAllValues()$export$covs,
+             data.frame(time=c(as.POSIXct("1987-12-11 12:15"), as.POSIXct("1987-12-12 12:15")),
+                        WT=rep(15, 2),
+                        SEX=c(0, as.numeric(NA)) #the first value is '0'
+             )
+)
+
+
 # shut down table
 p <- app$.__enclos_env__$private$shinyProcess
 p$interrupt()

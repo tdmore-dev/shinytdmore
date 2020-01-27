@@ -167,6 +167,25 @@ observationTable <- function(input, output, session, state) {
   })
 }
 
+#' Create a user interface to represent the covariates
+#' 
+#' The interface consists of a *table* (rhandsontable) that reads from the `state$covs` data.frame. It has at least two columns:
+#' 
+#' 1. `date` is a POSIXct date that is represented as YYYY/MM/DD in the table
+#' 2. `time` is a character string HH:MM that is represented as a dropdown box
+#' 3. and further: columns for each covariate in the model
+#' 
+#' The table has a horizontal line to reflect where `state$now` is situated. If `state$now` is empty, the line is not shown.
+#' 
+#' Edits to this observed table are automatically synchronized back to `state$covs`. The element ensures the rows are chronological.
+#' 
+#' The user interface also features a button to **add** new covariates. Adding to an empty table creates a line for an observation at **state$now**.
+#' Adding to an existing table duplicates the last row. The time is shifted by `24 hours`.
+#' 
+#' 
+#' @md
+#' @param state `reactiveValues` object with at least the values `now`, `observed` and `model`
+#' 
 #' @export
 covariatesTable <- function(input, output, session, state) {
   defaultDf <- reactive({
@@ -175,37 +194,76 @@ covariatesTable <- function(input, output, session, state) {
     df
   })
   tableDf = singleReactive(state, "covs", default=defaultDf,
-                           to=function(x) {dplyr::arrange(x, .data$time)})
+   to=function(x) {
+     # discrete covariates are displayed 
+     x <- dplyr::arrange(x, .data$time)
+     
+     # if a discrete choice, replace the labels back with the values
+     for(i in colnames(x)) {
+       cov <- tdmore::getMetadataByName(state$model, i)
+       if(!is.null(cov$choices)) {
+         #convert back to original values
+         value <- cov$choices[ match(x[[i]], names(cov$choices) ) ]
+         x[[i]] <- unlist(unname( value ) )
+       }
+     }
+     
+     x
+  })
   borders <- reactive({
     getTableBorder(tableDf(), state$now)
   })
   callModule(synchronizedHot, "table", stateDf=tableDf, expr={
     df <- isolate({ tableDf() })
     
-    covsNames <- colnames(df)
-    covsNames <- covsNames[!(covsNames %in% c("time"))]
+    # setup column headers
+    covsNames <- colnames(df)[2:ncol(df)]
+    colHeaders <- vapply(covsNames, function(x){
+      cov <- tdmore::getMetadataByName(state$model, x)
+      if(is.null(cov)) return(x)
+      
+      unit <- if(is.null(cov$unit)) "" else paste0(" (", cov$unit, ")")
+      paste0(cov$label, unit)
+    }, FUN.VALUE=character(1), USE.NAMES=FALSE)
     
-    metadata <- tdmore::getMetadataByClass(state$model, "tdmore_covariate", all=TRUE)
-    covsLabels <- covsNames
-    for(i in metadata) {
-      covsLabels[ which(covsNames == i$name) ] <- paste0(i$label, " (", i$unit, ")")
+    # swap out discrete columns with their labels
+    for(col in colnames(df)) {
+      cov <- tdmore::getMetadataByName(state$model, col)
+      if(!is.null(cov$choices)) df[[col]] <- factor( df[[col]], levels=cov$choices, labels=names(cov$choices) )
     }
     
-    colHeaders <- covsLabels
     z <- timeTable(df, borders(), colHeaders=colHeaders)
     
-    for(i in metadata) { #apply metadata
-      col <- which(covsNames==i$name)+2 #R index
+    # setup column types (and convert df if required)
+    for(col in seq_len(ncol(df) - 1) ) { #1 time column, N-1 covariate columns
+      name <- colnames(df)[col+1]
+      cov <- tdmore::getMetadataByName(state$model, name)
+      value <- df[[col+1]]
       
-      if(!is.null(i$choices) && setequal(i$choices, c(TRUE, FALSE)) ) {
-        z <- rhandsontable::hot_col(z, col=col,type="checkbox")
-      } else if (!is.null(i$choices)) {
-        z <- rhandsontable::hot_col(z, col=col, type="dropdown", source=i$choices, strict=TRUE)
+      if( is.factor(value) ) {
+        z <- rhandsontable::hot_col(z, col=col+2, # add extra column for date/time
+                                    type="dropdown", editor="select", selectOptions=levels(value))
       } else {
-        #numeric
-        ## https://github.com/jrowen/rhandsontable/issues/337
-        ## PhantomJS does not support ES6 javascript
-        f <- paste0("function (value, callback) {
+        # numeric
+        if(is.null(cov)) next #no metadata defined
+        f <- js_validate_numeric(min=cov$min, max=cov$max)
+        z <- rhandsontable::hot_col(hot=z, col=col+2, type="numeric", validator=f, allowInvalid=FALSE)
+      }
+    }
+    
+    z
+  }, hot_to_r=hot_to_r_datetime)
+  
+  observeEvent(input$add, {
+    addCovariate(state, tableDf())
+  })
+}
+
+## https://github.com/jrowen/rhandsontable/issues/337
+## PhantomJS does not support ES6 javascript, so we write our own validation function
+## that does not use ES6 javascript
+js_validate_numeric <- function(min, max) {
+  paste0("function (value, callback) {
           if (value === null || value === void 0) {
             value = '';
           }
@@ -222,31 +280,27 @@ covariatesTable <- function(input, output, session, state) {
             return callback(false);
           }
           
-          if (value <= ", i$min, ") { return callback(false); }
-          if (value >= ", i$max, ") { return callback(false); }
+          if (value <= ", min, ") { return callback(false); }
+          if (value >= ", max, ") { return callback(false); }
           
           return callback(true);
         }")
-        z <- rhandsontable::hot_col(hot=z, col=col, type="numeric", validator=f, allowInvalid=FALSE)
-        #z <- rhandsontable::hot_validate_numeric(hot=z, cols=col, min=i$min, max=i$max, allowInvalid=TRUE)
-      }
-    }
-    z
-  }, hot_to_r=hot_to_r_datetime)
+}
+
+addCovariate <- function(state, df) {
+  now <- if(is.null(state$now)) as.POSIXct(NA) else state$now
+  dosingInterval <- 24 #in hours
   
-  observeEvent(input$add, {
-    df <- tableDf()
-    now <- if(is.null(state$now)) as.POSIXct(NA) else state$now
-    dosingInterval <- 24 #in hours
-    
-    if(nrow(df) > 0) {
-      newrow <- df[ nrow(df), ] #last dose
-      newrow$time <- newrow$time + dosingInterval*3600
-    } else {
-      newrow <- tibble(time=now)
-      newrow[, state$model$covariates] <- as.numeric(NA)
-    }
-    
-    state$covs <- rbind(state$covs, newrow)
-  })
+  if(nrow(df) > 0) {
+    newrow <- df[ nrow(df), ] #last dose
+    newrow$time <- newrow$time + dosingInterval*3600
+  } else {
+    newrow <- tibble(time=now)
+  }
+  # set default values, except where covariates already defined
+  # we disgregard existing columns with no correspondance to current model covariates
+  covs <- setdiff( state$model$covariates, names(newrow)[ !is.na(newrow) ] )
+  newrow[, covs] <- as.numeric(NA)
+  
+  state$covs <- dplyr::bind_rows(state$covs, newrow)
 }

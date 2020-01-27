@@ -1,5 +1,6 @@
 {
   "input": {
+    "alternate": false,
     "metadata": true,
     "myCovs-add": 0
   },
