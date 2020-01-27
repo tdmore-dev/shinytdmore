@@ -1,3 +1,6 @@
+`%||%` <- function(a, b){
+  if(!is.null(a)) a else b
+}
 #' Convert shinyTDMore domain to TDMore domain.
 #'
 #' @param model model
@@ -12,10 +15,10 @@
 #'
 convertDataToTdmore <- function(state) {
   model <- state$model
-  doses <- state$regimen
-  obs <- state$observed
-  covs <- state$covs
-  now <- state$now
+  doses <- state$regimen %||% tibble(time=as.POSIXct(character(0)), dose=numeric(0), formulation=numeric(0), fix=logical(0))
+  obs <- state$observed %||% tibble(time=as.POSIXct(character(0)), dv=numeric(0), use=logical(0))
+  covs <- state$covs %||% tibble::tibble()
+  now <- state$now %||% as.POSIXct(NA)
   
   # Model output
   output <- getModelOutput(model)

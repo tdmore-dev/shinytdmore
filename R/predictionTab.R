@@ -7,6 +7,10 @@
 #' @export
 #'
 predictionTabUI <- function(id) {
+  if(packageVersion("shinyBS") <= package_version("0.61")) {
+    # bugfix for https://github.com/ebailey78/shinyBS/issues/115
+    shiny::addResourcePath("sbs", system.file("www", package="shinyBS"))
+  }
   ns <- NS(id)
   panel <- shiny::tabPanel(
     "Prediction",
@@ -15,17 +19,22 @@ predictionTabUI <- function(id) {
     icon = icon("address-card"),
       column(4,
         tags$head(
-         tags$style(HTML(paste0("
-            #", id, " .handsontable {
+         tags$style(HTML(paste0( #remove scrollbars around the handsontable
+         "#", id, " .handsontable {
               overflow: hidden;
-            }
-          ")))),
+          }"
+          )))),
+    shinyjs::useShinyjs(), #useShinyjs must appear in the UI output!
     shinyBS::bsCollapse(id=ns("bsCollapse"), multiple=T, open=c("Doses", "Measures", "Now"),
       shinyBS::bsCollapsePanel(title="Doses", style="primary",
-        doseTableUI(ns("doses"))
+        tableUI(ns("doses"), "Add dose"), #either one of these is shown through shinyJS::toggle()
+        tableUI(ns("recommendation"), "Add dose")
       ),
       shinyBS::bsCollapsePanel(title="Measures", style="primary", 
-        observationTableUI(ns("observation"))
+        tableUI(ns("observation"), "Add observation")
+      ),
+      shinyBS::bsCollapsePanel(title="Covariates", style="primary", 
+        tableUI(ns("covariates"), "Add covariate")
       ),
       shinyBS::bsCollapsePanel(title="Now", style="primary",
         nowInputUI(ns("now"))
@@ -53,7 +62,9 @@ predictionTabUI <- function(id) {
 predictionTab <- function(input, output, session, state) {
   # link input elements to `state`
   callModule(doseTable, "doses", state=state)
+  callModule(recommendationTable, "recommendation", state=state)
   callModule(observationTable, "observation", state=state)
+  callModule(covariatesTable, "covariates", state=state)
   callModule(nowInput, "now", state=state)
   callModule(targetInput, "target", state=state)
   
@@ -65,11 +76,15 @@ predictionTab <- function(input, output, session, state) {
     row.names=c("population", "fit", "recommendation"),
     doses=c(TRUE, TRUE, FALSE),
     recommendation=c(FALSE, FALSE, TRUE)
-  )
-  observeEvent(input$`plots-selected`, {
-    browser()
-    i <- input$`plots-selected`
+  ) %>% tibble::column_to_rownames("row.names")
+  
+  observeEvent(input$`plots-active`, {
+    i <- input$`plots-active`
     row <- visibilityStates[i, , drop=TRUE]
-    for(i in names(row)) shinyjs::toggle(id=i, condition=row[i])
+    for(j in names(row)) {
+      condition <- as.logical(row[j])
+      id <- j #ns is already applied by shinyjs!
+      shinyjs::toggle(id=id, condition=condition)
+    }
   })
 }

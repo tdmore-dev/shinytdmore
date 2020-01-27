@@ -1,7 +1,13 @@
 {
   "input": {
-    "myDose-add": 0,
-    "myDose-table-table": {
+    "prediction-bsCollapse": [
+      "Doses",
+      "Measures",
+      "Now"
+    ],
+    "prediction-covariates-add": 0,
+    "prediction-doses-add": 0,
+    "prediction-doses-table-table": {
       "data": [
 
       ],
@@ -1519,17 +1525,11 @@
           },
           {
             "type": "dropdown",
-            "source": [
-              "FormA",
-              "FormB"
-            ],
+            "source": "Prograft",
             "allowInvalid": false,
             "default": null,
             "editor": "select",
-            "selectOptions": [
-              "FormA",
-              "FormB"
-            ]
+            "selectOptions": "Prograft"
           },
           {
             "type": "checkbox",
@@ -1560,11 +1560,18 @@
 
         ]
       }
-    }
-  },
-  "output": {
-    "myDose-table-table": {
-      "x": {
+    },
+    "prediction-now-now": "2000-01-01 00:00",
+    "prediction-observation-add": 0,
+    "prediction-observation-table-table": {
+      "data": [
+
+      ],
+      "changes": {
+        "event": "afterChange",
+        "changes": null
+      },
+      "params": {
         "data": [
 
         ],
@@ -1576,42 +1583,37 @@
         "rColClasses": {
           "date": "character",
           "time": "character",
-          "dose": "numeric",
-          "formulation": "factor",
-          "fix": "logical"
+          "dv": "numeric",
+          "use": "logical"
         },
         "rColnames": [
           "date",
           "time",
-          "dose",
-          "formulation",
-          "fix"
+          "dv",
+          "use"
         ],
         "rColHeaders": [
           "date",
           "time",
-          "dose",
-          "formulation",
-          "fix"
+          "dv",
+          "use"
         ],
         "rRowHeaders": null,
         "rDataDim": [
           0,
-          5
+          4
         ],
         "selectCallback": true,
         "colHeaders": [
           "Date",
           "Time",
-          "Dose",
-          "Formulation",
-          "Fix"
+          "Measure",
+          "Use"
         ],
         "rowHeaders": null,
         "columns": [
           {
             "type": "date",
-            "renderer": "customRenderer",
             "default": null,
             "dateFormat": "YYYY-MM-DD",
             "strict": true,
@@ -1619,7 +1621,6 @@
           },
           {
             "type": "text",
-            "renderer": "customRenderer",
             "default": null,
             "source": [
               "00:00",
@@ -3072,28 +3073,12 @@
             "numericFormat": {
               "pattern": "0.00"
             },
-            "renderer": "customRenderer",
             "default": null
-          },
-          {
-            "type": "dropdown",
-            "source": [
-              "FormA",
-              "FormB"
-            ],
-            "allowInvalid": false,
-            "renderer": "customRenderer",
-            "default": null,
-            "editor": "select",
-            "selectOptions": [
-              "FormA",
-              "FormB"
-            ]
           },
           {
             "type": "checkbox",
-            "renderer": "customRenderer",
-            "default": null
+            "default": null,
+            "className": "htCenter"
           }
         ],
         "width": null,
@@ -3119,24 +3104,9 @@
         "customBorders": [
 
         ]
-      },
-      "evals": [
-        "columns.0.renderer",
-        "columns.1.renderer",
-        "columns.2.renderer",
-        "columns.3.renderer",
-        "columns.4.renderer"
-      ],
-      "jsHooks": [
-
-      ],
-      "deps": [
-
-      ]
+      }
     },
-    "myDoseOut": null
-  },
-  "export": {
-    "regimen": null
+    "prediction-plots-active": "population",
+    "prediction-recommendation-add": 0
   }
 }

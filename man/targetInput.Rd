@@ -3,7 +3,10 @@
 \name{targetInput}
 \alias{targetInput}
 \alias{targetInputUI}
-\title{Input element representing the target upper limit and lower limits}
+\title{Input element representing the target upper limit and lower limits
+The input element is synchronized to state$target$min and state$target$max
+If state$target does not exist, it creates this as list(min=NA, max=NA).
+NA assumes the model-defined min/max criteria will be used.}
 \usage{
 targetInputUI(id)
 
@@ -14,4 +17,7 @@ targetInput(input, output, session, state)
 }
 \description{
 Input element representing the target upper limit and lower limits
+The input element is synchronized to state$target$min and state$target$max
+If state$target does not exist, it creates this as list(min=NA, max=NA).
+NA assumes the model-defined min/max criteria will be used.
 }

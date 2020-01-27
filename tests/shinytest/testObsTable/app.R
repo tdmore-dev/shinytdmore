@@ -1,6 +1,6 @@
 library(shinytdmore)
 
-ui <- observationTableUI("myObs")
+ui <- tableUI("myObs", label="Add")
 
 shinyApp(ui=ui, server=function(input, output, session) {
   state <- reactiveValues()

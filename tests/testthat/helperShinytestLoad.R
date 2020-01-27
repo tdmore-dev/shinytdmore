@@ -13,17 +13,20 @@
 library(shinytest)
 library(testthat)
 
-tmp_lib <- tdmore::ensurePackagePresent("shinytdmore", quiet=F)
+tmp_lib <- NULL
 getFilename <- function(reporter) {
   filenames <- lapply(reporter$reporters, getFilename)
   filename <- c(list(reporter$file_name), filenames) %>%
-    purrr::flatten_chr() %>%
-    purrr::compact() %>%
+    purrr::flatten_chr(.data) %>%
+    purrr::compact(.data) %>%
     na.omit()
   filename[1]
 }
 
 testShiny <- function(appDir) {
+  if(is.null(tmp_lib)) {
+    tmp_lib <<- tdmore::ensurePackagePresent("shinytdmore", quiet=F)
+  }
   if(missing(appDir)) {
     filename <- getFilename(get_reporter())
     appDir <- sub("\\.[rR]$", "", filename)

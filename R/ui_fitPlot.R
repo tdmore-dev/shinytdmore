@@ -2,6 +2,7 @@
 #' that show the current state of the fit.
 #' 
 #' It is displayed in a tabsetPanel
+#' @export
 # TODO: change this to use Next / Previous buttons
 # TODO: Change the plots to render a single time
 # and then update the data on them instead
@@ -37,6 +38,7 @@ pagerPanel <- function(id, ...) {
   tsPanel
 }
 
+#' @export
 fitPlot <- function(input, output, session, state) {
   stateDebounced <- debounce(reactive({
     list(regimen=state$regimen,

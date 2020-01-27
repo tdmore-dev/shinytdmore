@@ -13,17 +13,17 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  state <- reactiveValues(df = data.frame(foo=rnorm(Nstart), bar=runif(Nstart)))
+  state <- reactiveValues(df = data.frame(time=rep(Sys.time(), Nstart), bar=runif(Nstart)))
   callModule(synchronizedHot, 
              id="hot", 
              stateDf=singleReactive(state, "df"), expr={
       cat("Running expression...\n")
       df <- isolate({state$df})
-      rhandsontable::rhandsontable(df)
-    }, debug=TRUE)
+      timeTable(df, colHeaders=c("Bar"))
+    }, hot_to_r=hot_to_r_datetime)
   observeEvent(input$add, {
     cat("EVENT input$add\n")
-    state$df <- rbind( state$df, tibble(foo=rnorm(1), bar=runif(1)) )
+    state$df <- rbind( state$df, tibble(time=Sys.time(), bar=runif(1)) )
   })
   
   debouncedState <- debounce(reactive({

@@ -18,7 +18,7 @@ getModelOutput <- function(model) {
 #' @return a dosing interval, numeric value
 #'
 getDosingInterval <- function(model, formulation=NULL) {
-  formulations <- tdmore::getMetadataByClass(model, "tdmore_formulation")
+  formulations <- tdmore::getMetadataByClass(model, "tdmore_formulation", all=TRUE)
   
   myFilter <- vapply(formulations, function(x) {!is.null(formulation) && x$name==formulation}, FUN.VALUE=logical(1))
   results <- formulations[myFilter]
@@ -68,13 +68,21 @@ getRoundFunction <- function(model, formulation=NULL) {
 preparePrediction <- function(state, population=FALSE) {
   shiny::req(nrow( state$regimen ) > 0)
   shiny::req( tdmore::is.tdmore( state$model ))
+  state <- as.list(state)
+  state$regimen <- state$regimen %||% tibble(time=as.POSIXct(character(0)), dose=numeric(0), formulation=numeric(0), fix=logical(0))
+  state$observed <- state$observed %||% tibble(time=as.POSIXct(character(0)), dv=numeric(0), use=logical(0))
+  state$covs <- state$covs %||% tibble::tibble()
+  state$now <- state$now %||% as.POSIXct(NA)
   model <- state$model
+  modelTarget <- tdmore::getMetadataByClass(state$model, "tdmore_target")
+  state$target <- state$target %||% modelTarget %||% list(min=as.numeric(NA), max=as.numeric(NA))
+  
   defaultModel <- model
   #  defaultModel <- getDefaultModel(model) #TODO: mixture models
   tdmoreData <- convertDataToTdmore(state)
   
   # Retrieving data
-  regimen <- tdmoreData$regimen %>% dplyr::select(-PAST, -FORM, -FIX)
+  regimen <- tdmoreData$regimen %>% dplyr::select(-.data$PAST, -.data$FORM, -.data$FIX)
   covariates <- tdmoreData$covariates
   filteredObserved <- tdmoreData$filteredObserved
   firstDoseDate <- tdmoreData$firstDoseDate
@@ -115,7 +123,7 @@ preparePrediction <- function(state, population=FALSE) {
   }
   
   c(
-    as.list(state),
+    state,
     list(
       predictionData=data, 
       tdmoreData=tdmoreData, 

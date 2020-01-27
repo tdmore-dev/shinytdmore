@@ -2,15 +2,12 @@
 % Please edit documentation in R/ui_hotTable.R
 \name{observationTable}
 \alias{observationTable}
-\alias{observationTableUI}
 \title{Create a user interface to represent the observations}
 \usage{
-observationTableUI(id)
-
 observationTable(input, output, session, state)
 }
 \arguments{
-\item{state}{`reactiveValues` object with at least the values `now`, `observed` and `model`}
+\item{state}{\code{reactiveValues} object with at least the values \code{now}, \code{observed} and \code{model}}
 }
 \description{
 The interface consists of a \emph{table} (rhandsontable) that reads from the \code{state$observed} data.frame. It has five columns:

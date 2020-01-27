@@ -26,7 +26,10 @@
 #' @export
 synchronizedHotUi <- function(id, ...) {
   ns <- NS(id)
-  rhandsontable::rHandsontableOutput(outputId=ns("table"), ...)
+  shiny::tagList(
+    shinyjs::useShinyjs(),
+    rhandsontable::rHandsontableOutput(outputId=ns("table"), ...)
+  )
 }
 
 
@@ -42,13 +45,18 @@ synchronizedHot <- function(input, output, session, stateDf, expr, hot_to_r=rhan
     if(debug) cat(proc.time()['elapsed'], "::", ..., "\n")
   }
   #ensure expr can be run in a render function, maintaining the original environment
-  fun <- shiny::exprToFunction(substitute(expr), quoted=TRUE, env=parent.frame(2))
+  #fun <- shiny::exprToFunction(substitute(expr), quoted=TRUE, env=parent.frame(2))
+  shiny::installExprFunction(substitute(expr), quoted=TRUE, eval.env=parent.frame(2), name="fun")
   
   invalidateTable <- reactiveVal(value=NA)
   #Changing the output also triggers a change in the input$table
   output$table <- rhandsontable::renderRHandsontable({
     log("RENDER output$table")
     invalidateTable()
+    #bugfix for https://github.com/jrowen/rhandsontable/issues/336
+    shinyjs::runjs(
+      paste0("el = HTMLWidgets.find('#", session$ns("table"), "'); if(el) el.hot.getPlugin('CustomBorders').clearBorders();")
+    )
     fun()
   })
   observeEvent(stateDf(), {
@@ -77,12 +85,4 @@ synchronizedHot <- function(input, output, session, stateDf, expr, hot_to_r=rhan
   })
   
   return(df)
-}
-
-#' @export
-singleReactive <- function(reactiveValues, key) {
-  function(x) {
-    if(missing(x)) reactiveValues[[key]]
-    else reactiveValues[[key]] <- x
-  }
 }

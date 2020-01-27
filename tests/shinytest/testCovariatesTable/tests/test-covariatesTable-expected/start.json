@@ -1,9 +1,10 @@
 {
   "input": {
-    "myDose-add": 0
+    "metadata": true,
+    "myCovs-add": 0
   },
   "output": {
-    "myDose-table": {
+    "myCovs-table-table": {
       "x": {
         "data": [
 
@@ -16,36 +17,28 @@
         "rColClasses": {
           "date": "character",
           "time": "character",
-          "dose": "numeric",
-          "form": "numeric",
-          "fix": "logical"
+          "WT": "numeric"
         },
         "rColnames": [
           "date",
           "time",
-          "dose",
-          "form",
-          "fix"
+          "WT"
         ],
         "rColHeaders": [
           "date",
           "time",
-          "dose",
-          "form",
-          "fix"
+          "WT"
         ],
         "rRowHeaders": null,
         "rDataDim": [
           0,
-          5
+          3
         ],
-        "selectCallback": false,
+        "selectCallback": true,
         "colHeaders": [
           "Date",
           "Time",
-          "Dose",
-          "Formulation",
-          "Fix"
+          "Weight (kg)"
         ],
         "rowHeaders": null,
         "columns": [
@@ -1504,7 +1497,8 @@
               "23:59"
             ],
             "strict": true,
-            "allowInvalid": false
+            "allowInvalid": false,
+            "autocomplete": true
           },
           {
             "type": "numeric",
@@ -1512,26 +1506,9 @@
               "pattern": "0.00"
             },
             "renderer": "customRenderer",
-            "default": null
-          },
-          {
-            "type": "dropdown",
-            "numericFormat": {
-              "pattern": "0.00"
-            },
-            "renderer": "customRenderer",
             "default": null,
-            "source": [
-
-            ],
-            "strict": true,
-            "autocomplete": true
-          },
-          {
-            "type": "checkbox",
-            "renderer": "customRenderer",
-            "default": null,
-            "colWidths": 0.1
+            "validator": "function (value, callback) {\n          if (value === null || value === void 0) {\n            value = '';\n          }\n          if (this.allowEmpty && value === '') {\n            return callback(true);\n          } else if (value === '') {\n            return callback(false);\n          }\n          var isNumber = /^-?\\d*(\\.|,)?\\d*$/.test(value);\n          if (!isNumber) {\n            return callback(false);\n          }\n          if (isNaN(parseFloat(value))) {\n            return callback(false);\n          }\n          \n          if (value <= 20) { return callback(false); }\n          if (value >= 200) { return callback(false); }\n          \n          return callback(true);\n        }",
+            "allowInvalid": false
           }
         ],
         "width": null,
@@ -1550,62 +1527,19 @@
             ],
             "remove_row": [
 
-            ],
-            "hsep3": {
-              "name": "---------"
-            },
-            "undo": [
-
-            ],
-            "redo": [
-
-            ],
-            "hsep4": {
-              "name": "---------"
-            },
-            "alignment": [
-
-            ],
-            "hsep1": {
-              "name": "---------"
-            },
-            "hsep7": {
-              "name": "---------"
-            },
-            "borders": [
-
             ]
           }
         },
+        "preventOverflow": "horizontal",
         "customBorders": [
-          {
-            "range": {
-              "from": {
-                "row": [
 
-                ],
-                "col": 0
-              },
-              "to": {
-                "row": [
-
-                ],
-                "col": 4
-              }
-            },
-            "top": {
-              "width": 2,
-              "color": "#aaa9a9"
-            }
-          }
         ]
       },
       "evals": [
         "columns.0.renderer",
         "columns.1.renderer",
         "columns.2.renderer",
-        "columns.3.renderer",
-        "columns.4.renderer"
+        "columns.2.validator"
       ],
       "jsHooks": [
 
@@ -1616,6 +1550,6 @@
     }
   },
   "export": {
-    "regimen": null
+    "covs": null
   }
 }

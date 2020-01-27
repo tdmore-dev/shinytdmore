@@ -1,4 +1,5 @@
 # Test observation table
+#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 library(shinytest)
 app <- ShinyDriver$new("..", loadTimeout = 30000, seed = 1234)
 app$snapshotInit("test-obsTable")
@@ -7,6 +8,7 @@ source("../../../testthat/helperShinytest.R")
 
 tableId <- "myObs-table-table"
 
+waitUntilReady()
 app$snapshot(filename = "start.json")
 
 ## table starts out blank
@@ -28,7 +30,7 @@ expect_equal(observed$use, TRUE)
 ## cell1 test default value
 tableCore <- app$findElement("table.htCore")
 cell <- function(i) {tableCore$findElements("td")[[i]]}
-cell(1)$click()
+
 table <- app$getAllValues()$input$`myObs-table-table`$data
 expect_equal(table[[1]][[1]], NULL)
 
@@ -36,20 +38,25 @@ cellValue <- sub("<div.*</div>", "", cell(1)$getAttribute(name="innerHTML"))
 testthat::expect_equal(cellValue, "")
 
 ## cell1 set invalid value
-readyShouldUpdate(tableId)
-cell(1)$click(); Sys.sleep(1)
-cell(1)$setValue("invalid_value")
-cell(1)$sendKeys("invalid_value")
-cell(1)$sendKeys("\t")
-cellValue <- sub("<div.*</div>", "", cell(1)$getAttribute(name="innerHTML"))
-testthat::expect_equal(cellValue, "") #no change
-expect_error( waitUntilReady(testUpdate=TRUE),
-              regex="Object.*myObs-table.*did not update") #there should be no update!
+## Not really a valid test; see testDoseTable for more info
+# readyShouldUpdate(tableId)
+# cell(1)$click(); Sys.sleep(1)
+# cell(1)$setValue("invalid_value")
+# cell(1)$sendKeys("invalid_value")
+# cell(1)$sendKeys("\t")
+# cellValue <- sub("<div.*</div>", "", cell(1)$getAttribute(name="innerHTML"))
+# testthat::expect_equal(cellValue, "") #no change
+# expect_error( waitUntilReady(testUpdate=TRUE),
+#               regex="Object.*myObs-table.*did not update") #there should be no update!
 
 ## cell1 set correct value
+
+cell(4)$click() #click on different cell to ensure we do not open the date-picker control!
 cell(1)$click()
 cell(1)$sendKeys("1987-12-11\t")
+cell(2)$click()
 cell(2)$sendKeys("12:15\t")
+cell(4)$click()
 
 testthat::try_again(10, {
   Sys.sleep(0.2)

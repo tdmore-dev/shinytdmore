@@ -54,12 +54,9 @@ snapshot <- function(text, id) {
 Sys.setlocale(category="LC_COLLATE", "C")
 
 sortByName <- function(list) {
-  cat("Current names: ", paste(names(list), collapse=", "), "\n")
-  cat("Sorted names: ", paste(sort(names(list)), collapse=", "), "\n")
   list[ sort(names(list)) ]
 }
 normalize <- function(filename, app=get("app", envir=parent.frame()) ) {
-  cat("Normalizing JSON file ",filename,"\n")
   if(is.null(app)) {
     file <- filename
   } else {
@@ -67,12 +64,76 @@ normalize <- function(filename, app=get("app", envir=parent.frame()) ) {
     file <- file.path(current_dir, filename)
   }
   json <- jsonlite::read_json(file)
-  cat("Read file: \n------\n",capture.output(print(json)),"\n------\n")
   json$input <- sortByName( json$input )
   json$output <- sortByName( json$output )
   json$export <- sortByName( json$export )
-  content <- jsonlite::toJSON(json, pretty=2, auto_unbox=TRUE)
-  cat("Saving file: \n------\n",content,"\n------\n")
   jsonlite::write_json(json, path=file, pretty=2, auto_unbox=TRUE)
-  cat("Saved file ", file, "\n")
+}
+
+setupHtmlwidgetsDebug <- function(app) {
+  f = "
+  function tryEval(code) {
+    var result = null;
+    try {
+      result = eval(\"(\" + code + \")\");
+    } catch(error) {
+      if (!error instanceof SyntaxError) {
+        throw error;
+      }
+      try {
+        result = eval(code);
+      } catch(e) {
+        if (e instanceof SyntaxError) {
+          throw error;
+        } else {
+          throw e;
+        }
+      }
+    }
+    return result;
+  }
+  function splitWithEscape(value, splitChar, escapeChar) {
+    var results = [];
+    var escapeMode = false;
+    var currentResult = \"\";
+    for (var pos = 0; pos < value.length; pos++) {
+      if (!escapeMode) {
+        if (value[pos] === splitChar) {
+          results.push(currentResult);
+          currentResult = \"\";
+        } else if (value[pos] === escapeChar) {
+          escapeMode = true;
+        } else {
+          currentResult += value[pos];
+        }
+      } else {
+        currentResult += value[pos];
+        escapeMode = false;
+      }
+    }
+    if (currentResult !== \"\") {
+      results.push(currentResult);
+    }
+    return results;
+  }
+  
+window.HTMLWidgets.evaluateStringMember = function(o, member) {
+  var parts = splitWithEscape(member, '.', '\\\\');
+  for (var i = 0, l = parts.length; i < l; i++) {
+    var part = parts[i];
+    // part may be a character or 'numeric' member name
+    if (o !== null && typeof o === \"object\" && part in o) {
+      if (i == (l - 1)) { // if we are at the end of the line then evalulate
+        if (typeof o[part] === \"string\") {
+          console.log('DEBUG: Evaluating string member '+o[part]);
+          o[part] = tryEval(o[part]);
+        }
+      } else { // otherwise continue to next embedded object
+        o = o[part];
+      }
+    }
+  }
+};
+"
+  app$executeScript(f)
 }

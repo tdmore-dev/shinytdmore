@@ -2,7 +2,7 @@ library(shinytest)
 library(magrittr)
 
 app <- ShinyDriver$new("..", loadTimeout = 30000, seed=1234)
-app$snapshotInit("test")
+app$snapshotInit("test-synchronizedHot")
 
 # Test modifying cells in rapid succession --------------------------------
 ## - Without any binding on the server side, this works perfectly
@@ -13,6 +13,8 @@ app$snapshotInit("test")
 ## (i.e. the change to state$df was caused by the handson-table), then the handsontable should not be re-rendered.
 ## 
 ## I recommend you add all of these extra checks to a module "synchronizedHandsontable".
+
+app$snapshot("start.json", items=list(input=TRUE, export=TRUE))
 
 Nstart <- app$getAllValues()$export$Nstart
 PlotSleep <- app$getAllValues()$export$PlotSleep

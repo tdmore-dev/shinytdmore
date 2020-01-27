@@ -36,38 +36,6 @@ getYAxisLabel <- function(model) {
 }
 
 #'
-#' Get dose column label.
-#' 
-#' @param model tdmore model
-#' @param breakLine breakline or just space before the unit
-#' @return a label
-#'
-getDoseColumnLabel <- function(model, breakLine=T) {
-  formulations <- tdmore::getMetadataByClass(model,"tdmore_formulation")
-  if(length(formulations)==0) return("Dose")
-  doseMetadata <- tdmore::getMetadataByName(model, formulations[[1]]$name)
-  if(is.null(doseMetadata)) return("Dose")
-  separator <- if(breakLine) "\n" else " "
-  label <- paste0("Dose", separator, "(", doseMetadata$unit, ")")
-  return(label)
-}
-
-#'
-#' Get recommended dose column label.
-#' 
-#' @param model tdmore model
-#' @param breakLine breakline or just space before the unit
-#' @return a label
-#'
-getRecommendedDoseColumnLabel <- function(model, breakLine=T) {
-  formulations <- tdmore::getMetadataByClass(model,"tdmore_formulation")
-  doseMetadata <- tdmore::getMetadataByName(model, formulations[[1]]$name)
-  separator <- if(breakLine){"\n"} else{" "}
-  label <- if(!is.null(doseMetadata)) {paste0("Rec. dose", separator, "(", doseMetadata$unit, ")")} else {"Dose"}
-  return(label)
-}
-
-#'
 #' Get measure column label.
 #' 
 #' @param model tdmore model
@@ -79,19 +47,6 @@ getMeasureColumnLabel <- function(model, breakLine=T) {
   outputMetadata <- tdmore::getMetadataByName(model, getModelOutput(model))
   label <- if(!is.null(outputMetadata)) {paste0("Measure", separator, "(", outputMetadata$unit, ")")} else {"Measure"}
   return(label)
-}
-
-#'
-#' Get the list of formulations for the given model.
-#' 
-#' @param model tdmore model
-#' @importFrom plyr laply
-#' @return a label
-#'
-getFormulationList <- function(model) {
-  allFormulations <- tdmore::getMetadataByClass(model, "tdmore_formulation")
-  list <- plyr::laply(allFormulations, function(form) {form$name})
-  return(list)
 }
 
 #'
@@ -250,7 +205,7 @@ prepareTimelinePlot <- function(doses, xlim, model, now) {
     geom_text(aes(x=TIME, y=AMT, label=AMT), nudge_x=0, nudge_y=0, check_overlap=T, show.legend=F) +
     geom_linerange(ymin=0, aes(ymax=DOSE)) +
     coord_cartesian(xlim=xlim, ylim=c(0, maxDose + addSpace)) +
-    labs(x="Time", y=getDoseColumnLabel(model, breakLine=F))
+    labs(x="Time", y="Dose")
 
   return(plot)
 }
@@ -328,7 +283,7 @@ prepareRecommendedTimelinePlot <- function(originalDoses, recommendedDoses, xlim
     geom_text(data=doses_copy2,aes(x=TIME, y=AMT, label=AMT), nudge_x=-nudge_II, nudge_y=0, check_overlap=T, show.legend=F, alpha=0.2) +
     geom_linerange(data=doses_copy2,ymin=0, aes(ymax=DOSE), position = position_nudge(x = -nudge_II), alpha=0.2) +
     coord_cartesian(xlim=c(xlim[1]-nudge_II,xlim[2]), ylim=c(0, maxDose + addSpace)) +
-    labs(x="Time", y=getDoseColumnLabel(model, breakLine=F))
+    labs(x="Time", y="Dose")
   
   return(plot)
 }
