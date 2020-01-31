@@ -120,27 +120,19 @@ addNowLabelAndIntercept <- function(plot, now) {
 #' @param model tdmore/tdmore_mpc model
 #' @param covs covariates
 #' @param target numeric vector of size 2, min and max value
-#' @param population logical value, true for population, false for individual
 #' @param now now date, POSIXlt date
 #' @return a list of two plots
 #' @export
 #'
-preparePredictionPlots <- function(predictionData) {
-  data <- predictionData$predictionData
-  fit <- predictionData$fit
-  doses <- predictionData$regimen
-  obs <- predictionData$observed
-  model <- predictionData$model
-  covs <- predictionData$covs
-  target <- predictionData$target
-  now <- predictionData$now
-  population <- predictionData$population
-  selectedModel <- fit$tdmore
-  observedVariables <- tdmore::getObservedVariables(selectedModel)
+preparePredictionPlots <- function(populationDf, individualDf, observed, target, model, now, regimen) {
+  list(
+    p1=preparePredictionPlot(populationDf, individualDf, obs=observed, target=target, model=model, now=now),
+    p2=prepareTimelinePlot(regimen=regimen, model=model, now=now),
+    p3=prepareParametersPlot(populationDf, individualDf, parameters=tdmore::getObservedVariables(model))
+  )
   
-  return(list(p1=preparePredictionPlot(data=data, obs=obs, target=target, population=population, model=selectedModel, now=now),
-              p2=prepareTimelinePlot(doses=doses, xlim=c(predictionData$tdmoreData$firstDoseDate, max(data$TIME)), model=selectedModel, now=now),
-              p3=prepareParametersPlot(data=data, parameters=observedVariables, population=population)))
+  #return(list(p1=preparePredictionPlot(data=data, obs=obs, target=target, population=population, model=selectedModel, now=now),
+  
 }
 
 #'
@@ -153,20 +145,25 @@ preparePredictionPlots <- function(predictionData) {
 #' @param model tdmore model
 #' @param now now date
 #'
-preparePredictionPlot <- function(data, obs, target, population, model, now) {
+preparePredictionPlot <- function(populationDf, individualDf, obs, target, model, now) {
+  population <- is.null(individualDf)
+  data <- if(population) populationDf else individualDf
+  
   color <- if(population) {predColor()} else {ipredColor()}
   obs <- obs %>% dplyr::filter(.data$use==TRUE) # Plot only 'used' observations
   obs$datetime <- obs$time
   data <- data %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   
+  if(is.null(target)) {
+    target <- tdmore::getMetadataByClass(model, "tdmore_target")
+  }
   ggplotTarget <- tibble(lower=target$min, upper=target$max)
   defaultModel <- getDefaultModel(model)
   output <- getModelOutput(defaultModel)
   
   plot <- ggplot(mapping=aes_string(x="TIME", y=output))
-  if (!population) {
-    plot <- plot + geom_line(data=data, mapping=aes_string(y="PRED"), color=predColor(), alpha=0.25)
-  }
+  if (!population) plot <- plot + geom_line(data=populationDf, color=predColor(), alpha=0.25)
+  
   plot <- plot +
     geom_line(data=data, color=color) +
     geom_point(data=obs, aes_string(x="datetime", y="dv"), color=ifelse(obs$datetime <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
@@ -189,22 +186,17 @@ preparePredictionPlot <- function(data, obs, target, population, model, now) {
 #' Prepare the timeline.
 #' 
 #' @param doses dataframe containing the doses
-#' @param xlim ggplot xlim argument
 #' @param model tdmore model
 #' @param now now date, currently not used here
 #'
-prepareTimelinePlot <- function(doses, xlim, model, now) {
-  doses_copy <- doses 
-  doses_copy$TIME <- doses$time # Hover same as in prediction plot
-  doses_copy$AMT <- doses$dose
-  doses_copy$DOSE <- doses$dose # Duplicated so that 'AMT' does not appear twice in tooltip
-  maxDose <- if(nrow(doses) > 0) {max(doses$dose)} else {0}
+prepareTimelinePlot <- function(regimen, model, now) {
+  maxDose <- if(nrow(regimen) > 0) {max(regimen$dose)} else {0}
   addSpace <- maxDose*0.15 # Add 15% margin for dose number
 
-  plot <- ggplot(doses_copy, aes(x=TIME, y=AMT)) +
-    geom_text(aes(x=TIME, y=AMT, label=AMT), nudge_x=0, nudge_y=0, check_overlap=T, show.legend=F) +
-    geom_linerange(ymin=0, aes(ymax=DOSE)) +
-    coord_cartesian(xlim=xlim, ylim=c(0, maxDose + addSpace)) +
+  plot <- ggplot(regimen, aes(x=time, y=dose)) +
+    geom_text(aes(label=dose), nudge_x=0, nudge_y=0, check_overlap=T, show.legend=F) +
+    geom_linerange(ymin=0, aes(ymax=dose)) +
+    coord_cartesian(ylim=c(0, maxDose + addSpace)) +
     labs(x="Time", y="Dose")
 
   return(plot)
@@ -217,14 +209,18 @@ prepareTimelinePlot <- function(doses, xlim, model, now) {
 #' @param parameters parameters
 #' @param population logical value, true for population, false for individual prediction
 #'
-prepareParametersPlot <- function(data, parameters, population) {
-  if (population) {
+prepareParametersPlot <- function(populationData, individualDf, parameters) {
+  if (is.null(individualDf)) {
     return(NULL) # makes no sense to prepare this plot for population
   }
   if(length(parameters)==0)
     return(NULL) # no parameters, so no interest
   # Keep useful parameters and melt data (ids: TIME and PRED_ columns)
-  data <- data %>% 
+  
+  colnames(populationData) <- paste0("PRED_", colnames(populationData))
+  
+  data <- individualDf %>%
+    cbind(populationData) %>%
     dplyr::select(c("TIME", parameters, paste0("PRED_", parameters))) %>% 
     tidyr::pivot_longer(parameters, names_to="variable", values_to="value")
   
@@ -259,31 +255,24 @@ prepareParametersPlot <- function(data, parameters, population) {
 #' @param model tdmore model
 #' @param now now date, currently not used here
 #'
-prepareRecommendedTimelinePlot <- function(originalDoses, recommendedDoses, xlim, model, now) {
-  doses_copy <- recommendedDoses
-  doses_copy$TIME <- recommendedDoses$time # Hover same as in prediction plot
-  doses_copy$AMT <- recommendedDoses$dose
-  doses_copy$TYPE <- "Recommended"
-  doses_copy$DOSE <- recommendedDoses$dose # Duplicated so that 'AMT' does not appear twice in tooltip
-  doses_copy2 <- originalDoses 
-  doses_copy2$TIME <- originalDoses$time # Hover same as in prediction plot
-  doses_copy2$AMT <- originalDoses$dose
-  doses_copy2$TYPE <- "Original"
-  doses_copy2$DOSE <- originalDoses$dose # Duplicated so that 'AMT' does not appear twice in tooltip
-  #all_doses <- merge(doses_copy ,doses_copy2,all=TRUE)
-  #all_doses <- dcast(setDT(all_doses), TIME ~ TYPE, value.var = c("DOSE", "AMT")) 
-  maxDose <- if(nrow(recommendedDoses) > 0) {max(c(originalDoses$dose,recommendedDoses$dose))} else {0}
+prepareRecommendedTimelinePlot <- function(regimen, newRegimen, model, now) {
+  maxDose <- max(c(0, regimen$dose, newRegimen$dose))
   addSpace <- maxDose*0.15 # Add 15% margin for dose number
-  II <- getDosingInterval(model)
-  nudge_II <- II/24*60*60 #empirical ratio
+  #II <- getDosingInterval(model)
+  #nudge_II <- II/24*60*60 #empirical ratio
   
-  plot <- ggplot(doses_copy, aes(x=TIME,y=AMT)) +
-    geom_text(data=doses_copy %>% dplyr::filter(TIME>now),aes(x=TIME, y=AMT, label=AMT), nudge_x=nudge_II, nudge_y=0, check_overlap=T, show.legend=F,color=recommendationColor()) +
-    geom_linerange(data=doses_copy %>% dplyr::filter(TIME>now),ymin=0, aes(ymax=DOSE), position = position_nudge(x = nudge_II),color=recommendationColor()) +
-    geom_text(data=doses_copy2,aes(x=TIME, y=AMT, label=AMT), nudge_x=-nudge_II, nudge_y=0, check_overlap=T, show.legend=F, alpha=0.2) +
-    geom_linerange(data=doses_copy2,ymin=0, aes(ymax=DOSE), position = position_nudge(x = -nudge_II), alpha=0.2) +
-    coord_cartesian(xlim=c(xlim[1]-nudge_II,xlim[2]), ylim=c(0, maxDose + addSpace)) +
+  plot <- ggplot(regimen, aes(x=time, y=dose)) +
+    geom_text(aes(label=dose), nudge_x=0, nudge_y=0, check_overlap=T, show.legend=F) +
+    geom_linerange(ymin=0, aes(ymax=dose)) +
+    geom_text(aes(label=dose), show.legend=F, data=newRegimen, color=recommendationColor(), nudge_x=1) +
+    geom_linerange(ymin=0, aes(ymax=dose), data=newRegimen, color=recommendationColor(), nudge_x=1)+
+    coord_cartesian(ylim=c(0, maxDose + addSpace)) +
     labs(x="Time", y="Dose")
+  
+    # geom_text(data=doses_copy %>% dplyr::filter(TIME>now),aes(x=TIME, y=AMT, label=AMT), nudge_x=nudge_II, nudge_y=0, check_overlap=T, show.legend=F,color=recommendationColor()) +
+    # geom_linerange(data=doses_copy %>% dplyr::filter(TIME>now),ymin=0, aes(ymax=DOSE), position = position_nudge(x = nudge_II),color=recommendationColor()) +
+    # geom_text(data=doses_copy2,aes(x=TIME, y=AMT, label=AMT), nudge_x=-nudge_II, nudge_y=0, check_overlap=T, show.legend=F, alpha=0.2) +
+    # geom_linerange(data=doses_copy2,ymin=0, aes(ymax=DOSE), position = position_nudge(x = -nudge_II), alpha=0.2) +
   
   return(plot)
 }
@@ -302,27 +291,16 @@ prepareRecommendedTimelinePlot <- function(originalDoses, recommendedDoses, xlim
 #' 
 #' @return a list of two plots
 #'
-prepareRecommendationPlots <- function(recommendationData) {
-  data <- recommendationData$predictionData
-  fit <- recommendationData$fit
-  doses <- recommendationData$doses
-  obs <- recommendationData$observed
-  model <- recommendationData$model
-  covs <- recommendationData$covs
-  target <- recommendationData$target
-  now <- recommendationData$now
-  
-  selectedModel <- fit$tdmore
-  
-  
-  
-  firstDoseDate <- recommendationData$tdmoreData$firstDoseDate
-  ipred <- recommendationData$ipred %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
-  ipredNew <- recommendationData$ipredNew %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
+prepareRecommendationPlots <- function(populationDf, individualDf, recommendationDf, observed, target, model, now, regimen, recommendedRegimen) {
+  ipred <- individualDf %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
+  ipredNew <- recommendationDf %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   defaultModel <- getDefaultModel(model)
-  obs <- obs %>% dplyr::filter(use==TRUE) # Plot only used observations
+  obs <- observed %>% dplyr::filter(use==TRUE) # Plot only used observations
   obs$datetime <- obs$time
   
+  if(is.null(target)) {
+    target <- tdmore::getMetadataByClass(model, "tdmore_target")
+  }
   ggplotTarget <- tibble(lower=target$min, upper=target$max)
   output <- getModelOutput(defaultModel)
   p1 <- ggplot(mapping=aes_string(x="TIME", y=output)) +
@@ -341,10 +319,9 @@ prepareRecommendationPlots <- function(recommendationData) {
   p1 <- addNowLabelAndIntercept(p1, now)
   
   # We have to be very careful with as.Date(), zone should be always taken into account
-  recommendedRegimen <- recommendationData$recommendedRegimen
-  recommendedRegimen$dose <- round(recommendedRegimen$AMT, digits=2)
-  newDoses <- recommendedRegimen %>% dplyr::mutate(time=TIME)
-  p2 <- prepareRecommendedTimelinePlot(recommendedDoses=newDoses, originalDoses= doses, xlim=c(firstDoseDate, max(ipredNew$TIME)), model=model, now=now)
+  newDoses <- regimen
+  newDoses$dose <- round(recommendedRegimen$AMT, digits=2)
+  p2 <- prepareRecommendedTimelinePlot(regimen=regimen, newRegimen=newDoses, model=model, now=now)
   
   return(list(p1=p1, p2=p2))
 }

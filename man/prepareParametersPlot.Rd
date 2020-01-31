@@ -4,12 +4,12 @@
 \alias{prepareParametersPlot}
 \title{Prepare the parameters plot.}
 \usage{
-prepareParametersPlot(data, parameters, population)
+prepareParametersPlot(populationData, individualDf, parameters)
 }
 \arguments{
-\item{data}{dataframe containing the prediction data}
-
 \item{parameters}{parameters}
+
+\item{data}{dataframe containing the prediction data}
 
 \item{population}{logical value, true for population, false for individual prediction}
 }

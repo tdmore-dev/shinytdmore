@@ -4,24 +4,18 @@
 \alias{prepareRecommendedTimelinePlot}
 \title{Prepare the timeline with both original and recommended doses.}
 \usage{
-prepareRecommendedTimelinePlot(
-  originalDoses,
-  recommendedDoses,
-  xlim,
-  model,
-  now
-)
+prepareRecommendedTimelinePlot(regimen, newRegimen, model, now)
 }
 \arguments{
+\item{model}{tdmore model}
+
+\item{now}{now date, currently not used here}
+
 \item{originalDoses}{dataframe containing the original entered doses}
 
 \item{recommendedDoses}{dataframe containing the recommended doses calculated by the computer}
 
 \item{xlim}{ggplot xlim argument}
-
-\item{model}{tdmore model}
-
-\item{now}{now date, currently not used here}
 }
 \description{
 Prepare the timeline with both original and recommended doses.

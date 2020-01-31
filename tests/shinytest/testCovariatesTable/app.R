@@ -45,7 +45,7 @@ ui <- fluidPage(
 shinyApp(ui=ui, server=function(input, output, session) {
   state <- reactiveValues()
   # observeEvent(input$alternate, {
-  #   state$covs <- NULL #remove the existing covariates
+  #   state$covariates <- NULL #remove the existing covariates
   # })
   observeEvent(c(input$alternate, input$metadata), {
     if(input$alternate) {
@@ -63,5 +63,5 @@ shinyApp(ui=ui, server=function(input, output, session) {
     }
   })
   callModule(covariatesTable, "myCovs", state=state)
-  exportTestValues(covs = { state$covs })
+  exportTestValues(covs = { state$covariates })
 })

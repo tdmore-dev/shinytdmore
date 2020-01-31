@@ -79,6 +79,8 @@ addDose <- function(state) {
   state$regimen <- rbind(doses, newdose)
 }
 
+#' The recommendationTable uses the state$regimen and state$recommendation tables
+#' 
 recommendationTable <- function(input, output, session, state) {
   defaultReactive <- reactive({
     tibble(time=as.POSIXct(character(0)), 
@@ -95,10 +97,9 @@ recommendationTable <- function(input, output, session, state) {
   })
   callModule(synchronizedHot, "table", 
              stateDf=tableDf, expr={
-               recData <- state$recommendationData()
-               shiny::req(recData)
+               regimen <- state$recommendation
+               shiny::req(regimen)
                df <- isolate({ tableDf() })
-               regimen <- recData$recommendedRegimen
                shiny::req(nrow(df) == nrow(regimen)) #otherwise wait for update...
                df$recommendation <- regimen$AMT
                
@@ -193,7 +194,7 @@ covariatesTable <- function(input, output, session, state) {
     df[, state$model$covariates] <- numeric(0)
     df
   })
-  tableDf = singleReactive(state, "covs", default=defaultDf,
+  tableDf = singleReactive(state, "covariates", default=defaultDf,
    to=function(x) {
      # discrete covariates are displayed 
      x <- dplyr::arrange(x, .data$time)
@@ -234,7 +235,7 @@ covariatesTable <- function(input, output, session, state) {
     
     z <- timeTable(df, borders(), colHeaders=colHeaders)
     
-    # setup column types (and convert df if required)
+    # setup column types
     for(col in seq_len(ncol(df) - 1) ) { #1 time column, N-1 covariate columns
       name <- colnames(df)[col+1]
       cov <- tdmore::getMetadataByName(state$model, name)
@@ -302,5 +303,5 @@ addCovariate <- function(state, df) {
   covs <- setdiff( state$model$covariates, names(newrow)[ !is.na(newrow) ] )
   newrow[, covs] <- as.numeric(NA)
   
-  state$covs <- dplyr::bind_rows(state$covs, newrow)
+  state$covariates <- dplyr::bind_rows(state$covariates, newrow)
 }

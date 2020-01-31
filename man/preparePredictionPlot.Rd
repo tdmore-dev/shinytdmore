@@ -4,20 +4,20 @@
 \alias{preparePredictionPlot}
 \title{Prepare the prediction plot.}
 \usage{
-preparePredictionPlot(data, obs, target, population, model, now)
+preparePredictionPlot(populationDf, individualDf, obs, target, model, now)
 }
 \arguments{
-\item{data}{dataframe containing the prediction data}
-
 \item{obs}{dataframe containing the observations}
 
 \item{target}{numeric vector of size 2, min and max value}
 
-\item{population}{logical value, true for population, false for individual prediction}
-
 \item{model}{tdmore model}
 
 \item{now}{now date}
+
+\item{data}{dataframe containing the prediction data}
+
+\item{population}{logical value, true for population, false for individual prediction}
 }
 \description{
 Prepare the prediction plot.

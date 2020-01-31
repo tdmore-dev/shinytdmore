@@ -69,6 +69,7 @@ predictionTab <- function(input, output, session, state) {
   callModule(targetInput, "target", state=state)
   
   # output plots
+  calculation(state)
   callModule(fitPlot, "plots", state=state)
   
   # adapt visibility of input elements

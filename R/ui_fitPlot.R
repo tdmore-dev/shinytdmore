@@ -10,7 +10,7 @@
 # TODO: add interactivity in the plots themselves
 fitPlotUI <- function(id) {
   ns <- NS(id)
-  tabsetPanel(
+  pagerPanel(
     id=ns("active"),
     tabPanel(title = "Population",
              value="population",
@@ -29,7 +29,6 @@ fitPlotUI <- function(id) {
 
 pagerPanel <- function(id, ...) {
   tsPanel <- tabsetPanel(id = id, ...)
-  #tsPanel$children[[1]]$attribs$style = "display: none;" #hide
   ## TODO: add Previous / Next buttons instead
   ## They should work fully using javascript,
   ## because we do not want to add server-side code for something
@@ -38,42 +37,26 @@ pagerPanel <- function(id, ...) {
   tsPanel
 }
 
+#' Fitplot creates a Population, Fit and Recommendation plot
+#' 
 #' @export
 fitPlot <- function(input, output, session, state) {
-  stateDebounced <- debounce(reactive({
-    list(regimen=state$regimen,
-         model=state$model,
-         regimen=state$regimen,
-         observed=state$observed,
-         covs=state$covs,
-         now=state$now,
-         target=state$target)
-  }), millis=500)
-  if(is.null( isolate({state$populationData}) ))
-    state$populationData <- reactive({
-      preparePrediction(stateDebounced(), population=TRUE)
-    })
-  if(is.null(isolate({state$individualData})))
-    state$individualData <- reactive({
-      preparePrediction(stateDebounced(), population=FALSE)
-    })
-  if(is.null(isolate({state$recommendationData})))
-    state$recommendationData <- reactive({
-      prepareRecommendation(state$individualData())
-    })
-  
   output$population <- plotly::renderPlotly({
-    data <- state$populationData()
-    plots <- preparePredictionPlots(data)
-    z1 <- mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
-    z1
+    shiny::req(state$populationPredict)
+    plots <- preparePredictionPlots(state$populationPredict,
+                                    NULL,
+                                    observed=state$observed, target=state$target, model=state$model, now=state$now,
+                                    regimen=state$regimen)
+    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
   })
   outputOptions(output, "population", priority = -10)
   output$fit <- plotly::renderPlotly({
-    data <- state$individualData()
-    plots <- preparePredictionPlots(data)
-    z1 <- mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
-    z1
+    shiny::req(state$individualPredict)
+    plots <- preparePredictionPlots(state$populationPredict,
+                                    state$individualPredict,
+                                    observed=state$observed, target=state$target, model=state$model, now=state$now,
+                                    regimen=state$regimen)
+    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
   })
   outputOptions(output, "fit", priority = -10)
   ##
@@ -82,10 +65,19 @@ fitPlot <- function(input, output, session, state) {
   ##data$rec <- ifelse(recommendedRegimen$PAST, "/", round(recommendedRegimen$AMT, 2))
   ## renderHotDoseFuture(data)
   output$recommendation <- plotly::renderPlotly({
-    data <- state$recommendationData()
-    plots <- prepareRecommendationPlots(data)
-    z1 <- mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
-    z1
+    shiny::req(state$populationPredict)
+    shiny::req(state$individualPredict)
+    shiny::req(state$recommendationPredict)
+    shiny::req(state$recommendation)
+    plots <- prepareRecommendationPlots(
+      state$populationPredict,
+      state$individualPredict,
+      state$recommendationPredict,
+      observed=state$observed, target=state$target, model=state$model, now=state$now,
+      regimen=state$regimen,
+      state$recommendation
+      )
+    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
   })
   outputOptions(output, "recommendation", priority = -10)
 }

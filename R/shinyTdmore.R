@@ -42,18 +42,13 @@ shinyTdmoreUI <- function(title, ...) {
 #' 
 shinyTdmore <- function(input, output, session, modules, db=InMemoryDatabase$new()) {
   # Create the main reactive container
-  val <- reactiveValues(
-    doses=tibble(date=numeric(), time=numeric(), dose=numeric(), fix=logical()),
+  state <- reactiveValues(
+    regimen=tibble(time=numeric(), dose=numeric(), fix=logical()),
     obs=tibble(date=numeric(), time=numeric(), measure=numeric(), use=logical()),
     now=Sys.time(),
     currentTab=NULL,
     onNewPatientAdded=0
   )
-  
-  # Change last tab
-  observe({
-    val$currentTab <- input$tabs
-  })
   
   for(id in names(modules)) {
     callModule( module=modules[[id]], id=id, val=val, db=db)

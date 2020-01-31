@@ -5,22 +5,32 @@
 \title{Prepare recommendation plots (to be refactored).
 This includes the recommendation plot and the timeline plot.}
 \usage{
-prepareRecommendationPlots(recommendationData)
+prepareRecommendationPlots(
+  populationDf,
+  individualDf,
+  recommendationDf,
+  observed,
+  target,
+  model,
+  now,
+  regimen,
+  recommendedRegimen
+)
 }
 \arguments{
-\item{recommendationData}{recommendation data (contains namely ipred, ipredNew and the recommendation)}
+\item{target}{numeric vector of size 2, min and max value}
+
+\item{model}{tdmore model}
+
+\item{now}{now date}
 
 \item{doses}{doses}
 
 \item{obs}{observations}
 
-\item{model}{tdmore model}
-
 \item{covs}{covariates}
 
-\item{target}{numeric vector of size 2, min and max value}
-
-\item{now}{now date}
+\item{recommendationData}{recommendation data (contains namely ipred, ipredNew and the recommendation)}
 }
 \value{
 a list of two plots

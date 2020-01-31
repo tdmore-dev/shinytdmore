@@ -5,22 +5,28 @@
 \title{Prepare population OR individual prediction plots.
 This includes the prediction plot and the timeline plot.}
 \usage{
-preparePredictionPlots(predictionData)
+preparePredictionPlots(
+  populationDf,
+  individualDf,
+  observed,
+  target,
+  model,
+  now,
+  regimen
+)
 }
 \arguments{
+\item{target}{numeric vector of size 2, min and max value}
+
+\item{model}{tdmore/tdmore_mpc model}
+
+\item{now}{now date, POSIXlt date}
+
 \item{doses}{doses}
 
 \item{obs}{observations}
 
-\item{model}{tdmore/tdmore_mpc model}
-
 \item{covs}{covariates}
-
-\item{target}{numeric vector of size 2, min and max value}
-
-\item{population}{logical value, true for population, false for individual}
-
-\item{now}{now date, POSIXlt date}
 }
 \value{
 a list of two plots

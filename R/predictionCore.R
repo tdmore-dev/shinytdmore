@@ -9,31 +9,6 @@ getModelOutput <- function(model) {
 }
 
 #'
-#' Retrieve the dosing interval from the tdmore metadata according to the specified formulation.
-#' If no formulation matches, dosing interval of the first formulation is returned.
-#' If no formulation at all in metadata, 24 hours is returned.
-#'
-#' @param model tdmore model
-#' @param formulation formulation we are looking for, character, can be NULL
-#' @return a dosing interval, numeric value
-#'
-getDosingInterval <- function(model, formulation=NULL) {
-  formulations <- tdmore::getMetadataByClass(model, "tdmore_formulation", all=TRUE)
-  
-  myFilter <- vapply(formulations, function(x) {!is.null(formulation) && x$name==formulation}, FUN.VALUE=logical(1))
-  results <- formulations[myFilter]
-  if (length(results) > 0) {
-    return(results[[1]]$dosing_interval)
-  
-  } else if (length(formulations) > 0) {
-    return(formulations[[1]]$dosing_interval)
-  
-  } else {
-    return(24)
-  }
-}
-
-#'
 #' Retrieve the rounding function from the tdmore metadata according to the specified formulation.
 #' If no formulation matches, no rounding function is used.
 #' If no formulation at all in metadata, no rounding function is used.
@@ -71,7 +46,7 @@ preparePrediction <- function(state, population=FALSE) {
   state <- as.list(state)
   state$regimen <- state$regimen %||% tibble(time=as.POSIXct(character(0)), dose=numeric(0), formulation=numeric(0), fix=logical(0))
   state$observed <- state$observed %||% tibble(time=as.POSIXct(character(0)), dv=numeric(0), use=logical(0))
-  state$covs <- state$covs %||% tibble::tibble()
+  state$covs <- state$covariates %||% tibble::tibble()
   state$now <- state$now %||% as.POSIXct(NA)
   model <- state$model
   modelTarget <- tdmore::getMetadataByClass(state$model, "tdmore_target")
