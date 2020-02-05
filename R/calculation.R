@@ -22,9 +22,9 @@ getNewdata <- function(regimen, observed, model) {
 }
 
 defaultData <- list(
-  regimen=tibble(time=as.POSIXct(character()), dose=numeric(), formulation=character(), fix=logical()),
-  observed=tibble(time=as.POSIXct(character()), dv=numeric(), use=logical()),
-  covariates=tibble(time=as.POSIXct(character())), #rest of columns depend on model
+  regimen=tibble::tibble(time=as.POSIXct(character()), dose=numeric(), formulation=character(), fix=logical()),
+  observed=tibble::tibble(time=as.POSIXct(character()), dv=numeric(), use=logical()),
+  covariates=tibble::tibble(time=as.POSIXct(character())), #rest of columns depend on model
   now=as.POSIXct("2000-01-01"),
   target=list(min=as.numeric(NA), max=as.numeric(NA))
 )
