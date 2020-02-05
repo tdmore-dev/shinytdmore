@@ -4,20 +4,32 @@
 \alias{preparePredictionPlot}
 \title{Prepare the prediction plot.}
 \usage{
-preparePredictionPlot(populationDf, individualDf, obs, target, model, now)
+preparePredictionPlot(
+  populationPredict,
+  individualPredict,
+  observed,
+  target,
+  model,
+  now
+)
 }
 \arguments{
-\item{obs}{dataframe containing the observations}
+\item{populationPredict}{dataframe containing the individual prediction data}
 
-\item{target}{numeric vector of size 2, min and max value}
+\item{individualPredict}{dataframe containing the population prediction data}
 
-\item{model}{tdmore model}
+\item{observed}{a data.frame with the following columns:
+\itemize{
+\item \code{time} a POSIXct time
+\item \code{dv} the observed data
+\item \code{use} whether the observation should be used in the estimation
+}}
 
-\item{now}{now date}
+\item{target}{a named list with min/max values to represent the target concentration}
 
-\item{data}{dataframe containing the prediction data}
+\item{model}{a tdmore model with (ideally) metadata}
 
-\item{population}{logical value, true for population, false for individual prediction}
+\item{now}{a POSIXct time representing the current time}
 }
 \description{
 Prepare the prediction plot.

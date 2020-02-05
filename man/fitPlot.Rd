@@ -6,6 +6,15 @@
 \usage{
 fitPlot(input, output, session, state)
 }
+\arguments{
+\item{input}{Shiny input object}
+
+\item{output}{Shiny output object}
+
+\item{session}{Shiny session object}
+
+\item{state}{a reactiveValues object with the state of the application. See [convertDataToTdmore()] for more information.}
+}
 \description{
 Fitplot creates a Population, Fit and Recommendation plot
 }

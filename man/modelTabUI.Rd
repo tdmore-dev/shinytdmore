@@ -4,10 +4,12 @@
 \alias{modelTabUI}
 \title{Model tab user interface.}
 \usage{
-modelTabUI(id, dir = system.file("models", package = "tdmore"))
+modelTabUI(id, dir = system.file("models", package = "shinytdmore"))
 }
 \arguments{
 \item{id}{namespace id}
+
+\item{dir}{default value for the directory in which to search for models}
 }
 \value{
 a panel

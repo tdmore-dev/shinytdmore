@@ -22,7 +22,7 @@
 #'   * `...` columns corresponding to covariates required in the tdmore model. If columns are missing, the method returns an error.
 #' * `state$now` a POSIXct time representing the current time
 #' 
-#' This is converted into a list of arguments compatible with [tdmore::estimate], [tdmore::predict] and [tdmore::findDose]. 
+#' This is converted into a list of arguments compatible with [tdmore::estimate], [tdmore::predict.tdmore] and [tdmore::findDose]. 
 #' * `model` the tdmore model
 #' * `regimen` all treatments in the right format
 #' * `observed` all observed values where use=TRUE, and with the `dv` column renamed to the default model output
@@ -40,7 +40,6 @@
 #'
 convertDataToTdmore <- function(state) {
   model <- state$model
-  shiny::req(model)
   regimen <- state$regimen %||% tibble(time=as.POSIXct(character(0)), dose=numeric(0), formulation=character(0), fix=logical(0))
   observed <- state$observed %||% tibble(time=as.POSIXct(character(0)), dv=numeric(0), use=logical(0))
   covariates <- state$covariates %||% tibble::tibble(time=as.POSIXct(character(0)))
@@ -48,8 +47,10 @@ convertDataToTdmore <- function(state) {
   
   result <- list()
   result$model <- model
-  result$t0 <- min(c(regimen$time, observed$time, covariates$time))
-  result$now <- as.numeric( difftime(result$t0, now, units="hours") )
+  allTimes <- c(regimen$time, observed$time, covariates$time, now)
+  result$t0 <- min(allTimes)
+  
+  result$now <- as.numeric( difftime(now, result$t0, units="hours") )
   result$regimen <- regimen %>% transmute(
     TIME = as.numeric(difftime(.data$time, result$t0, units="hours")),
     AMT = .data$dose,
@@ -59,18 +60,19 @@ convertDataToTdmore <- function(state) {
   if( !is.null(model$iov) ) result$regimen$OCC <- seq_along(result$regimen$AMT) # add IOV column
   
   result$doseRows <- which( regimen$time > now & !regimen$fix )
-  result$covariates <- full_join(
-    covariates,
-    regimen %>% select(.data$time, .data$formulation)
-  ) %>% arrange(.data$time) %>%
+  result$covariates <- covariates %>% ## covariates does not contain the FORMULATION; it should be added to the regimen
     mutate(
       TIME = as.numeric(difftime(.data$time, result$t0, units="hours"))
     ) %>% select(.data$TIME, everything()) %>% select(-.data$time)
+  if(length(model$covariates)==0) result$covariates <- numeric(0)
   
+  replaceName <- function(df, old, new) { #programmatic version of dplyr::rename
+    stats::setNames(df, replace(names(df), which(names(df)==old), new) )
+  }
   result$observed <- observed %>% 
     filter(.data$use) %>% select(-.data$use) %>% #only use points where use==TRUE
     filter(.data$time < now) %>% #only before NOW
-    setNames(., replace(names(.), names(.)=="dv", getModelOutput(model)) ) %>%
+    replaceName("dv", getModelOutput(model)) %>%
     mutate(
       TIME = as.numeric(difftime(.data$time, result$t0, units="hours"))
     ) %>% select(.data$TIME, everything()) %>% select(-.data$time)

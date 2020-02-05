@@ -14,6 +14,14 @@ targetInput(input, output, session, state)
 }
 \arguments{
 \item{id}{unique identifier}
+
+\item{input}{Shiny input object}
+
+\item{output}{Shiny output object}
+
+\item{session}{Shiny session object}
+
+\item{state}{a reactiveValues object with the state of the application. See [convertDataToTdmore()] for more information.}
 }
 \description{
 Input element representing the target upper limit and lower limits

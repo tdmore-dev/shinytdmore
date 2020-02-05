@@ -6,3 +6,7 @@
 ^.travis.yml$
 ^logo.svg$
 ^docs$
+^\.dockerignore$
+^docker-compose\.test\.yml$
+^R-disabled$
+^vignettes-disabled$

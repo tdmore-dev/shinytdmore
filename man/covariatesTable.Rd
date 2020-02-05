@@ -7,6 +7,12 @@
 covariatesTable(input, output, session, state)
 }
 \arguments{
+\item{input}{Shiny input object}
+
+\item{output}{Shiny output object}
+
+\item{session}{Shiny session object}
+
 \item{state}{\code{reactiveValues} object with at least the values \code{now}, \code{observed} and \code{model}}
 }
 \description{

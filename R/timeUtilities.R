@@ -39,19 +39,6 @@ getTimeFormat <- function() {
   return("%H:%M")
 }
 
-#'
-#' Convert date and time vectors to POSIX.
-#' 
-#' @param date date vector
-#' @param time character vector with '\%H:\%M'-formatted times
-#' @return a POSIXct datetime, timezone included (e.g. CEST)
-#' @export
-#'
-dateAndTimeToPOSIX <- function(date, time) {
-  strvalue <- paste(date, time)
-  anytime::anytime(strvalue)
-}
-
 #' Convert POSIX date to hours (numeric).
 #'
 #' @param posixDate a posix date

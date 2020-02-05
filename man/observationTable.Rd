@@ -7,7 +7,13 @@
 observationTable(input, output, session, state)
 }
 \arguments{
-\item{state}{\code{reactiveValues} object with at least the values \code{now}, \code{observed} and \code{model}}
+\item{input}{Shiny input object}
+
+\item{output}{Shiny output object}
+
+\item{session}{Shiny session object}
+
+\item{state}{a reactiveValues object with the state of the application. See [convertDataToTdmore()] for more information.}
 }
 \description{
 The interface consists of a \emph{table} (rhandsontable) that reads from the \code{state$observed} data.frame. It has five columns:

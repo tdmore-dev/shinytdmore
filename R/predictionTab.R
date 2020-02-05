@@ -7,7 +7,7 @@
 #' @export
 #'
 predictionTabUI <- function(id) {
-  if(packageVersion("shinyBS") <= package_version("0.61")) {
+  if(utils::packageVersion("shinyBS") <= package_version("0.61")) {
     # bugfix for https://github.com/ebailey78/shinyBS/issues/115
     shiny::addResourcePath("sbs", system.file("www", package="shinyBS"))
   }

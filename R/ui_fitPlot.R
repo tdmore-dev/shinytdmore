@@ -2,6 +2,9 @@
 #' that show the current state of the fit.
 #' 
 #' It is displayed in a tabsetPanel
+#' 
+#' @param id output ID
+#' 
 #' @export
 # TODO: change this to use Next / Previous buttons
 # TODO: Change the plots to render a single time
@@ -37,21 +40,60 @@ pagerPanel <- function(id, ...) {
   tsPanel
 }
 
+# This function checks all of the arguments.
+# If any of the arguments is an error, it emits the error
+checkError <- function(..., verbose=TRUE) {
+  args <- list(...)
+  for(i in seq_along(args)) {
+    value <- args[[i]]
+    if(inherits(value, "error")) {
+      if(verbose) {
+        cat(names(args)[i], " --> ")
+        print(value)
+        dput(value)
+      }
+      signalCondition(value)
+    }
+  }
+}
+
 #' Fitplot creates a Population, Fit and Recommendation plot
 #' 
+#' @inheritParams shinytdmore-module
 #' @export
 fitPlot <- function(input, output, session, state) {
+  ## TODO: plots depend on state$populationPredict, which comes from a debounced regimen/observed/...
+  ## However, they also directly depend on regimen/observed/...
+  ## 
+  ## If regimen is modified, the plot is updated twice:
+  ## 1) When the regimen is modified
+  ## 2) When the populationPredict is modified 500 milli-seconds later...
+  ## This can probably be resolved with freeze/thaw, but this is still mystical to me...
   output$population <- plotly::renderPlotly({
-    shiny::req(state$populationPredict)
+    checkError(populationPredict=state$populationPredict,
+               observed=state$observed, target=state$target, model=state$model, now=state$now,
+               regimen=state$regimen)
+    validate(
+      need(state$populationPredict, label="Prediction")
+    )
     plots <- preparePredictionPlots(state$populationPredict,
                                     NULL,
                                     observed=state$observed, target=state$target, model=state$model, now=state$now,
                                     regimen=state$regimen)
-    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
+    z <- mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
+    z
   })
   outputOptions(output, "population", priority = -10)
   output$fit <- plotly::renderPlotly({
-    shiny::req(state$individualPredict)
+    checkError(
+      populationPredict=state$populationPredict,
+      individualPredict=state$individualPredict,
+      observed=state$observed, target=state$target, model=state$model, now=state$now,
+      regimen=state$regimen
+    )
+    validate(
+      need(state$individualPredict, label="Prediction")
+    )
     plots <- preparePredictionPlots(state$populationPredict,
                                     state$individualPredict,
                                     observed=state$observed, target=state$target, model=state$model, now=state$now,
@@ -65,10 +107,19 @@ fitPlot <- function(input, output, session, state) {
   ##data$rec <- ifelse(recommendedRegimen$PAST, "/", round(recommendedRegimen$AMT, 2))
   ## renderHotDoseFuture(data)
   output$recommendation <- plotly::renderPlotly({
-    shiny::req(state$populationPredict)
-    shiny::req(state$individualPredict)
-    shiny::req(state$recommendationPredict)
-    shiny::req(state$recommendation)
+    checkError(
+      populationPredict=state$populationPredict,
+      individualPredict=state$individualPredict,
+      recommendationPredict=state$recommendationPredict,
+      observed=state$observed, target=state$target, model=state$model, now=state$now,
+      regimen=state$regimen,
+      recommendation=state$recommendation
+    )
+    validate(
+      need(state$populationPredict, label="Prediction") %||%
+      need(state$individualPredict, label="Prediction") %||%
+      need(state$recommendationPredict, label="Prediction")
+    )
     plots <- prepareRecommendationPlots(
       state$populationPredict,
       state$individualPredict,

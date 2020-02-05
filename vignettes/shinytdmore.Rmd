@@ -1,0 +1,113 @@
+---
+title: "shinytdmore introduction"
+author: "Ruben Faelens"
+date: "09/07/2019"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{shinytdmore introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r setup, echo=FALSE}
+library(shinytest)
+
+tmp_lib <- tdmore::ensurePackagePresent("shinytdmore", quiet=F)
+app <- withr::with_libpaths(tmp_lib, {
+      ShinyDriver$new(path="shinytdmoreApp", debug="all", shinyOptions = list(test.mode=TRUE))
+    }, action="prefix")
+
+file <- knitr::fig_path("png")
+dir.create(dirname(file), recursive = TRUE, showWarnings = FALSE) #create dir if not exists yet
+
+knitr::opts_chunk$set(echo=FALSE)
+```
+
+## Introduction
+Shinytdmore helps you build an application for dose adaptation. This vignette will take you through the application step-by-step.
+
+## Prediction tab default menu
+```{r}
+Sys.sleep(2)
+file <- knitr::fig_path("png")
+app$takeScreenshot(file)
+knitr::include_graphics(file)
+```
+
+
+## Add the posology
+```{r}
+app$setInputs(`prediction-doses-add`="click")
+app$setInputs(`prediction-doses-add`="click")
+app$setInputs(`prediction-doses-add`="click")
+
+Sys.sleep(2)
+app$findElement(".htCheckboxRendererInput")$click() #FIX the first dose
+Sys.sleep(2)
+
+file <- knitr::fig_path("png")
+app$takeScreenshot(file)
+knitr::include_graphics(file)
+```
+When you add a dose, the default formulation in the model is used. Clicking *add dose* multiple times will add new doses with the right interdose interval.
+
+## Add an observation
+```{r}
+app$setInputs(`prediction-observation-add`="click")
+table <- app$findElements("#prediction-observation-table-table td")
+table[[2]]$click()
+table[[2]]$sendKeys("06:50\t")
+table[[3]]$click()
+table[[3]]$sendKeys("43.5\t")
+
+Sys.sleep(2)
+file <- knitr::fig_path("png")
+app$takeScreenshot(file)
+knitr::include_graphics(file)
+```
+
+The observation is not used yet, because the current time ("now") is still 1st of January at midnight.
+
+## Changing the now time
+```{r}
+now <- app$findElement("#prediction-now-now")
+now$click()
+
+combodate <- app$findElements(".popover-content .combodate select")
+combodate[[4]]$setValue("11")
+
+submit <- app$findElement(".popover-content .editable-submit")
+submit$click()
+
+file <- knitr::fig_path("png")
+app$takeScreenshot(file)
+knitr::include_graphics(file)
+```
+
+The observation is now taken into account. From the population plot, we see that this individual has relatively low concentrations with regards to the starting dose.
+
+## Prediction graph
+```{r}
+app$findElement(linkText="Fit")$click()
+#app$getDebugLog()
+Sys.sleep(5)
+file <- knitr::fig_path("png")
+app$takeScreenshot(file)
+knitr::include_graphics(file)
+```
+
+## Recommendation
+```{r}
+app$findElement(linkText="Recommendation")$click()
+#app$getDebugLog()
+Sys.sleep(5)
+file <- knitr::fig_path("png")
+app$takeScreenshot(file)
+knitr::include_graphics(file)
+```
+
+
+## Final debug log
+```{r}
+app$getDebugLog()
+app$stop()
+```

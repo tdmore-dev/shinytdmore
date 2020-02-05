@@ -14,6 +14,7 @@ targetInputUI <- function(id) {
 }
 
 #' @name targetInput
+#' @inheritParams shinytdmore-module
 targetInput <- function(input, output, session, state) {
   modelTargets <- reactive({
     target <- tdmore::getMetadataByClass(state$model, "tdmore_target")

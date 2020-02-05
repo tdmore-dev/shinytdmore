@@ -7,6 +7,9 @@ that show the current state of the fit.}
 \usage{
 fitPlotUI(id)
 }
+\arguments{
+\item{id}{output ID}
+}
 \description{
 It is displayed in a tabsetPanel
 }

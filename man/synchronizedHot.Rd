@@ -20,6 +20,14 @@ synchronizedHot(
 \arguments{
 \item{id}{unique identifier}
 
+\item{...}{passed to [rhandsontable::rHandsontableOutput()]}
+
+\item{input}{Shiny input object}
+
+\item{output}{Shiny output object}
+
+\item{session}{Shiny session object}
+
 \item{stateDf}{a reactiveVal data.frame used to write the state}
 
 \item{expr}{expression used to create a rhandsontable. Make sure to isolate() calls to the state$df object. The observers

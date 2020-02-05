@@ -6,8 +6,8 @@
 This includes the prediction plot and the timeline plot.}
 \usage{
 preparePredictionPlots(
-  populationDf,
-  individualDf,
+  populationPredict,
+  individualPredict,
   observed,
   target,
   model,
@@ -16,20 +16,33 @@ preparePredictionPlots(
 )
 }
 \arguments{
-\item{target}{numeric vector of size 2, min and max value}
+\item{populationPredict}{dataframe containing the individual prediction data}
 
-\item{model}{tdmore/tdmore_mpc model}
+\item{individualPredict}{dataframe containing the population prediction data}
 
-\item{now}{now date, POSIXlt date}
+\item{observed}{a data.frame with the following columns:
+\itemize{
+\item \code{time} a POSIXct time
+\item \code{dv} the observed data
+\item \code{use} whether the observation should be used in the estimation
+}}
 
-\item{doses}{doses}
+\item{target}{a named list with min/max values to represent the target concentration}
 
-\item{obs}{observations}
+\item{model}{a tdmore model with (ideally) metadata}
 
-\item{covs}{covariates}
+\item{now}{a POSIXct time representing the current time}
+
+\item{regimen}{a data.frame with the following columns:
+\itemize{
+\item \code{time} a POSIXct time
+\item \code{dose} a numeric with the dose amount
+\item \code{formulation} a character vector that corresponds to formulations defined in the metadata of the model
+\item \code{fix} a boolean vector describing whether the given regimen can be modified in dose recommendation
+}}
 }
 \value{
-a list of two plots
+a list of plots (p1, p2, p3)
 }
 \description{
 Prepare population OR individual prediction plots.

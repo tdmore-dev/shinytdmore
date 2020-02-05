@@ -6,6 +6,15 @@
 \usage{
 recommendationTable(input, output, session, state)
 }
+\arguments{
+\item{input}{Shiny input object}
+
+\item{output}{Shiny output object}
+
+\item{session}{Shiny session object}
+
+\item{state}{a reactiveValues object with the state of the application. See [convertDataToTdmore()] for more information.}
+}
 \description{
 The recommendationTable uses the state$regimen and state$recommendation tables
 }

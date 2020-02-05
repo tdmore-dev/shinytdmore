@@ -4,15 +4,37 @@
 \alias{prepareTimelinePlot}
 \title{Prepare the timeline.}
 \usage{
-prepareTimelinePlot(regimen, model, now)
+prepareTimelinePlot(
+  populationPredict,
+  individualPredict,
+  regimen,
+  recommendedRegimen,
+  model,
+  now
+)
 }
 \arguments{
-\item{model}{tdmore model}
+\item{populationPredict}{dataframe containing the individual prediction data}
 
-\item{now}{now date, currently not used here}
+\item{individualPredict}{dataframe containing the population prediction data}
 
-\item{doses}{dataframe containing the doses}
+\item{regimen}{a data.frame with the following columns:
+\itemize{
+\item \code{time} a POSIXct time
+\item \code{dose} a numeric with the dose amount
+\item \code{formulation} a character vector that corresponds to formulations defined in the metadata of the model
+\item \code{fix} a boolean vector describing whether the given regimen can be modified in dose recommendation
+}}
+
+\item{recommendedRegimen}{regimen with the AMT column changed by the recommended doses}
+
+\item{model}{a tdmore model with (ideally) metadata}
+
+\item{now}{a POSIXct time representing the current time}
 }
 \description{
 Prepare the timeline.
+}
+\details{
+The individual and population prediction dataframes are only required to ensure the same X axis format.
 }

@@ -4,6 +4,7 @@ output: md_document
 params:
    modelId: NA
    dir: NA
+   model: "UNDEFINED"
 ---
 
 ```{r, echo=F, message=F}
@@ -17,6 +18,10 @@ library(assertthat)
 
 
 ```{r, echo=F, comment=NA}
-model <- getModel(name=params$modelId, dir=params$dir)
+if(!identical(params$model,"UNDEFINED")) {
+  model <- params$model
+} else {
+  model <- getModel(name=params$modelId, dir=params$dir)
+}
 print(model)
 ```

@@ -14,8 +14,8 @@ Authors@R: c(
   )
 Description: The functions in this package allow you to quickly create a shiny application for dose adaptation.
 Depends: R (>= 3.5.0)
-Imports: assertthat, plyr, dplyr, tdmore, rjson, jsonlite, lubridate, mongolite, 
-  shiny, shinyBS, DT, tidyverse, plotly, crosstalk, anytime, shinyjs,
+Imports: tdmore,dplyr, rjson, jsonlite, lubridate, mongolite, 
+  shiny, shinyBS, tidyverse, plotly, shinyjs, DT,
   rhandsontable (<= 0.3.7), R6, ggplot2, purrr, tidyr, htmltools, tibble, rlang
 Note: The dependency on rhandsontable is limited to version 0.3.7, because of a
   particular licensing issue. Rhandsontable depends on handsontable.js, which changed

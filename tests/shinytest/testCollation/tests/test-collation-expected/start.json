@@ -1,0 +1,50 @@
+{
+  "input": {
+
+  },
+  "output": {
+
+  },
+  "export": {
+    "A": 8,
+    "B": 10,
+    "LC_COLLATE": "C",
+    "a": 1,
+    "b": 3,
+    "icuGetCollate": "ICU not in use",
+    "sortedArray": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "H",
+      "I",
+      "J",
+      "K",
+      "L",
+      "M",
+      "N",
+      "O",
+      "P",
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+      "l",
+      "m",
+      "n",
+      "o",
+      "p"
+    ]
+  }
+}

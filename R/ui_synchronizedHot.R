@@ -23,6 +23,7 @@
 #' 
 #' @name synchronizedHot
 #' @param id unique identifier
+#' @param ... passed to [rhandsontable::rHandsontableOutput()]
 #' @export
 synchronizedHotUi <- function(id, ...) {
   ns <- NS(id)
@@ -39,13 +40,15 @@ synchronizedHotUi <- function(id, ...) {
 #' @param stateDf a reactiveVal data.frame used to write the state
 #' @param hot_to_r a function to convert the input$table object into a data.frame of the same format as stateDf
 #' @param debug TRUE to enable printing debug messages
+#' @inheritParams shinytdmore-module
 #' @export
 synchronizedHot <- function(input, output, session, stateDf, expr, hot_to_r=rhandsontable::hot_to_r, debug=FALSE) {
   log <- function(...) {
-    if(debug) cat(proc.time()['elapsed'], "::", ..., "\n")
+    if(debug) cat(proc.time()['elapsed'], "::[", session$ns(""), "]", ..., "\n")
   }
   #ensure expr can be run in a render function, maintaining the original environment
   #fun <- shiny::exprToFunction(substitute(expr), quoted=TRUE, env=parent.frame(2))
+  fun <- NULL #avoid warnings from CMD CHECK
   shiny::installExprFunction(substitute(expr), quoted=TRUE, eval.env=parent.frame(2), name="fun")
   
   invalidateTable <- reactiveVal(value=NA)
@@ -61,7 +64,7 @@ synchronizedHot <- function(input, output, session, stateDf, expr, hot_to_r=rhan
   })
   observeEvent(stateDf(), {
     df <- stateDf()
-    if(!is.null(input$table) && !isTRUE(all.equal(df, hot_to_r(input$table)))) {
+    if(is.null(input$table) || !isTRUE(all.equal(df, hot_to_r(input$table)))) {
       log("INVALIDATING output$table")
       invalidateTable(runif(1))
     } else {

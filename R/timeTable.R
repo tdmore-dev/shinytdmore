@@ -15,6 +15,13 @@ hot_to_r_datetime <- function(x){
   value
 }
 
+#' Create a function that behaves as a reactiveVal(), but is backed by a reactiveValues() object
+#' @param state the reactiveValues object
+#' @param key character key
+#' @param default default value to return if `state$key` is null
+#' @param from function to convert value from state into output
+#' @param to function to convert from input into state
+#' 
 #' @export
 singleReactive <- function(state, key, default=NULL, from=identity, to=identity) {
   function(x) {
@@ -52,7 +59,9 @@ timeTable <- function(df, borders=list(), colHeaders=c()) {
                            .before="time")
   df$time <- time
   
-  stopifnot(ncol(df) == (length(colHeaders)+2)) #number of columns should match colHeaders
+  if(ncol(df) != (length(colHeaders)+2)) { #number of columns should match colHeaders
+    stop("Displayed data.frame has columns ", paste(colnames(df), collapse=", "), ", while colHeaders specified as ", paste(colHeaders, collapse=", "))
+  }
   
   z <- rhandsontable::rhandsontable(
     df,

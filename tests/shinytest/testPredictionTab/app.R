@@ -1,5 +1,4 @@
 options(useFancyQuotes = FALSE)
-
 library(shinytdmore)
 options(shiny.reactlog=TRUE)
 
@@ -22,7 +21,8 @@ tdmModel <- tdmore::tdmore(rxModel,
 myModel <- tdmore::metadata(tdmModel,
   tdmore::target(min=10, max=15),
   tdmore::covariate("WT", "Weight", "kg", min=20, max=150),
-  tdmore::formulation(name="Prograft", unit="mg", dosing_interval=24, default_value=5, round_function=identity)
+  tdmore::formulation(name="Prograft", unit="mg", dosing_interval=12, default_value=5, round_function=identity),
+  tdmore::formulation(name="Advagraf", unit="mg", dosing_interval=24, default_value=5, round_function=identity)
 )
 
 ui <- fluidPage(
@@ -33,6 +33,7 @@ shinyApp(ui=ui, server=function(input, output, session) {
   state <- reactiveValues()
   #state$target <- list(min=12, max=15)
   state$model <- myModel #specify a model
+  #state$covariates <- tibble::tibble(time=as.POSIXct("1999-12-15 12:00"), WT=70)
   # state$now <- as.POSIXct("2000-01-01 12:00")
   # state$regimen <- tibble(time=as.POSIXct("1999-12-15 12:00"),
   #                                         dose=15,

@@ -6,6 +6,9 @@
 \usage{
 defaultApp(...)
 }
+\arguments{
+\item{...}{default values for the application (e.g. `regimen`, `observed`, etc)}
+}
 \description{
 Default full-featured application
 }

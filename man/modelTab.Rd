@@ -13,15 +13,15 @@ modelTab(
 )
 }
 \arguments{
-\item{input}{shiny input}
+\item{input}{Shiny input object}
 
-\item{output}{shiny output}
+\item{output}{Shiny output object}
 
-\item{session}{shiny session}
+\item{session}{Shiny session object}
 
-\item{val}{main reactive container}
+\item{state}{a reactiveValues object with the state of the application. See [convertDataToTdmore()] for more information.}
 
-\item{onTabChanged}{on tab changed}
+\item{rmdFile}{Rmarkdown file to create a description of the model}
 }
 \description{
 Model tab server.

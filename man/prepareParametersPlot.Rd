@@ -4,14 +4,14 @@
 \alias{prepareParametersPlot}
 \title{Prepare the parameters plot.}
 \usage{
-prepareParametersPlot(populationData, individualDf, parameters)
+prepareParametersPlot(populationPredict, individualPredict, parameters)
 }
 \arguments{
+\item{populationPredict}{dataframe containing the individual prediction data}
+
+\item{individualPredict}{dataframe containing the population prediction data}
+
 \item{parameters}{parameters}
-
-\item{data}{dataframe containing the prediction data}
-
-\item{population}{logical value, true for population, false for individual prediction}
 }
 \description{
 Prepare the parameters plot.

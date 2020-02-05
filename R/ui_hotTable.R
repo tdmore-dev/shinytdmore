@@ -7,7 +7,8 @@ tableUI <- function(id, ...) {
   div(
     id=id,
     synchronizedHotUi(ns("table")),
-    actionButton(ns("add"), ..., style="margin-top: 5px;")
+    actionButton(ns("add"), ..., style="margin-top: 5px;"),
+    shinyBS::bsAlert(ns("alert"))
   )
 }
 
@@ -20,13 +21,27 @@ getFormulationList <- function(model) {
   return(list)
 }
 
-#' @name doseTable
+# Create a reactive value that only updates/invalidates if the borders really change
+# Beware, this creates a new reactive value at every call!
+bordersReactiveVal <- function(tableDf, state) {
+  borders <- reactiveVal()
+  observe({
+    borders <- getTableBorder(tableDf(), state$now)
+    if(!isTRUE(all.equal(borders(), borders))) borders(borders) #only update if needed!
+  })
+  borders
+}
+
+#' Server component for doseTable
+#' 
 #' @param state `reactiveValues` object with the values `now`, `regimen` and `model`.
 #' `now` can be absent, in which case the `now` time is not shown graphically in the table.
 #' Also, the addDose command will then not use the current date by default.
 #' 
 #' `model` should at least contain formulation metadata. If not, the corresponding reactives
-#' that set the output doseTable will show a silent shiny error (see \link{shiny::req} for more information).
+#' that set the output doseTable will show a silent shiny error (see [shiny::req()] for more information).
+#' 
+#' @inheritParams shinytdmore-module
 #' 
 #' @export
 doseTable <- function(input, output, session, state) {
@@ -39,23 +54,23 @@ doseTable <- function(input, output, session, state) {
   tableDf <- singleReactive(state, "regimen",
                      default=defaultReactive,
                      to=function(x) {dplyr::arrange(x, .data$time)})
-  customBorders <- reactive({ 
-    borders <- getTableBorder(tableDf(), state$now)
-    borders
-  })
+  borders <- bordersReactiveVal(tableDf, state)
   callModule(synchronizedHot, "table", 
              stateDf=tableDf, expr={
     colHeaders <- c("Dose", "Formulation", "Fix")
     
     df <- isolate({ tableDf() })
                   
-    z <- timeTable(df, customBorders(), colHeaders=colHeaders)
+    z <- timeTable(df, borders(), colHeaders=colHeaders)
     ## Use a custom editor, since the editor for dropdown is broken...
     z <- rhandsontable::hot_col(z, col="Formulation", type="dropdown", editor="select", selectOptions=levels(df$formulation))
     z
   }, hot_to_r=hot_to_r_datetime)
   observeEvent(input$add, {
-    addDose(state)
+    res <- tryCatch( addDose(state), error=function(e) e)
+    if(!is.null(res)) {
+      shinyBS::createAlert(session, session$ns("alert"), title="Error while creating dose", style="danger", content=htmltools::htmlEscape(capture.output(print(res))))
+    }
   })
 }
 
@@ -77,9 +92,11 @@ addDose <- function(state) {
     newdose$dose <- form$default_value
   }
   state$regimen <- rbind(doses, newdose)
+  NULL #by default, return NULL
 }
 
 #' The recommendationTable uses the state$regimen and state$recommendation tables
+#' @inheritParams shinytdmore-module
 #' 
 recommendationTable <- function(input, output, session, state) {
   defaultReactive <- reactive({
@@ -90,11 +107,8 @@ recommendationTable <- function(input, output, session, state) {
   })
   tableDf <- singleReactive(state, "regimen",
                             default=defaultReactive,
-                            to=function(x) {dplyr::arrange(x, .data$time)})
-  customBorders <- reactive({ 
-    borders <- getTableBorder(tableDf(), state$now)
-    borders
-  })
+                            to=function(x) {x %>% dplyr::select(-.data$recommendation) %>% dplyr::arrange(x, .data$time)})
+  borders <- bordersReactiveVal(tableDf, state)
   callModule(synchronizedHot, "table", 
              stateDf=tableDf, expr={
                regimen <- state$recommendation
@@ -105,14 +119,17 @@ recommendationTable <- function(input, output, session, state) {
                
                colHeaders <- c("Dose", "Formulation", "Fix", "Rec. Dose")
                
-               z <- timeTable(df, customBorders(), colHeaders=colHeaders)
+               z <- timeTable(df, borders(), colHeaders=colHeaders)
                ## Use a custom editor, since the editor for dropdown is broken...
                z <- rhandsontable::hot_col(z, col="Formulation", type="dropdown", editor="select", selectOptions=levels(df$formulation))
                z <- rhandsontable::hot_col(z, col="Rec. Dose", readOnly=TRUE)
                z
              }, hot_to_r=hot_to_r_datetime)
   observeEvent(input$add, {
-    addDose(state)
+    res <- tryCatch( addDose(state), error=function(e) e)
+    if(!is.null(res)) {
+      shinyBS::createAlert(session, session$ns("alert"), title="Error while creating dose", style="danger", content=htmltools::htmlEscape(capture.output(print(res))))
+    }
   })
 }
 
@@ -133,15 +150,13 @@ recommendationTable <- function(input, output, session, state) {
 #' Adding to an existing table duplicates the last row. The time is shifted by `24 hours`.
 #' 
 #' @md
-#' @param state `reactiveValues` object with at least the values `now`, `observed` and `model`
+#' @inheritParams shinytdmore-module
 #' 
 #' @export
 observationTable <- function(input, output, session, state) {
   tableDf = singleReactive(state, "observed", default=tibble(time=as.POSIXct(character(0)), dv=numeric(0), use=logical(0)),
                            to=function(x) {dplyr::arrange(x, .data$time)})
-  borders <- reactive({
-    getTableBorder(tableDf(), state$now)
-  })
+  borders <- bordersReactiveVal(tableDf, state)
   callModule(synchronizedHot, "table", stateDf=tableDf, expr={
     df <- isolate({ tableDf() })
     
@@ -153,19 +168,27 @@ observationTable <- function(input, output, session, state) {
   }, hot_to_r=hot_to_r_datetime)
   
   observeEvent(input$add, {
-    df <- if(is.null(state$observed)) tibble() else state$observed
-    now <- if(is.null(state$now)) as.POSIXct(NA) else state$now
-    dosingInterval <- 24 #in hours
-    
-    if(nrow(df) > 0) {
-      newrow <- df[ nrow(df), ] #last dose
-      newrow$time <- newrow$time + dosingInterval*3600
-    } else {
-      newrow <- tibble(time=now, dv=0, use=TRUE)
+    res <- tryCatch( addObservation(state), error=function(e) e)
+    if(!is.null(res)) {
+      shinyBS::createAlert(session, session$ns("alert"), title="Error while creating observation", style="danger", content=htmltools::htmlEscape(capture.output(print(res))))
     }
-    
-    state$observed <- rbind(state$observed, newrow)
   })
+}
+
+addObservation <- function(state) {
+  df <- if(is.null(state$observed)) tibble() else state$observed
+  now <- if(is.null(state$now)) as.POSIXct(NA) else state$now
+  dosingInterval <- 24 #in hours
+  
+  if(nrow(df) > 0) {
+    newrow <- df[ nrow(df), ] #last dose
+    newrow$time <- newrow$time + dosingInterval*3600
+  } else {
+    newrow <- tibble(time=now, dv=0, use=TRUE)
+  }
+  
+  state$observed <- rbind(state$observed, newrow)
+  NULL
 }
 
 #' Create a user interface to represent the covariates
@@ -185,6 +208,7 @@ observationTable <- function(input, output, session, state) {
 #' 
 #' 
 #' @md
+#' @inheritParams shinytdmore-module
 #' @param state `reactiveValues` object with at least the values `now`, `observed` and `model`
 #' 
 #' @export
@@ -211,14 +235,12 @@ covariatesTable <- function(input, output, session, state) {
      
      x
   })
-  borders <- reactive({
-    getTableBorder(tableDf(), state$now)
-  })
+  borders <- bordersReactiveVal(tableDf, state)
   callModule(synchronizedHot, "table", stateDf=tableDf, expr={
     df <- isolate({ tableDf() })
     
     # setup column headers
-    covsNames <- colnames(df)[2:ncol(df)]
+    covsNames <- colnames(df)[-1] #names without first column (time)
     colHeaders <- vapply(covsNames, function(x){
       cov <- tdmore::getMetadataByName(state$model, x)
       if(is.null(cov)) return(x)
@@ -256,7 +278,11 @@ covariatesTable <- function(input, output, session, state) {
   }, hot_to_r=hot_to_r_datetime)
   
   observeEvent(input$add, {
-    addCovariate(state, tableDf())
+    res <- tryCatch( addCovariate(state, tableDf()), error=function(e) e)
+    if(!is.null(res)) {
+      shinyBS::createAlert(session, session$ns("alert"), title="Error while creating covariate", style="danger", content=htmltools::htmlEscape(capture.output(print(res))))
+    }
+    
   })
 }
 
@@ -304,4 +330,7 @@ addCovariate <- function(state, df) {
   newrow[, covs] <- as.numeric(NA)
   
   state$covariates <- dplyr::bind_rows(state$covariates, newrow)
+  NULL
 }
+
+

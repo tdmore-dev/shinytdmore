@@ -19,6 +19,8 @@ RUN R -e 'install.packages("DT")'
 RUN R -e 'install.packages("plotly")'
 RUN R -e 'install.packages("rhandsontable")'
 RUN R -e 'install.packages("shinyBS")'
+RUN R -e 'install.packages("shinyjs")'
+RUN R -e 'install.packages("anytime")'
 
 # Set the working directory to /app
 WORKDIR /app

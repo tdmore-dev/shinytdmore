@@ -26,4 +26,9 @@ pheno <- function() {
 }
 
 nlmixr::nlmixr(pheno) %>% tdmore::tdmore() %>%
-  tdmore::metadata(tdmore::observed_variables("cp"))
+  tdmore::metadata(
+    tdmore::output(name="cp", label="Concentration", unit="mg/L"),
+                   tdmore::formulation(name="IV", unit="mg", default_value=130, dosing_interval=8),
+                   tdmore::formulation(name="intramusc", unit="mg", default_value=65, dosing_interval=8),
+                   tdmore::formulation(name="per os", unit="mg", default_value=15, dosing_interval=24)
+                   )
