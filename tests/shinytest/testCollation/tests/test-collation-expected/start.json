@@ -11,7 +11,7 @@
     "LC_COLLATE": "C",
     "a": 1,
     "b": 3,
-    "icuGetCollate": "ICU not in use",
+    "icuGetCollate": "ASCII",
     "sortedArray": [
       "A",
       "B",

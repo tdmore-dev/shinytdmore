@@ -1,3 +1,4 @@
+icuSetCollate(locale="ASCII")
 library(shinytdmore)
 library(shiny)
 library(tibble)

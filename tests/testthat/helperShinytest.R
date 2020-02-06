@@ -43,7 +43,12 @@ snapshot <- function(text, id) {
   app <- get("app", envir=parent.frame())
   destDir <- paste0(app$getSnapshotDir(), "-current")
   file <- file.path(destDir, paste0(id,".download"))
-  writeLines(text, file) #make sure downloaded HTML matches
+  
+  fileCon <- base::file(file, open="wb")
+  ## writeLines writes either \n or \r\n depending on the platform
+  ## For more control, open a binary connection and specify the precise value
+  writeLines(text, fileCon, sep="\n") #make sure downloaded HTML matches
+  close(fileCon)
 }
 
 ## ensure input/output/export all have a consistent order

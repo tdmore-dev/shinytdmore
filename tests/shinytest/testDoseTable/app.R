@@ -1,3 +1,4 @@
+icuSetCollate(locale="ASCII")
 library(shinytdmore)
 
 options(shiny.reactlog=TRUE)

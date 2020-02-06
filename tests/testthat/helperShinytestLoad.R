@@ -33,14 +33,16 @@ testShiny <- function(appDir) {
   }
   test_that(paste0("shinytest for ", appDir, "..."), {
     appDir <- testthat::test_path("../shinytest/", appDir)
-    results <- 
-      withr::with_envvar(c(LC_COLLATE="C"), {
-        withr::with_libpaths(tmp_lib, {
-        shinytest::testApp(appDir=appDir, compareImages=!testthat::is_testing(), quiet=FALSE)
-      }, action="prefix")
-      })
+    results <- testApp(appDir=appDir)
     shinytest::expect_pass(results)
   })
+}
+
+testApp <- function(appDir) {
+  withr::local_envvar(c(LC_COLLATE="C"))
+  withr::local_libpaths(tmp_lib, action="prefix")
+  results <- shinytest::testApp(appDir=appDir, compareImages=!testthat::is_testing(), quiet=FALSE)
+  results
 }
 
 testShiny_dir <- function() {

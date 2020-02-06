@@ -1,3 +1,5 @@
+icuSetCollate(locale="ASCII")
+Sys.setlocale(category="LC_TIME", locale="C")
 library(shinytdmore)
 
 rxModel <- RxODE::RxODE(
@@ -29,19 +31,19 @@ ui <- fluidPage(
 shinyApp(ui=ui, server=function(input, output, session) {
   state <- reactiveValues()
   state$regimen <- tibble::tibble(
-    time=as.POSIXct("2000-01-01 08:00")+lubridate::dhours(seq(0, 100, by=8)),
+    time=as.POSIXct("2000-01-01 08:00", tz="GMT")+lubridate::dhours(seq(0, 100, by=8)),
     dose=15,
     formulation="CompoundA",
     fix=c(TRUE, TRUE, TRUE, rep(FALSE, 10))
   )
   state$target <- list(min=12, max=15)
   state$observed <- tibble::tibble(
-    time=as.POSIXct("2000-01-01 11:30"),
+    time=as.POSIXct("2000-01-01 11:30", tz="GMT"),
     dv=60,
     use=TRUE
   )
   state$model <- myModel
-  state$now <- as.POSIXct("2000-01-02 08:00")
+  state$now <- as.POSIXct("2000-01-02 08:00", tz="GMT")
   calculation(state)
   callModule(fitPlot, "plots", state=state)
   # output$debug <- shiny::renderUI({

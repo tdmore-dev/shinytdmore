@@ -10,7 +10,7 @@ app$snapshot(filename="snapshot.json")
 el <- app$findElement(xpath="//div[@data-value='aboutTabId']")
 el$findElement(xpath="p")$getText()
 
-writeLines( app$getSource(), file.path(destDir, "source.html.download") ) #make sure downloaded HTML matches
+snapshotSource("source") #make sure downloaded HTML matches
 
 p <- app$.__enclos_env__$private$shinyProcess
 p$interrupt()

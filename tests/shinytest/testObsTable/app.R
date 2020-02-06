@@ -1,3 +1,4 @@
+icuSetCollate(locale="ASCII")
 library(shinytdmore)
 
 ui <- tableUI("myObs", label="Add")

@@ -1,3 +1,6 @@
+icuSetCollate(locale="ASCII")
+Sys.setlocale(category="LC_TIME", locale="C")
+Sys.setenv(TZ='GMT')
 options(useFancyQuotes = FALSE)
 library(shinytdmore)
 options(shiny.reactlog=TRUE)
@@ -33,6 +36,7 @@ shinyApp(ui=ui, server=function(input, output, session) {
   state <- reactiveValues()
   #state$target <- list(min=12, max=15)
   state$model <- myModel #specify a model
+  state$now <- as.POSIXct("2000-01-01 12:00", tz="GMT")
   #state$covariates <- tibble::tibble(time=as.POSIXct("1999-12-15 12:00"), WT=70)
   # state$now <- as.POSIXct("2000-01-01 12:00")
   # state$regimen <- tibble(time=as.POSIXct("1999-12-15 12:00"),

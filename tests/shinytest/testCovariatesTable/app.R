@@ -1,3 +1,4 @@
+icuSetCollate(locale="ASCII")
 library(shinytdmore)
 
 myModel <- tdmore::tdmore(

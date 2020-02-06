@@ -1,3 +1,4 @@
+icuSetCollate(locale="ASCII")
 library(shinytdmore)
 
 ui <- aboutTabUI(id = "aboutTabId")
