@@ -6,7 +6,6 @@ source("../../../testthat/helperShinytest.R")
 app <- ShinyDriver$new("..", loadTimeout = 30000, seed=1234)
 app$snapshotInit("test-rhandsontable")
 app$snapshot(filename = "start.json", items=list(input=TRUE, output=FALSE, export=TRUE)) #do not take the plot into account
-normalize("start.json")
 
 # Test modifying cells in rapid succession --------------------------------
 ## - Without any binding on the server side, this works perfectly

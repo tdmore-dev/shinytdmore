@@ -61,19 +61,6 @@ Sys.setlocale(category="LC_COLLATE", "C")
 sortByName <- function(list) {
   list[ sort(names(list)) ]
 }
-normalize <- function(filename, app=get("app", envir=parent.frame()) ) {
-  if(is.null(app)) {
-    file <- filename
-  } else {
-    current_dir <- paste0(app$getSnapshotDir(), "-current")
-    file <- file.path(current_dir, filename)
-  }
-  json <- jsonlite::read_json(file)
-  json$input <- sortByName( json$input )
-  json$output <- sortByName( json$output )
-  json$export <- sortByName( json$export )
-  jsonlite::write_json(json, path=file, pretty=2, auto_unbox=TRUE)
-}
 
 setupHtmlwidgetsDebug <- function(app) {
   f = "

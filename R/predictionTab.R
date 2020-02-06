@@ -28,7 +28,7 @@ predictionTabUI <- function(id) {
     shinyBS::bsCollapse(id=ns("bsCollapse"), multiple=T, open=c("Doses", "Measures", "Now"),
       shinyBS::bsCollapsePanel(title="Doses", style="primary",
         tableUI(ns("doses"), "Add dose"), #either one of these is shown through shinyJS::toggle()
-        tableUI(ns("recommendation"), "Add dose")
+        shinyjs::hidden(tableUI(ns("recommendation"), "Add dose"))
       ),
       shinyBS::bsCollapsePanel(title="Measures", style="primary", 
         tableUI(ns("observation"), "Add observation")

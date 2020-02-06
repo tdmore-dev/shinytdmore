@@ -4,8 +4,8 @@ app <- ShinyDriver$new("..", loadTimeout = 30000, seed=1234)
 app$snapshotInit("test-predictiontab")
 source("../../../testthat/helperShinytest.R")
 
-#!!! plotly output snapshot does not work if a value is not rendered due to shiny::req()
-# https://github.com/ropensci/plotly/issues/1685
+### TODO: In Linux, the prediction-recommendation-table-table is not present in the exported output
+### In windows, apparently it is??
 app$snapshot(filename="start.json", items=list(input=TRUE))
 
 # add a covariate
