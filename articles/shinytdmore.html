@@ -56,18 +56,6 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-<li>
-      <a href="../articles/modules.html">shinytdmore modules</a>
-    </li>
-  </ul>
-</li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
@@ -101,220 +89,182 @@
 
     
     
+<pre><code>## Package shinytdmore is not available. Installing new version...
+## Installing temporary version of shinytdmore</code></pre>
 <div id="introduction" class="section level2">
 <h2 class="hasAnchor">
 <a href="#introduction" class="anchor"></a>Introduction</h2>
 <p>Shinytdmore helps you build an application for dose adaptation. This vignette will take you through the application step-by-step.</p>
 </div>
-<div id="patient-selection-screen" class="section level2">
+<div id="prediction-tab-default-menu" class="section level2">
 <h2 class="hasAnchor">
-<a href="#patient-selection-screen" class="anchor"></a>Patient selection screen</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw"><a href="https://rdrr.io/r/base/Sys.sleep.html">Sys.sleep</a></span>(<span class="dv">2</span>)</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2">file &lt;-<span class="st"> </span>knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/fig_path.html">fig_path</a></span>(<span class="st">"png"</span>)</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3">app<span class="op">$</span><span class="kw">takeScreenshot</span>(file)</a>
-<a class="sourceLine" id="cb1-4" data-line-number="4">knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/include_graphics.html">include_graphics</a></span>(file)</a></code></pre></div>
+<a href="#prediction-tab-default-menu" class="anchor"></a>Prediction tab default menu</h2>
 <p><img src="shinytdmore_files/figure-html/unnamed-chunk-1-1.png" width="496"></p>
 </div>
-<div id="create-new-patient" class="section level2">
+<div id="add-the-posology" class="section level2">
 <h2 class="hasAnchor">
-<a href="#create-new-patient" class="anchor"></a>Create new patient</h2>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">app<span class="op">$</span><span class="kw">setInputs</span>(<span class="st">`</span><span class="dt">patientsTabId-newPatientButton</span><span class="st">`</span>=<span class="st">"click"</span>)</a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="kw"><a href="https://rdrr.io/r/base/Sys.sleep.html">Sys.sleep</a></span>(<span class="dv">2</span>)</a>
-<a class="sourceLine" id="cb2-3" data-line-number="3">file &lt;-<span class="st"> </span>knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/fig_path.html">fig_path</a></span>(<span class="st">"png"</span>)</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">app<span class="op">$</span><span class="kw">takeScreenshot</span>(file)</a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/include_graphics.html">include_graphics</a></span>(file)</a></code></pre></div>
-<p><img src="shinytdmore_files/figure-html/unnamed-chunk-2-1.png" width="496"></p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">app<span class="op">$</span><span class="kw">setInputs</span>(<span class="st">`</span><span class="dt">newPatientDialogId-firstname</span><span class="st">`</span>=<span class="st">"Ruben"</span>, <span class="st">`</span><span class="dt">newPatientDialogId-lastname</span><span class="st">`</span>=<span class="st">"Faelens"</span>)</a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">app<span class="op">$</span><span class="kw">setInputs</span>(<span class="st">`</span><span class="dt">newPatientDialogId-modalFormOK</span><span class="st">`</span>=<span class="st">"click"</span>)</a>
-<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="kw"><a href="https://rdrr.io/r/base/Sys.sleep.html">Sys.sleep</a></span>(<span class="dv">2</span>)</a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">file &lt;-<span class="st"> </span>knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/fig_path.html">fig_path</a></span>(<span class="st">"png"</span>)</a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">app<span class="op">$</span><span class="kw">takeScreenshot</span>(file)</a>
-<a class="sourceLine" id="cb3-6" data-line-number="6">knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/include_graphics.html">include_graphics</a></span>(file)</a></code></pre></div>
-<p><img src="shinytdmore_files/figure-html/unnamed-chunk-3-1.png" width="496"></p>
+<a href="#add-the-posology" class="anchor"></a>Add the posology</h2>
+<p><img src="shinytdmore_files/figure-html/unnamed-chunk-2-1.png" width="496"> When you add a dose, the default formulation in the model is used. Clicking <em>add dose</em> multiple times will add new doses with the right interdose interval.</p>
 </div>
-<div id="prediction-screen" class="section level2">
+<div id="add-an-observation" class="section level2">
 <h2 class="hasAnchor">
-<a href="#prediction-screen" class="anchor"></a>Prediction screen</h2>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1">link &lt;-<span class="st"> </span>app<span class="op">$</span><span class="kw">findElement</span>(<span class="dt">linkText=</span><span class="st">'Ruben Faelens'</span>)</a>
-<a class="sourceLine" id="cb4-2" data-line-number="2">link<span class="op">$</span><span class="kw">click</span>()</a>
-<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="kw"><a href="https://rdrr.io/r/base/Sys.sleep.html">Sys.sleep</a></span>(<span class="dv">10</span>)</a>
-<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="co">#app$getDebugLog()</span></a>
-<a class="sourceLine" id="cb4-5" data-line-number="5">file &lt;-<span class="st"> </span>knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/fig_path.html">fig_path</a></span>(<span class="st">"png"</span>)</a>
-<a class="sourceLine" id="cb4-6" data-line-number="6">app<span class="op">$</span><span class="kw">takeScreenshot</span>(file)</a>
-<a class="sourceLine" id="cb4-7" data-line-number="7">knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/include_graphics.html">include_graphics</a></span>(file)</a></code></pre></div>
-<p><img src="shinytdmore_files/figure-html/unnamed-chunk-4-1.png" width="504"></p>
+<a href="#add-an-observation" class="anchor"></a>Add an observation</h2>
+<p><img src="shinytdmore_files/figure-html/unnamed-chunk-3-1.png" width="496"></p>
+<p>The observation is not used yet, because the current time (“now”) is still 1st of January at midnight.</p>
+</div>
+<div id="changing-the-now-time" class="section level2">
+<h2 class="hasAnchor">
+<a href="#changing-the-now-time" class="anchor"></a>Changing the now time</h2>
+<p><img src="shinytdmore_files/figure-html/unnamed-chunk-4-1.png" width="496"></p>
+<p>The observation is now taken into account. From the population plot, we see that this individual has relatively low concentrations with regards to the starting dose.</p>
 </div>
 <div id="prediction-graph" class="section level2">
 <h2 class="hasAnchor">
 <a href="#prediction-graph" class="anchor"></a>Prediction graph</h2>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1">app<span class="op">$</span><span class="kw">setInputs</span>(<span class="st">`</span><span class="dt">predictionTabId-next_plot</span><span class="st">`</span> =<span class="st"> "click"</span>)</a>
-<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="co">#app$getDebugLog()</span></a>
-<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="kw"><a href="https://rdrr.io/r/base/Sys.sleep.html">Sys.sleep</a></span>(<span class="dv">5</span>)</a>
-<a class="sourceLine" id="cb5-4" data-line-number="4">file &lt;-<span class="st"> </span>knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/fig_path.html">fig_path</a></span>(<span class="st">"png"</span>)</a>
-<a class="sourceLine" id="cb5-5" data-line-number="5">app<span class="op">$</span><span class="kw">takeScreenshot</span>(file)</a>
-<a class="sourceLine" id="cb5-6" data-line-number="6">knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/include_graphics.html">include_graphics</a></span>(file)</a></code></pre></div>
-<p><img src="shinytdmore_files/figure-html/unnamed-chunk-5-1.png" width="504"></p>
+<p><img src="shinytdmore_files/figure-html/unnamed-chunk-5-1.png" width="496"></p>
+</div>
+<div id="recommendation" class="section level2">
+<h2 class="hasAnchor">
+<a href="#recommendation" class="anchor"></a>Recommendation</h2>
+<p><img src="shinytdmore_files/figure-html/unnamed-chunk-6-1.png" width="496"></p>
 </div>
 <div id="final-debug-log" class="section level2">
 <h2 class="hasAnchor">
 <a href="#final-debug-log" class="anchor"></a>Final debug log</h2>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1">app<span class="op">$</span><span class="kw">getDebugLog</span>()</a></code></pre></div>
-<pre><code>## S/I 14:49:03.00 window.shinytest loaded
-## S/I 14:49:03.00 already connected
-## S/I 14:49:03.00 waiting for first output
-## B/I 14:49:03.64 find (:)
-## B/I 14:49:03.66 find (:)
-## B/I 14:49:03.66 getId (:)
-## B/I 14:49:03.66 getValue (:)
-## B/I 14:49:03.66 subscribe (:)
-## S/I 14:49:04.00 idle
-## S/I 14:49:04.00 Found message with values field.
-## S/I 14:49:04.00 value predictionTabId-plot_type
-## S/I 14:49:04.00 value patientsTabId-patientTable
-## S/I 14:49:04.00 value predictionTabId-display_covariates
-## S/I 14:49:04.00 busy
-## S/I 14:49:04.00 idle
-## S/I 14:49:04.00 busy
-## S/I 14:49:04.00 idle
-## B/W 14:49:04.58 TypeError: undefined is not a function (evaluating 'a.format(this.options.viewformat)')
-##   value2html (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:6)
-##   render (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:5)
-##   setValue (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:5)
-##   (anonymous function) (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:5)
-##   each (http://127.0.0.1:4266/shared/jquery.min.js:2)
-##   each (http://127.0.0.1:4266/shared/jquery.min.js:2)
-##   editable (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:5)
-##   (anonymous function) (http://127.0.0.1:4266/:73)
-##   _sendMessagesToHandlers (http://127.0.0.1:4266/shared/shiny.min.js:3)
-##   (anonymous function) (http://127.0.0.1:4266/shared/shiny.min.js:3)
-##   _sendMessagesToHandlers (http://127.0.0.1:4266/shared/shiny.min.js:3)
-##   dispatchMessage (http://127.0.0.1:4266/shared/shiny.min.js:3)
-##   onmessage (http://127.0.0.1:4266/shared/shiny.min.js:3)
-## B/I 14:49:04.64 setValue (:)
-## B/I 14:49:04.64 save (:)
-## B/I 14:49:04.66 getId (:)
-## B/I 14:49:04.66 getValue (:)
-## B/W 14:49:04.82 TypeError: undefined is not a function (evaluating 'a.format(this.options.viewformat)')
-##   value2html (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:6)
-##   render (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:5)
-##   setValue (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:5)
-##   (anonymous function) (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:5)
-##   each (http://127.0.0.1:4266/shared/jquery.min.js:2)
-##   each (http://127.0.0.1:4266/shared/jquery.min.js:2)
-##   editable (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:5)
-##   (anonymous function) (http://127.0.0.1:4266/:73)
-##   _sendMessagesToHandlers (http://127.0.0.1:4266/shared/shiny.min.js:3)
-##   (anonymous function) (http://127.0.0.1:4266/shared/shiny.min.js:3)
-##   _sendMessagesToHandlers (http://127.0.0.1:4266/shared/shiny.min.js:3)
-##   dispatchMessage (http://127.0.0.1:4266/shared/shiny.min.js:3)
-##   onmessage (http://127.0.0.1:4266/shared/shiny.min.js:3)
-## B/I 14:49:04.84 setValue (:)
-## B/I 14:49:04.84 save (:)
-## B/I 14:49:04.85 getId (:)
-## B/I 14:49:04.85 getValue (:)
-## S/I 14:49:05.00 busy
-## S/I 14:49:05.00 idle
-## S/I 14:49:07.00 inputQueue: adding patientsTabId-newPatientButton
-## S/I 14:49:07.00 inputQueue: flushing patientsTabId-newPatientButton
-## S/I 14:49:07.00 busy
-## S/I 14:49:07.00 idle
-## S/I 14:49:07.00 Found message with values field.
-## S/I 14:49:07.00 busy
-## S/I 14:49:07.00 idle
-## B/I 14:49:07.16 find (:)
-## B/I 14:49:07.16 find (:)
-## B/I 14:49:07.24 find (:)
-## B/I 14:49:07.25 find (:)
-## S/I 14:49:09.00 inputQueue: adding newPatientDialogId-firstname
-## S/I 14:49:09.00 inputQueue: adding newPatientDialogId-lastname
-## S/I 14:49:09.00 inputQueue: flushing newPatientDialogId-firstname
-## S/I 14:49:09.00 inputQueue: flushing newPatientDialogId-lastname
-## S/I 14:49:09.00 Found message with values field.
-## S/I 14:49:09.00 inputQueue: adding newPatientDialogId-modalFormOK
-## S/I 14:49:09.00 inputQueue: flushing newPatientDialogId-modalFormOK
-## S/I 14:49:09.00 busy
-## S/I 14:49:09.00 idle
-## S/I 14:49:09.00 Found message with values field.
-## S/I 14:49:09.00 value patientsTabId-patientTable
-## S/I 14:49:09.00 busy
-## S/I 14:49:09.00 idle
-## B/I 14:49:09.88 find (:)
-## B/I 14:49:09.89 find (:)
-## S/I 14:49:12.00 busy
-## S/I 14:49:12.00 idle
-## S/I 14:49:12.00 busy
-## B/W 14:49:12.17 TypeError: undefined is not a function (evaluating 'a.format(this.options.viewformat)')
-##   value2html (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:6)
-##   render (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:5)
-##   setValue (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:5)
-##   (anonymous function) (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:5)
-##   each (http://127.0.0.1:4266/shared/jquery.min.js:2)
-##   each (http://127.0.0.1:4266/shared/jquery.min.js:2)
-##   editable (http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js:5)
-##   (anonymous function) (http://127.0.0.1:4266/:73)
-##   _sendMessagesToHandlers (http://127.0.0.1:4266/shared/shiny.min.js:3)
-##   (anonymous function) (http://127.0.0.1:4266/shared/shiny.min.js:3)
-##   _sendMessagesToHandlers (http://127.0.0.1:4266/shared/shiny.min.js:3)
-##   dispatchMessage (http://127.0.0.1:4266/shared/shiny.min.js:3)
-##   onmessage (http://127.0.0.1:4266/shared/shiny.min.js:3)
-## B/I 14:49:12.18 setValue (:)
-## B/I 14:49:12.18 save (:)
-## B/I 14:49:12.19 getId (:)
-## B/I 14:49:12.19 getValue (:)
-## B/I 14:49:12.26 find (:)
-## B/I 14:49:12.26 find (:)
-## S/I 14:49:15.00 idle
-## S/I 14:49:15.00 value predictionTabId-hotdose
-## S/I 14:49:15.00 value predictionTabId-plot_title
-## S/I 14:49:15.00 value predictionTabId-tab_title
-## S/I 14:49:15.00 value predictionTabId-hotobs
-## S/I 14:49:15.00 value predictionTabId-populationPlot
-## S/I 14:49:16.00 busy
-## B/I 14:49:16.38 find (:)
-## B/I 14:49:16.38 find (:)
-## S/I 14:49:17.00 idle
-## S/I 14:49:17.00 value predictionTabId-populationPlot
-## S/I 14:49:17.00 busy
-## S/I 14:49:17.00 idle
-## S/I 14:49:17.00 value predictionTabId-hotobs
-## S/I 14:49:17.00 busy
-## S/I 14:49:17.00 idle
-## S/I 14:49:18.00 busy
-## B/I 14:49:18.29 find (:)
-## B/I 14:49:18.29 find (:)
-## S/I 14:49:20.00 idle
-## S/I 14:49:20.00 value predictionTabId-populationPlot
-## S/I 14:49:22.00 inputQueue: adding predictionTabId-next_plot
-## S/I 14:49:22.00 inputQueue: flushing predictionTabId-next_plot
-## S/I 14:49:22.00 busy
-## S/I 14:49:22.00 idle
-## S/I 14:49:22.00 Found message with values field.
-## S/I 14:49:22.00 value predictionTabId-plot_title
-## S/I 14:49:22.00 value predictionTabId-plot_type
-## S/I 14:49:22.00 busy
-## B/I 14:49:22.57 find (:)
-## B/I 14:49:22.57 find (:)
-## S/I 14:49:24.00 idle
-## S/I 14:49:24.00 value predictionTabId-fitPlot
-## C/I ----------- [1] "View patient Ruben Faelens (ID=1795921608)"
+<pre><code>## S/I 10:46:52.00 window.shinytest loaded
+## S/I 10:46:52.00 already connected
+## S/I 10:46:52.00 waiting for first output
+## B/I 10:46:52.53 find (:)
+## B/I 10:46:52.55 find (:)
+## B/I 10:46:52.55 getId (:)
+## B/I 10:46:52.55 getValue (:)
+## B/I 10:46:52.55 subscribe (:)
+## B/I 10:46:53.03 find (:)
+## B/I 10:46:53.04 find (:)
+## S/I 10:46:55.00 idle
+## S/I 10:46:55.00 Found message with values field.
+## S/I 10:46:55.00 value prediction-doses-table-table
+## S/I 10:46:55.00 value prediction-observation-table-table
+## S/I 10:46:55.00 value prediction-plots-population
+## S/I 10:46:55.00 busy
+## S/I 10:46:55.00 idle
+## S/I 10:46:58.00 inputQueue: adding prediction-doses-add
+## S/I 10:46:58.00 inputQueue: flushing prediction-doses-add
+## S/I 10:46:58.00 busy
+## S/I 10:46:58.00 idle
+## S/I 10:46:58.00 Found message with values field.
+## S/I 10:46:58.00 value prediction-doses-table-table
+## S/I 10:46:58.00 value prediction-plots-population
+## S/I 10:46:59.00 busy
+## B/I 10:46:59.10 find (:)
+## B/I 10:46:59.10 find (:)
+## S/I 10:47:00.00 idle
+## S/I 10:47:00.00 value prediction-plots-population
+## S/I 10:47:00.00 busy
+## S/I 10:47:00.00 inputQueue: adding prediction-doses-add
+## S/I 10:47:00.00 idle
+## S/I 10:47:00.00 inputQueue: flushing prediction-doses-add
+## S/I 10:47:00.00 Found message with values field.
+## S/I 10:47:00.00 busy
+## S/I 10:47:00.00 idle
+## S/I 10:47:00.00 value prediction-doses-table-table
+## S/I 10:47:00.00 value prediction-plots-population
+## S/I 10:47:01.00 busy
+## S/I 10:47:01.00 inputQueue: adding prediction-doses-add
+## S/I 10:47:01.00 inputQueue: flushing prediction-doses-add
+## B/I 10:47:01.17 find (:)
+## B/I 10:47:01.17 find (:)
+## S/I 10:47:02.00 idle
+## S/I 10:47:02.00 Found message with values field.
+## S/I 10:47:02.00 value prediction-plots-population
+## S/I 10:47:02.00 busy
+## S/I 10:47:02.00 idle
+## S/I 10:47:02.00 busy
+## S/I 10:47:02.00 idle
+## S/I 10:47:03.00 value prediction-doses-table-table
+## S/I 10:47:03.00 value prediction-plots-population
+## S/I 10:47:03.00 busy
+## B/I 10:47:03.12 find (:)
+## B/I 10:47:03.13 find (:)
+## S/I 10:47:04.00 idle
+## S/I 10:47:04.00 value prediction-plots-population
+## S/I 10:47:04.00 busy
+## S/I 10:47:04.00 idle
+## S/I 10:47:05.00 busy
+## S/I 10:47:05.00 idle
+## S/I 10:47:05.00 value prediction-plots-population
+## S/I 10:47:05.00 busy
+## B/I 10:47:05.66 find (:)
+## B/I 10:47:05.66 find (:)
+## S/I 10:47:06.00 idle
+## S/I 10:47:06.00 value prediction-plots-population
+## S/I 10:47:07.00 inputQueue: adding prediction-observation-add
+## S/I 10:47:07.00 inputQueue: flushing prediction-observation-add
+## S/I 10:47:07.00 busy
+## S/I 10:47:07.00 idle
+## S/I 10:47:07.00 Found message with values field.
+## S/I 10:47:07.00 value prediction-observation-table-table
+## S/I 10:47:07.00 value prediction-plots-population
+## S/I 10:47:07.00 busy
+## S/I 10:47:07.00 idle
+## S/I 10:47:07.00 busy
+## B/I 10:47:07.91 find (:)
+## B/I 10:47:07.91 find (:)
+## S/I 10:47:09.00 idle
+## S/I 10:47:09.00 value prediction-plots-population
+## S/I 10:47:09.00 busy
+## S/I 10:47:09.00 idle
+## S/I 10:47:09.00 value prediction-plots-population
+## S/I 10:47:10.00 busy
+## S/I 10:47:10.00 idle
+## S/I 10:47:10.00 value prediction-plots-population
+## S/I 10:47:10.00 busy
+## B/I 10:47:10.53 find (:)
+## B/I 10:47:10.53 find (:)
+## S/I 10:47:11.00 idle
+## S/I 10:47:11.00 value prediction-plots-population
+## S/I 10:47:12.00 busy
+## S/I 10:47:12.00 idle
+## S/I 10:47:12.00 value prediction-doses-table-table
+## B/I 10:47:12.35 save (:)
+## B/I 10:47:12.36 getId (:)
+## B/I 10:47:12.36 getValue (:)
+## S/I 10:47:13.00 value prediction-observation-table-table
+## S/I 10:47:13.00 value prediction-plots-population
+## S/I 10:47:13.00 busy
+## B/I 10:47:13.16 find (:)
+## B/I 10:47:13.16 find (:)
+## S/I 10:47:15.00 idle
+## S/I 10:47:15.00 value prediction-plots-population
+## S/I 10:47:15.00 busy
+## S/I 10:47:15.00 idle
+## S/I 10:47:15.00 value prediction-plots-fit
+## S/I 10:47:15.00 busy
+## S/I 10:47:15.00 idle
+## S/I 10:47:18.00 busy
+## S/I 10:47:18.00 idle
+## S/I 10:47:18.00 busy
+## S/I 10:47:18.00 idle
+## C/I ----------- recommendationPredict  --&gt; &lt;simpleError in checkRegimen(regimen, iov): is.data.frame(regimen) is not TRUE&gt;
+## C/I ----------- structure(list(message = "is.data.frame(regimen) is not TRUE", 
+## C/I -----------     call = checkRegimen(regimen, iov)), class = c("simpleError", 
+## C/I ----------- "error", "condition"))
 ## C/E ----------- Running application in test mode.
 ## C/E ----------- Loading required package: shiny
 ## C/E ----------- 
-## C/E ----------- Listening on http://127.0.0.1:4266
+## C/E ----------- Listening on http://127.0.0.1:6812
+## C/E ----------- Warning in is.na(x) :
+## C/E -----------   is.na() applied to non-(list or vector) of type 'closure'
+## C/E ----------- Warning: Column `formulation` has different attributes on LHS and RHS of join
+## C/E ----------- Warning in is.na(x) :
+## C/E -----------   is.na() applied to non-(list or vector) of type 'closure'
+## C/E ----------- Warning: Column `formulation` has different attributes on LHS and RHS of join
 ## C/E ----------- Warning in is.na(x) :
 ## C/E -----------   is.na() applied to non-(list or vector) of type 'closure'
 ## C/E ----------- Warning in is.na(x) :
 ## C/E -----------   is.na() applied to non-(list or vector) of type 'closure'
-## C/E ----------- Warning in is.na(x) :
-## C/E -----------   is.na() applied to non-(list or vector) of type 'closure'
-## C/E ----------- Warning: Ignoring unknown aesthetics: text
-## C/E ----------- Warning in is.na(x) :
-## C/E -----------   is.na() applied to non-(list or vector) of type 'closure'
-## C/E ----------- Warning in is.na(x) :
-## C/E -----------   is.na() applied to non-(list or vector) of type 'closure'
-## C/E ----------- Warning in is.na(x) :
-## C/E -----------   is.na() applied to non-(list or vector) of type 'closure'</code></pre>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1">app<span class="op">$</span><span class="kw"><a href="https://rdrr.io/r/base/stop.html">stop</a></span>()</a></code></pre></div>
+## C/E ----------- Warning: Error in checkRegimen: is.data.frame(regimen) is not TRUE
+## C/E -----------   115: &lt;Anonymous&gt;</code></pre>
 </div>
   </div>
 
@@ -325,10 +275,12 @@
 <a href="#tocnav" class="anchor"></a>Contents</h2>
       <ul class="nav nav-pills nav-stacked">
 <li><a href="#introduction">Introduction</a></li>
-      <li><a href="#patient-selection-screen">Patient selection screen</a></li>
-      <li><a href="#create-new-patient">Create new patient</a></li>
-      <li><a href="#prediction-screen">Prediction screen</a></li>
+      <li><a href="#prediction-tab-default-menu">Prediction tab default menu</a></li>
+      <li><a href="#add-the-posology">Add the posology</a></li>
+      <li><a href="#add-an-observation">Add an observation</a></li>
+      <li><a href="#changing-the-now-time">Changing the now time</a></li>
       <li><a href="#prediction-graph">Prediction graph</a></li>
+      <li><a href="#recommendation">Recommendation</a></li>
       <li><a href="#final-debug-log">Final debug log</a></li>
       </ul>
 </div>

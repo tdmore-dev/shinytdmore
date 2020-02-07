@@ -98,18 +98,6 @@ This includes the prediction plot and the timeline plot." />
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/modules.html">shinytdmore modules</a>
-    </li>
-  </ul>
-</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
@@ -142,44 +130,61 @@ This includes the prediction plot and the timeline plot.</h1>
 This includes the prediction plot and the timeline plot.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>preparePredictionPlots</span>(<span class='no'>doses</span>, <span class='no'>obs</span>, <span class='no'>model</span>, <span class='no'>covs</span>, <span class='no'>target</span>, <span class='no'>population</span>, <span class='no'>now</span>)</pre>
+    <pre class="usage"><span class='fu'>preparePredictionPlots</span>(
+  <span class='no'>populationPredict</span>,
+  <span class='no'>individualPredict</span>,
+  <span class='no'>observed</span>,
+  <span class='no'>target</span>,
+  <span class='no'>model</span>,
+  <span class='no'>now</span>,
+  <span class='no'>regimen</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>doses</th>
-      <td><p>doses</p></td>
+      <th>populationPredict</th>
+      <td><p>dataframe containing the individual prediction data</p></td>
     </tr>
     <tr>
-      <th>obs</th>
-      <td><p>observations</p></td>
+      <th>individualPredict</th>
+      <td><p>dataframe containing the population prediction data</p></td>
     </tr>
     <tr>
-      <th>model</th>
-      <td><p>tdmore/tdmore_mpc model</p></td>
-    </tr>
-    <tr>
-      <th>covs</th>
-      <td><p>covariates</p></td>
+      <th>observed</th>
+      <td><p>a data.frame with the following columns:</p><ul>
+<li><p><code>time</code> a POSIXct time</p></li>
+<li><p><code>dv</code> the observed data</p></li>
+<li><p><code>use</code> whether the observation should be used in the estimation</p></li>
+</ul></td>
     </tr>
     <tr>
       <th>target</th>
-      <td><p>numeric vector of size 2, min and max value</p></td>
+      <td><p>a named list with min/max values to represent the target concentration</p></td>
     </tr>
     <tr>
-      <th>population</th>
-      <td><p>logical value, true for population, false for individual</p></td>
+      <th>model</th>
+      <td><p>a tdmore model with (ideally) metadata</p></td>
     </tr>
     <tr>
       <th>now</th>
-      <td><p>now date, POSIXlt date</p></td>
+      <td><p>a POSIXct time representing the current time</p></td>
+    </tr>
+    <tr>
+      <th>regimen</th>
+      <td><p>a data.frame with the following columns:</p><ul>
+<li><p><code>time</code> a POSIXct time</p></li>
+<li><p><code>dose</code> a numeric with the dose amount</p></li>
+<li><p><code>formulation</code> a character vector that corresponds to formulations defined in the metadata of the model</p></li>
+<li><p><code>fix</code> a boolean vector describing whether the given regimen can be modified in dose recommendation</p></li>
+</ul></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>a list of two plots</p>
+    <p>a list of plots (p1, p2, p3)</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">

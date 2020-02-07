@@ -95,18 +95,6 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/modules.html">shinytdmore modules</a>
-    </li>
-  </ul>
-</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
@@ -137,22 +125,22 @@
     <p>Prepare the parameters plot.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>prepareParametersPlot</span>(<span class='no'>data</span>, <span class='no'>parameters</span>, <span class='no'>population</span>)</pre>
+    <pre class="usage"><span class='fu'>prepareParametersPlot</span>(<span class='no'>populationPredict</span>, <span class='no'>individualPredict</span>, <span class='no'>parameters</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>data</th>
-      <td><p>dataframe containing the prediction data</p></td>
+      <th>populationPredict</th>
+      <td><p>dataframe containing the individual prediction data</p></td>
+    </tr>
+    <tr>
+      <th>individualPredict</th>
+      <td><p>dataframe containing the population prediction data</p></td>
     </tr>
     <tr>
       <th>parameters</th>
       <td><p>parameters</p></td>
-    </tr>
-    <tr>
-      <th>population</th>
-      <td><p>logical value, true for population, false for individual prediction</p></td>
     </tr>
     </table>
 

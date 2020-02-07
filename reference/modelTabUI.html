@@ -95,18 +95,6 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/modules.html">shinytdmore modules</a>
-    </li>
-  </ul>
-</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
@@ -129,7 +117,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Model tab user interface.</h1>
-    <small class="dont-index">Source: <a href='https://github.com/tdmore-dev/shinytdmore/blob/master/R/modelTab.R'><code>R/modelTab.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/tdmore-dev/shinytdmore/blob/master/R/ui_modelTab.R'><code>R/ui_modelTab.R</code></a></small>
     <div class="hidden name"><code>modelTabUI.Rd</code></div>
     </div>
 
@@ -137,7 +125,7 @@
     <p>Model tab user interface.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>modelTabUI</span>(<span class='no'>id</span>)</pre>
+    <pre class="usage"><span class='fu'>modelTabUI</span>(<span class='no'>id</span>, <span class='kw'>dir</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span>(<span class='st'>"models"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"shinytdmore"</span>))</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -145,6 +133,10 @@
     <tr>
       <th>id</th>
       <td><p>namespace id</p></td>
+    </tr>
+    <tr>
+      <th>dir</th>
+      <td><p>default value for the directory in which to search for models</p></td>
     </tr>
     </table>
 
