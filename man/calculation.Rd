@@ -4,7 +4,7 @@
 \alias{calculation}
 \title{This module performs all of the required calculation for the application.}
 \usage{
-calculation(state, millis = 500, .mc.maxpts = 300)
+calculation(state, millis = 500, mc.maxpts = 300)
 }
 \arguments{
 \item{state}{reactiveValues object with full state}

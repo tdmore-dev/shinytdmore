@@ -52,7 +52,7 @@ defaultData <- list(
 #' @param .mc.maxpts number of points in monte carlo 
 #' 
 #' @export
-calculation <- function(state, millis=500, .mc.maxpts=300) {
+calculation <- function(state, millis=500, mc.maxpts=300) {
   # setup default values
   isolate({
     missingNames <- setdiff(names(defaultData), names(state))
@@ -72,7 +72,7 @@ calculation <- function(state, millis=500, .mc.maxpts=300) {
   
   observeEvent(debounced(), {
     withLogErrors({
-      executeCalculation(state)
+      executeCalculation(state, mc.maxpts=mc.maxpts)
     })
   }, 
     label="TDMore calculation",
@@ -80,7 +80,7 @@ calculation <- function(state, millis=500, .mc.maxpts=300) {
   )
 }
 
-executeCalculation <- function(state) {
+executeCalculation <- function(state, mc.maxpts=100) {
   ## TODO: more fine-grained updating: compare original with new value, only store if really new
   progress <- shiny::Progress$new()
   on.exit(progress$close())
@@ -90,7 +90,7 @@ executeCalculation <- function(state) {
   progress$set(detail = "Population prediction")
   # this fires when any input data changes
   args <- convertDataToTdmore(state)
-  state$populationPredict <- tryCatch({captureStackTraces(calculatePopulationPredict(state, progress, 1/5))}, error=function(e) e)
+  state$populationPredict <- tryCatch({captureStackTraces(calculatePopulationPredict(state, progress, 1/5, mc.maxpts))}, error=function(e) e)
   progress$inc(1/5, detail = "Fitting")
   fit <- state$fit
   if(needsUpdate(fit, args, onlyEstimate=TRUE) ) {
@@ -112,11 +112,11 @@ executeCalculation <- function(state) {
     #no update needed
   }
   progress$set(detail = "Individual prediction")
-  state$individualPredict <- tryCatch( {captureStackTraces(calculateIndividualPredict(state, progress, 1/5))}, error=function(e) e)
+  state$individualPredict <- tryCatch( {captureStackTraces(calculateIndividualPredict(state, progress, 1/5, mc.maxpts))}, error=function(e) e)
   progress$inc(1/5, detail = "Optimizing treatment")
   state$recommendation <- tryCatch({ captureStackTraces(calculateRecommendation(state))}, error=function(e) e)
   progress$set(detail = "Recommendation prediction")
-  state$recommendationPredict <- tryCatch({captureStackTraces(calculateRecommendationPredict(state, progress, 1/5))}, error=function(e) e)
+  state$recommendationPredict <- tryCatch({captureStackTraces(calculateRecommendationPredict(state, progress, 1/5, mc.maxpts))}, error=function(e) e)
 }
 
 
@@ -161,37 +161,37 @@ needsUpdate <- function(fit, args, onlyEstimate=TRUE) {
   })
 }
 
-calculateIndividualPredict <- function(state, progress, amount) {
+calculateIndividualPredict <- function(state, progress, amount, mc.maxpts) {
   args <- convertDataToTdmore(state)
   fit <- state$fit
   if(is.null(fit)) stop("Fit not calculated yet...")
   newdata <- getNewdata(regimen=args$regimen, observed=args$observed, model=args$model)
   
   p <- ShinyToDplyrProgressFacade$new(proxy=progress, amount=amount)
-  data <- stats::predict(fit, newdata=newdata, se.fit=T, level=0.95, .progress=p) # 95% CI by default
+  data <- stats::predict(fit, newdata=newdata, se.fit=T, level=0.95, mc.maxpts=mc.maxpts, .progress=p) # 95% CI by default
   data$TIME <- args$t0 + lubridate::dhours(data$TIME)
   data
 }
 
-calculatePopulationPredict <- function(state, progress, amount) {
+calculatePopulationPredict <- function(state, progress, amount, mc.maxpts) {
   args <- convertDataToTdmore(state)
   fit <- tdmore::estimate(args$model, regimen=args$regimen, covariates=args$covariates)
   
   newdata <- getNewdata(regimen=args$regimen, observed=args$observed, model=args$model)
   
   p <- ShinyToDplyrProgressFacade$new(proxy=progress, amount=amount)
-  data <- stats::predict(fit, newdata=newdata, se.fit=T, level=0.95, .progress=p) # 95% CI by default
+  data <- stats::predict(fit, newdata=newdata, se.fit=T, level=0.95, mc.maxpts=mc.maxpts, .progress=p) # 95% CI by default
   data$TIME <- args$t0 + lubridate::dhours(data$TIME)
   data
 }
 
-calculateRecommendationPredict <- function(state, progress, amount) {
+calculateRecommendationPredict <- function(state, progress, amount, mc.maxpts) {
   args <- convertDataToTdmore(state)
   fit <- state$fit
   newdata <- getNewdata(regimen=args$regimen, observed=args$observed, model=args$model)
   
   p <- ShinyToDplyrProgressFacade$new(proxy=progress, amount=amount)
-  data <- stats::predict(fit, regimen=state$recommendation, newdata=newdata, se.fit=T, level=0.95, .progress=p) # 95% CI by default
+  data <- stats::predict(fit, regimen=state$recommendation, newdata=newdata, se.fit=T, level=0.95, mc.maxpts=mc.maxpts, .progress=p) # 95% CI by default
   data$TIME <- args$t0 + lubridate::dhours(data$TIME)
   data
 }
