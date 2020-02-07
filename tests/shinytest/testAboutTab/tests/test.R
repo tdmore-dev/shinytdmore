@@ -3,6 +3,8 @@ app <- ShinyDriver$new("..", loadTimeout = 30000, seed=1234)
 app$snapshotInit("test")
 destDir <- paste0(app$getSnapshotDir(), "-current")
 
+source("../../../testthat/helperShinytest.R")
+
 ## Filenames should end in either .json, .download or .png
 
 app$snapshot(filename="snapshot.json")
