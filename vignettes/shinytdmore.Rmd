@@ -1,6 +1,5 @@
 ---
 title: "shinytdmore introduction"
-author: "Ruben Faelens"
 date: "09/07/2019"
 output: rmarkdown::html_vignette
 vignette: >
@@ -19,6 +18,11 @@ app <- withr::with_libpaths(tmp_lib, {
 file <- knitr::fig_path("png")
 dir.create(dirname(file), recursive = TRUE, showWarnings = FALSE) #create dir if not exists yet
 
+waitForRecalculating <- function() {
+  app$waitFor("$('.recalculating').length == 0", timeout=20*1000)
+  invisible()
+}
+
 knitr::opts_chunk$set(echo=FALSE)
 ```
 
@@ -27,7 +31,7 @@ Shinytdmore helps you build an application for dose adaptation. This vignette wi
 
 ## Prediction tab default menu
 ```{r}
-Sys.sleep(2)
+waitForRecalculating()
 file <- knitr::fig_path("png")
 app$takeScreenshot(file)
 knitr::include_graphics(file)
@@ -37,12 +41,13 @@ knitr::include_graphics(file)
 ## Add the posology
 ```{r}
 app$setInputs(`prediction-doses-add`="click")
+waitForRecalculating()
 app$setInputs(`prediction-doses-add`="click")
+waitForRecalculating()
 app$setInputs(`prediction-doses-add`="click")
+waitForRecalculating()
 
-Sys.sleep(2)
 app$findElement(".htCheckboxRendererInput")$click() #FIX the first dose
-Sys.sleep(2)
 
 file <- knitr::fig_path("png")
 app$takeScreenshot(file)
@@ -59,7 +64,7 @@ table[[2]]$sendKeys("06:50\t")
 table[[3]]$click()
 table[[3]]$sendKeys("43.5\t")
 
-Sys.sleep(2)
+waitForRecalculating()
 file <- knitr::fig_path("png")
 app$takeScreenshot(file)
 knitr::include_graphics(file)
@@ -78,6 +83,9 @@ combodate[[4]]$setValue("11")
 submit <- app$findElement(".popover-content .editable-submit")
 submit$click()
 
+Sys.sleep(2)
+waitForRecalculating()
+
 file <- knitr::fig_path("png")
 app$takeScreenshot(file)
 knitr::include_graphics(file)
@@ -88,8 +96,8 @@ The observation is now taken into account. From the population plot, we see that
 ## Prediction graph
 ```{r}
 app$findElement(linkText="Fit")$click()
-#app$getDebugLog()
-Sys.sleep(5)
+Sys.sleep(1)
+waitForRecalculating()
 file <- knitr::fig_path("png")
 app$takeScreenshot(file)
 knitr::include_graphics(file)
@@ -98,8 +106,9 @@ knitr::include_graphics(file)
 ## Recommendation
 ```{r}
 app$findElement(linkText="Recommendation")$click()
-#app$getDebugLog()
-Sys.sleep(5)
+Sys.sleep(2)
+waitForRecalculating()
+
 file <- knitr::fig_path("png")
 app$takeScreenshot(file)
 knitr::include_graphics(file)

@@ -186,6 +186,7 @@ calculatePopulationPredict <- function(state, progress, amount, mc.maxpts) {
 }
 
 calculateRecommendationPredict <- function(state, progress, amount, mc.maxpts) {
+  if(inherits(state$recommendation, "error")) stop(state$recommendation)
   args <- convertDataToTdmore(state)
   fit <- state$fit
   newdata <- getNewdata(regimen=args$regimen, observed=args$observed, model=args$model)
