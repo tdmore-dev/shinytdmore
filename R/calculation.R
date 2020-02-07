@@ -49,10 +49,10 @@ defaultData <- list(
 #' 
 #' @param state reactiveValues object with full state
 #' @param millis time delay for reacting to changes in the input
-#' @param .mc.maxpts number of points in monte carlo 
+#' @param mc.maxpts number of points in monte carlo 
 #' 
 #' @export
-calculation <- function(state, millis=500, mc.maxpts=300) {
+calculation <- function(state, millis=500, mc.maxpts=100) {
   # setup default values
   isolate({
     missingNames <- setdiff(names(defaultData), names(state))
@@ -95,7 +95,7 @@ executeCalculation <- function(state, mc.maxpts=100) {
   fit <- state$fit
   if(needsUpdate(fit, args, onlyEstimate=TRUE) ) {
     pars <- NULL
-    if(!is.null(state$fit)) pars <- coef(state$fit)
+    if(!is.null(state$fit)) pars <- stats::coef(state$fit)
     fit <- tdmore::estimate(args$model, 
                             observed=args$observed, 
                             regimen=args$regimen, 
