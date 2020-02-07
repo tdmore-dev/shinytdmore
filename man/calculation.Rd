@@ -4,14 +4,14 @@
 \alias{calculation}
 \title{This module performs all of the required calculation for the application.}
 \usage{
-calculation(state, millis = 500, mc.maxpts = 300)
+calculation(state, millis = 500, mc.maxpts = 100)
 }
 \arguments{
 \item{state}{reactiveValues object with full state}
 
 \item{millis}{time delay for reacting to changes in the input}
 
-\item{.mc.maxpts}{number of points in monte carlo}
+\item{mc.maxpts}{number of points in monte carlo}
 }
 \description{
 Call it in your application using `calculation(state)`.
