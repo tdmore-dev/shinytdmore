@@ -7,7 +7,7 @@
 \usage{
 nowInputUI(id)
 
-nowInput(input, output, session, state)
+nowInput(input, output, session, state, debug = FALSE)
 }
 \arguments{
 \item{id}{unique identifier}
@@ -19,6 +19,8 @@ nowInput(input, output, session, state)
 \item{session}{session object}
 
 \item{state}{reactiveValues object with value `now`. The server logic ensures a synchronization between `state$now` and the nowInput element.}
+
+\item{debug}{whether to print debugging messages}
 }
 \description{
 Input element representing the current time
