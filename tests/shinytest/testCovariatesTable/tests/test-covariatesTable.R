@@ -7,7 +7,7 @@ app$snapshotInit("test-covariatesTable")
 source("../../../testthat/helperShinytest.R")
 
 tableId <- "myCov-table-table"
-
+app$waitFor("$('#myCovs-table-table .htCore').length > 0") #wait until covariatesTable is rendered
 app$snapshot(filename = "start.json")
 
 ## table starts out blank
