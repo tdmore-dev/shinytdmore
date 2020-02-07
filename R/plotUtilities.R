@@ -261,6 +261,7 @@ prepareParametersPlot <- function(populationPredict, individualPredict, paramete
 #' @return a list of two plots
 #'
 prepareRecommendationPlots <- function(populationPredict, individualPredict, recommendationPredict, observed, target, model, now, regimen, recommendedRegimen) {
+  shiny::req(nrow(regimen) == nrow(recommendedRegimen)) #if not, wait for update first!
   regimen <- regimen %||% tibble(time=as.POSIXct(character(0)), dose=numeric(0), formulation=character(0), fix=logical(0))
   observed <- observed %||% tibble(time=as.POSIXct(character(0)), dv=numeric(0), use=logical(0))
   
