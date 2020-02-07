@@ -60,11 +60,15 @@ convertDataToTdmore <- function(state) {
   if( !is.null(model$iov) ) result$regimen$OCC <- seq_along(result$regimen$AMT) # add IOV column
   
   result$doseRows <- which( regimen$time > now & !regimen$fix )
-  result$covariates <- covariates %>% ## covariates does not contain the FORMULATION; it should be added to the regimen
+  
+  result$covariates <- covariates %>%
     mutate(
       TIME = as.numeric(difftime(.data$time, result$t0, units="hours"))
-    ) %>% select(.data$TIME, everything()) %>% select(-.data$time)
-  if(length(model$covariates)==0) result$covariates <- numeric(0)
+    ) %>% select(.data$TIME, everything()) %>% select(-.data$time) %>%
+    dplyr::bind_rows(tibble(TIME=0)) %>% #add time '0'
+    arrange(.data$TIME) %>%
+    tidyr::fill(everything(), .direction="downup")
+  if(nrow(covariates)==0) result$covariates <- result$covariates %>% filter(FALSE) #filter out everything
   
   replaceName <- function(df, old, new) { #programmatic version of dplyr::rename
     stats::setNames(df, replace(names(df), which(names(df)==old), new) )
