@@ -39,7 +39,7 @@ testShiny <- function(appDir) {
 }
 
 testApp <- function(appDir) {
-  withr::local_envvar(c(LC_COLLATE="C"))
+  withr::local_envvar(c(LC_COLLATE="C", TZ="GMT"))
   withr::local_libpaths(tmp_lib, action="prefix")
   results <- shinytest::testApp(appDir=appDir, compareImages=!testthat::is_testing(), quiet=FALSE)
   results
