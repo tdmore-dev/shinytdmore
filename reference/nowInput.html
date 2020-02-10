@@ -127,7 +127,7 @@
 
     <pre class="usage"><span class='fu'>nowInputUI</span>(<span class='no'>id</span>)
 
-<span class='fu'>nowInput</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>state</span>)</pre>
+<span class='fu'>nowInput</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>state</span>, <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -151,6 +151,10 @@
     <tr>
       <th>state</th>
       <td><p>reactiveValues object with value `now`. The server logic ensures a synchronization between `state$now` and the nowInput element.</p></td>
+    </tr>
+    <tr>
+      <th>debug</th>
+      <td><p>whether to print debugging messages</p></td>
     </tr>
     </table>
 

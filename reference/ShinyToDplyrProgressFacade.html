@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>This module performs all of the required calculation for the application. — calculation • shinytdmore</title>
+<title>A facade object to use Shiny Progress with dplyr — ShinyToDplyrProgressFacade • shinytdmore</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -42,8 +42,8 @@
 
 
 
-<meta property="og:title" content="This module performs all of the required calculation for the application. — calculation" />
-<meta property="og:description" content="Call it in your application using `calculation(state)`." />
+<meta property="og:title" content="A facade object to use Shiny Progress with dplyr — ShinyToDplyrProgressFacade" />
+<meta property="og:description" content="Used to translate dplyr progress to a Shiny progress bar" />
 <meta property="og:image" content="/logo.png" />
 <meta name="twitter:card" content="summary" />
 
@@ -116,58 +116,111 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>This module performs all of the required calculation for the application.</h1>
-    <small class="dont-index">Source: <a href='https://github.com/tdmore-dev/shinytdmore/blob/master/R/calculation.R'><code>R/calculation.R</code></a></small>
-    <div class="hidden name"><code>calculation.Rd</code></div>
+    <h1>A facade object to use Shiny Progress with dplyr</h1>
+    <small class="dont-index">Source: <a href='https://github.com/tdmore-dev/shinytdmore/blob/master/R/progress.R'><code>R/progress.R</code></a></small>
+    <div class="hidden name"><code>ShinyToDplyrProgressFacade.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Call it in your application using `calculation(state)`.</p>
+    <p>Used to translate dplyr progress to a Shiny progress bar</p>
     </div>
 
-    <pre class="usage"><span class='fu'>calculation</span>(<span class='no'>state</span>, <span class='kw'>millis</span> <span class='kw'>=</span> <span class='fl'>500</span>, <span class='kw'>mc.maxpts</span> <span class='kw'>=</span> <span class='fl'>100</span>)</pre>
 
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>state</th>
-      <td><p>reactiveValues object with full state</p></td>
-    </tr>
-    <tr>
-      <th>millis</th>
-      <td><p>time delay for reacting to changes in the input</p></td>
-    </tr>
-    <tr>
-      <th>mc.maxpts</th>
-      <td><p>number of points in monte carlo</p></td>
-    </tr>
-    </table>
 
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+    <h2 class="hasAnchor" id="public-fields"><a class="anchor" href="#public-fields"></a>Public fields</h2>
 
-    <p>Shiny progress calls are used to report which calculation is being done. However, the progress bar does not advance.
-It is very difficult to create an encompassing progress bar throughout all steps, because some of these steps are shortcutted depending 
-on the changes done. As an example, changes in future doses will not change the fitted parameters.</p>
-    <h2 class="hasAnchor" id="output"><a class="anchor" href="#output"></a>Output</h2>
+    <p><div class="r6-fields"></p><dl class='dl-horizontal'>
+<dt><code>proxy</code></dt><dd><p>Shiny Progress object</p></dd>
+
+<dt><code>n</code></dt><dd><p>total ticks for dplyr progress; can be reinitialized</p></dd>
+
+<dt><code>i</code></dt><dd><p>current tick for dplyr progress; can be reinitialized</p></dd>
+
+<dt><code>offset</code></dt><dd><p>offset for Shiny Progress</p></dd>
+
+<dt><code>amount</code></dt><dd><p>total advanced amount in Shiny after the dplyr progress is done</p></dd>
+
+</dl><p></div></p>
+    <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
 
     
+<h3>Public methods</h3>
 
-<p>The module sets the following state variables:
-* `populationPredict` a data-frame with prediction data on the population level
-* `fit` a tdmorefit object
-* `individualPredict` a data-frame with prediction data for the individual
-* `recommendation` a data.frame in the same form as `regimen`, but where the AMT column was adapted</p>
-<p>If any of these values could not be calculated, the outputs are set to the error that occurred during calculation. This may be
-a simple R error [simpleError()] or a more verbose shiny validation error (e.g. [shiny::validate()] or [shiny::req()])</p>
+<ul>
+<li><p><a href='#method-new'><code>ShinyToDplyrProgressFacade$new()</code></a></p></li>
+<li><p><a href='#method-tick'><code>ShinyToDplyrProgressFacade$tick()</code></a></p></li>
+<li><p><a href='#method-stop'><code>ShinyToDplyrProgressFacade$stop()</code></a></p></li>
+<li><p><a href='#method-print'><code>ShinyToDplyrProgressFacade$print()</code></a></p></li>
+<li><p><a href='#method-clone'><code>ShinyToDplyrProgressFacade$clone()</code></a></p></li>
+</ul>
+<p><hr>
+<a id="method-new"></a></p><h3>Method <code>new()</code></h3>
+<p>Initialize a shiny progress to dplyr facade. This can either be called with the `proxy` and `amount`
+arguments for a first initialization (e.g. when using `new`), or with 
+`n` and `min_time` arguments for the dplyr-like initialization</p><h3>Usage</h3>
+<p><div class="r"></p><pre>ShinyToDplyrProgressFacade$new(
+  n = 1,
+  min_time = 0,
+  proxy = NULL,
+  amount = 1,
+  ...
+)</pre><p></div></p>
+
+<h3>Arguments</h3>
+<p><div class="arguments"></p><dl class='dl-horizontal'>
+<dt><code>n</code></dt><dd><p>Total number of items</p></dd>
+
+<dt><code>min_time</code></dt><dd><p>Progress bar will wait until at least `min_time`
+seconds have elapsed before displaying any results.</p></dd>
+
+<dt><code>proxy</code></dt><dd><p>Shiny Progress object</p></dd>
+
+<dt><code>amount</code></dt><dd><p>amount advanced in Shiny Progress</p></dd>
+
+<dt><code>...</code></dt><dd><p>ignored</p></dd>
+
+</dl><p></div></p>
+<h3>Returns</h3>
+<p>an object that can be used in `.progress` arguments for dplyr</p>
+<p><hr>
+<a id="method-tick"></a></p><h3>Method <code>tick()</code></h3>
+<p>Advance a tick</p><h3>Usage</h3>
+<p><div class="r"></p><pre>ShinyToDplyrProgressFacade$tick()</pre><p></div></p>
+
+<p><hr>
+<a id="method-stop"></a></p><h3>Method <code><a href='https://rdrr.io/r/base/stop.html'>stop()</a></code></h3>
+<p>Stop the timer; advance until the end</p><h3>Usage</h3>
+<p><div class="r"></p><pre>ShinyToDplyrProgressFacade$stop()</pre><p></div></p>
+
+<p><hr>
+<a id="method-print"></a></p><h3>Method <code><a href='https://rdrr.io/r/base/print.html'>print()</a></code></h3>
+<p>Print out the progress; transfers the progress to Shiny</p><h3>Usage</h3>
+<p><div class="r"></p><pre>ShinyToDplyrProgressFacade$print(...)</pre><p></div></p>
+
+<h3>Arguments</h3>
+<p><div class="arguments"></p><dl class='dl-horizontal'>
+<dt><code>...</code></dt><dd><p>ignored</p></dd>
+
+</dl><p></div></p>
+<p><hr>
+<a id="method-clone"></a></p><h3>Method <code>clone()</code></h3>
+<p>The objects of this class are cloneable with this method.</p><h3>Usage</h3>
+<p><div class="r"></p><pre>ShinyToDplyrProgressFacade$clone(deep = FALSE)</pre><p></div></p>
+
+<h3>Arguments</h3>
+<p><div class="arguments"></p><dl class='dl-horizontal'>
+<dt><code>deep</code></dt><dd><p>Whether to make a deep clone.</p></dd>
+
+</dl><p></div></p>
+
+
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#details">Details</a></li>
-      <li><a href="#output">Output</a></li>
+      <li><a href="#public-fields">Public fields</a></li>
+      <li><a href="#methods">Methods</a></li>
     </ul>
 
   </div>
