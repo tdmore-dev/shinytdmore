@@ -7,6 +7,14 @@ app$snapshotInit("test-covariatesTable")
 source("../../../testthat/helperShinytest.R")
 
 tableId <- "myCov-table-table"
+
+testthat::try_again(20, { ## table input object sometimes not available (timing issue); ensure it is!
+  Sys.sleep(3)
+  table <- app$getAllValues()$input[tableId]
+  if(is.null(table)) stop()
+})
+
+
 app$waitFor("$('#myCovs-table-table .htCore').length > 0") #wait until covariatesTable is rendered
 app$snapshot(filename = "start.json")
 
