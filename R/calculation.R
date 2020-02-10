@@ -167,7 +167,7 @@ calculateIndividualPredict <- function(state, progress, amount, mc.maxpts) {
   if(is.null(fit)) stop("Fit not calculated yet...")
   newdata <- getNewdata(regimen=args$regimen, observed=args$observed, model=args$model)
   
-  p <- ShinyToDplyrProgressFacade$new(proxy=progress, amount=amount)
+  p <- tdmore::ShinyToDplyrProgressFacade$new(proxy=progress, amount=amount)
   data <- stats::predict(fit, newdata=newdata, se.fit=T, level=0.95, mc.maxpts=mc.maxpts, .progress=p) # 95% CI by default
   data$TIME <- args$t0 + lubridate::dhours(data$TIME)
   data
@@ -179,7 +179,7 @@ calculatePopulationPredict <- function(state, progress, amount, mc.maxpts) {
   
   newdata <- getNewdata(regimen=args$regimen, observed=args$observed, model=args$model)
   
-  p <- ShinyToDplyrProgressFacade$new(proxy=progress, amount=amount)
+  p <- tdmore::ShinyToDplyrProgressFacade$new(proxy=progress, amount=amount)
   data <- stats::predict(fit, newdata=newdata, se.fit=T, level=0.95, mc.maxpts=mc.maxpts, .progress=p) # 95% CI by default
   data$TIME <- args$t0 + lubridate::dhours(data$TIME)
   data
@@ -191,7 +191,7 @@ calculateRecommendationPredict <- function(state, progress, amount, mc.maxpts) {
   fit <- state$fit
   newdata <- getNewdata(regimen=args$regimen, observed=args$observed, model=args$model)
   
-  p <- ShinyToDplyrProgressFacade$new(proxy=progress, amount=amount)
+  p <- tdmore::ShinyToDplyrProgressFacade$new(proxy=progress, amount=amount)
   data <- stats::predict(fit, regimen=state$recommendation, newdata=newdata, se.fit=T, level=0.95, mc.maxpts=mc.maxpts, .progress=p) # 95% CI by default
   data$TIME <- args$t0 + lubridate::dhours(data$TIME)
   data
