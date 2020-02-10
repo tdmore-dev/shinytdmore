@@ -53,6 +53,13 @@ defaultData <- list(
 #' 
 #' @export
 calculation <- function(state, millis=500, mc.maxpts=100) {
+  ### TODO: See https://resources.rstudio.com/rstudio-conf-2019/effective-use-of-shiny-modules-in-application-development on time 14:14
+  ### Using a reactiveValues() object to pass state around is bad practice
+  ### We do it here anyway, because we may change some values
+  ### in multiple locations (similar to the AngularJS data binding principle)
+  ### See e.g. https://docs.angularjs.org/tutorial/step_06 for an example where
+  ### a global state is modified by Input elements.
+  
   # setup default values
   isolate({
     missingNames <- setdiff(names(defaultData), names(state))
