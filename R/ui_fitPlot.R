@@ -42,7 +42,7 @@ pagerPanel <- function(id, ...) {
 
 # This function checks all of the arguments.
 # If any of the arguments is an error, it emits the error
-checkError <- function(..., verbose=TRUE) {
+checkError <- function(..., verbose=FALSE) {
   args <- list(...)
   for(i in seq_along(args)) {
     value <- args[[i]]
