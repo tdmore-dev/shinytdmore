@@ -150,7 +150,7 @@ preparePredictionPlot <- function(populationPredict, individualPredict, observed
   observed <- observed %>% dplyr::filter(.data$use==TRUE) # Plot only 'used' observations
   data <- data %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   
-  if(is.null(target)) {
+  if(is.null(target) || all(is.na(target))) {
     target <- tdmore::getMetadataByClass(model, "tdmore_target")
   }
   if(is.null(target)) target <- list(min=as.numeric(NA), max=as.numeric(NA))
@@ -271,7 +271,7 @@ prepareRecommendationPlots <- function(populationPredict, individualPredict, rec
   observed <- observed %||% tibble(time=as.POSIXct(character(0)), dv=numeric(0), use=logical(0))
   observed <- observed %>% dplyr::filter(.data$use==TRUE) # Plot only used observations
   
-  if(is.null(target)) {
+  if(is.null(target) || all(is.na(target))) {
     target <- tdmore::getMetadataByClass(model, "tdmore_target")
   }
   if(is.null(target)) target <- list(min=as.numeric(NA), max=as.numeric(NA))
