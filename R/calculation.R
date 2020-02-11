@@ -116,6 +116,7 @@ executeCalculation <- function(state, mc.maxpts=100) {
       fit$regimen <- args$regimen
       fit$observed <- args$observed
       fit$covariates <- args$covariates
+      fit
     })}, error=function(e) e)
   } else {
     #no update needed
