@@ -101,20 +101,22 @@ executeCalculation <- function(state, mc.maxpts=100) {
   progress$inc(1/5, detail = "Fitting")
   fit <- state$fit
   if(needsUpdate(fit, args, onlyEstimate=TRUE) ) {
-    pars <- NULL
-    if(!is.null(state$fit)) pars <- stats::coef(state$fit)
-    fit <- tdmore::estimate(args$model, 
-                            observed=args$observed, 
-                            regimen=args$regimen, 
-                            covariates=args$covariates,
-                            par=pars)
-    state$fit <- fit
+    state$fit <- tryCatch({captureStackTraces({
+      pars <- NULL
+      if(!is.null(state$fit)) pars <- stats::coef(state$fit)
+      fit <- tdmore::estimate(args$model, 
+                              observed=args$observed, 
+                              regimen=args$regimen, 
+                              covariates=args$covariates,
+                              par=pars)
+    })}, error=function(e) e)
   } else if (needsUpdate(fit, args, onlyEstimate=FALSE) ){
-    #just update the included regimen/observed/covariates
-    fit$regimen <- args$regimen
-    fit$observed <- args$observed
-    fit$covariates <- args$covariates
-    state$fit <- fit
+    state$fit <- tryCatch({captureStackTraces({
+      #just update the included regimen/observed/covariates
+      fit$regimen <- args$regimen
+      fit$observed <- args$observed
+      fit$covariates <- args$covariates
+    })}, error=function(e) e)
   } else {
     #no update needed
   }

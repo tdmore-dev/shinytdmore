@@ -71,6 +71,11 @@ convertDataToTdmore <- function(state) {
   if(nrow(covariates)==0) result$covariates <- result$covariates %>% filter(FALSE) #filter out everything
   
   replaceName <- function(df, old, new) { #programmatic version of dplyr::rename
+    if(is.null(old)) return(df)
+    if(is.null(new)) {
+      df[old] <- NULL #remove old
+      return(df)
+    }
     stats::setNames(df, replace(names(df), which(names(df)==old), new) )
   }
   result$observed <- observed %>% 
