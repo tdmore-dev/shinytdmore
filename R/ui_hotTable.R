@@ -105,9 +105,14 @@ recommendationTable <- function(input, output, session, state) {
            formulation=factor(levels=getFormulationList(state$model)), 
            fix=logical(0))
   })
+  recommendationdf_to_regimen <- function(x) {
+    x %>% 
+      dplyr::select(-.data$recommendation) %>% 
+      dplyr::arrange(.data$time)
+    }
   tableDf <- singleReactive(state, "regimen",
                             default=defaultReactive,
-                            to=function(x) {x %>% dplyr::select(-.data$recommendation) %>% dplyr::arrange(x, .data$time)})
+                            to=recommendationdf_to_regimen)
   borders <- bordersReactiveVal(tableDf, state)
   callModule(synchronizedHot, "table", 
              stateDf=tableDf, expr={
