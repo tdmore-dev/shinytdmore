@@ -6780,6 +6780,19 @@
       ],
       "deps": [
         {
+          "name": "setprototypeof",
+          "version": "0.1",
+          "src": {
+            "href": "setprototypeof-0.1"
+          },
+          "meta": null,
+          "script": "setprototypeof.js",
+          "stylesheet": null,
+          "head": null,
+          "attachment": null,
+          "all_files": false
+        },
+        {
           "name": "typedarray",
           "version": "0.1",
           "src": {
@@ -6822,9 +6835,9 @@
         },
         {
           "name": "plotly-htmlwidgets-css",
-          "version": "1.49.4",
+          "version": "1.52.2",
           "src": {
-            "href": "plotly-htmlwidgets-css-1.49.4"
+            "href": "plotly-htmlwidgets-css-1.52.2"
           },
           "meta": null,
           "script": null,
@@ -6835,9 +6848,9 @@
         },
         {
           "name": "plotly-main",
-          "version": "1.49.4",
+          "version": "1.52.2",
           "src": {
-            "href": "plotly-main-1.49.4"
+            "href": "plotly-main-1.52.2"
           },
           "meta": null,
           "script": "plotly-latest.min.js",
@@ -10480,6 +10493,19 @@
       ],
       "deps": [
         {
+          "name": "setprototypeof",
+          "version": "0.1",
+          "src": {
+            "href": "setprototypeof-0.1"
+          },
+          "meta": null,
+          "script": "setprototypeof.js",
+          "stylesheet": null,
+          "head": null,
+          "attachment": null,
+          "all_files": false
+        },
+        {
           "name": "typedarray",
           "version": "0.1",
           "src": {
@@ -10522,9 +10548,9 @@
         },
         {
           "name": "plotly-htmlwidgets-css",
-          "version": "1.49.4",
+          "version": "1.52.2",
           "src": {
-            "href": "plotly-htmlwidgets-css-1.49.4"
+            "href": "plotly-htmlwidgets-css-1.52.2"
           },
           "meta": null,
           "script": null,
@@ -10535,9 +10561,9 @@
         },
         {
           "name": "plotly-main",
-          "version": "1.49.4",
+          "version": "1.52.2",
           "src": {
-            "href": "plotly-main-1.49.4"
+            "href": "plotly-main-1.52.2"
           },
           "meta": null,
           "script": "plotly-latest.min.js",
