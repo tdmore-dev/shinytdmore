@@ -13,6 +13,13 @@ app$waitFor("$('.recalculating').length == 0")
 ## and https://github.com/rstudio/crosstalk/blob/master/javascript/src/var.js#L37
 app$waitFor("$('.plotly .plot-container .svg-container').length > 0")
 
+testthat::try_again(10, {
+  foo <- app$getAllValues()$input$`.clientValue-default-plotlyCrosstalkOpts`
+  expect_false(is.null(foo))
+  Sys.sleep(2)
+})
+
+
 ## snapshot population plot
 app$snapshot(filename="population.json")
 #snapshotSource("population") #SVG files contain random ID attributes
