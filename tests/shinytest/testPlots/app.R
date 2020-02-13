@@ -24,7 +24,7 @@ myModel <- tdmore::metadata(tdmModel,
                             tdmore::formulation(name="CompoundA", unit="mg", dosing_interval=8))
 
 ui <- fluidPage(
-  fitPlotUI("plots"),
+  fitPlotUI("plots", height="80vh"),
   htmlOutput("debug")
 )
 

@@ -4,10 +4,13 @@
 \alias{predictionTabUI}
 \title{Prediction tab user interface.}
 \usage{
-predictionTabUI(id)
+predictionTabUI(id, height = "auto")
 }
 \arguments{
 \item{id}{namespace id}
+
+\item{height}{height of the plotly plots
+Use "80vh" to cover 80\% of the screen space, or use a pixel amount to have a fixed size plot.}
 }
 \value{
 a panel

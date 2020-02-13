@@ -6735,7 +6735,8 @@
           },
           "hovermode": "closest",
           "barmode": "relative",
-          "dragmode": "pan"
+          "dragmode": "pan",
+          "autosize": true
         },
         "source": "A",
         "config": {
@@ -10448,7 +10449,8 @@
           },
           "hovermode": "closest",
           "barmode": "relative",
-          "dragmode": "pan"
+          "dragmode": "pan",
+          "autosize": true
         },
         "source": "A",
         "config": {
@@ -15345,7 +15347,8 @@
           },
           "hovermode": "closest",
           "barmode": "relative",
-          "dragmode": "pan"
+          "dragmode": "pan",
+          "autosize": true
         },
         "source": "A",
         "config": {

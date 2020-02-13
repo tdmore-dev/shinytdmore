@@ -5,7 +5,8 @@
 #' @param outputId the output ID
 #'
 updatePlot <- function(plot, outputId) {
-  p2 <- plot %>% plotly::plotly_build %>% function(x){ x$x }
+  p2 <- plot %>% plotly::plotly_build()
+  p2 <- p2$x
   p2$layout <- list(datarevision=round(runif(1)*1000))
   p2[c("attrs", "shinyEvents", "highlight", "config", "source", "visdat")] <- NULL
   p2[c("base_url", "cur_data")] <- NULL
@@ -70,7 +71,7 @@ mergePlots <- function(p1, p2, p3, output) {
       plotly::ggplotly(p2, tooltip=tooltip2) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
       nrows = 2, heights = c(0.8, 0.2), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
-    ) %>% plotly::layout(dragmode = "pan")
+    ) %>% plotly::layout(dragmode = "pan", autosize=TRUE )
   } else {
     plot <- plotly::subplot(
       plotly::ggplotly(p1, tooltip=tooltip1) %>% 
@@ -80,7 +81,7 @@ mergePlots <- function(p1, p2, p3, output) {
       plotly::ggplotly(p3) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
       nrows = 3, heights = c(0.7, 0.15, 0.15), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
-    ) %>% plotly::layout(dragmode = "pan", legend = list(orientation = "h", y=-250))
+    ) %>% plotly::layout(dragmode = "pan", legend = list(orientation = "h", y=-250), autosize=TRUE )
   }
   
   return(plot)

@@ -2,11 +2,13 @@
 #' Prediction tab user interface.
 #'
 #' @param id namespace id
+#' @inheritParams fitPlotUI
+#' 
 #' @return a panel
 #' 
 #' @export
 #'
-predictionTabUI <- function(id) {
+predictionTabUI <- function(id, height="auto") {
   if(utils::packageVersion("shinyBS") <= package_version("0.61")) {
     # bugfix for https://github.com/ebailey78/shinyBS/issues/115
     shiny::addResourcePath("sbs", system.file("www", package="shinyBS"))
@@ -44,7 +46,7 @@ predictionTabUI <- function(id) {
       )
     )
     ),
-    column(8, fitPlotUI(ns("plots")) )
+    column(8, fitPlotUI(ns("plots"), height=height) )
   )
   return(panel)
 }

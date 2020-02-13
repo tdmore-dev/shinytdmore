@@ -4,6 +4,8 @@
 #' It is displayed in a tabsetPanel
 #' 
 #' @param id output ID
+#' @param height height of the plotly plots
+#' Use "80vh" to cover 80\% of the screen space, or use a pixel amount to have a fixed size plot.
 #' 
 #' @export
 # TODO: change this to use Next / Previous buttons
@@ -11,21 +13,21 @@
 # and then update the data on them instead
 # TODO: add progress bars while rendering the plots
 # TODO: add interactivity in the plots themselves
-fitPlotUI <- function(id) {
+fitPlotUI <- function(id, height="auto") {
   ns <- NS(id)
-  pagerPanel(
+  panel <- pagerPanel(
     id=ns("active"),
     tabPanel(title = "Population",
              value="population",
-             plotly::plotlyOutput(ns("population"))
+             plotly::plotlyOutput(ns("population"), height=height)
     ),
     tabPanel(title = "Fit",
              value="fit",
-             plotly::plotlyOutput(ns("fit"))
+             plotly::plotlyOutput(ns("fit"), height=height)
     ),
     tabPanel(title = "Recommendation",
              value="recommendation",
-             plotly::plotlyOutput(ns("recommendation"))
+             plotly::plotlyOutput(ns("recommendation"), height=height)
     )
   )
 }

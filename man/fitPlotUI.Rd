@@ -5,10 +5,13 @@
 \title{This UI element displays several plots
 that show the current state of the fit.}
 \usage{
-fitPlotUI(id)
+fitPlotUI(id, height = "auto")
 }
 \arguments{
 \item{id}{output ID}
+
+\item{height}{height of the plotly plots
+Use "80vh" to cover 80\% of the screen space, or use a pixel amount to have a fixed size plot.}
 }
 \description{
 It is displayed in a tabsetPanel
