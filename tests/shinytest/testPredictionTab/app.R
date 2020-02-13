@@ -43,6 +43,7 @@ shinyApp(ui=ui, server=function(input, output, session) {
   #                                         dose=15,
   #                                         formulation=1, fix=FALSE
   # )
+  calculation(state)
   callModule(predictionTab, "prediction", state=state)
   exportTestValues(regimen = { state$regimen }, observed= {state$observed})
 })

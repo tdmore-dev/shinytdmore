@@ -13,6 +13,7 @@ defaultApp <- function(...) {
                    )
   server <- function(input, output, session) {
     state <- do.call(reactiveValues, defaultValues)
+    calculation(state)
     callModule(predictionTab, "prediction", state)
     callModule(modelTab, "model", state)
     callModule(aboutTab, "about")
