@@ -14,7 +14,8 @@ aboutTabUI <- function(id, htmlFile) {
     "About",
     icon = icon("question"),
     value=id,
-    HTML(htmlContent)
+    HTML(htmlContent),
+    packageVersions()
   )
 }
 
@@ -28,4 +29,26 @@ aboutTabUI <- function(id, htmlFile) {
 #' 
 aboutTab <- function(input, output, session) {
   # Nothing to do
+}
+
+#' Returns an HTML element that describes all installed 
+packageVersions <- function() {
+  htmltools::tagList(
+    htmltools::tags$pre(
+      paste(capture.output(print(sessionInfo())), collapse="\n")
+    ),
+    htmltools::HTML(
+      htmlTable::htmlTable(loadedPackages())
+    )
+  )
+}
+
+loadedPackages <- function() {
+  df <- loadedNamespaces() %>%
+    purrr::map_dfr(function(pkg) {
+      desc <- packageDescription(pkg)
+      tibble::as_tibble(unclass(desc))
+    })
+  #df[, c("Package", "Version", "License", "Packaged", "Date/Publication", "Built") ]
+  df[, c("Package", "Version", "License", "Built") ]
 }
