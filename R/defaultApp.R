@@ -7,7 +7,7 @@ defaultApp <- function(...) {
   defaultValues <- list(...)
   ui <- navbarPage(
     "Shinytdmore",
-                   predictionTabUI("prediction"),
+                   predictionTabUI("prediction", height="80vh"),
                    modelTabUI("model"),
                    aboutTabUI("about")
                    )
