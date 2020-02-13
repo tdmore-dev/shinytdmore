@@ -31,11 +31,11 @@ aboutTab <- function(input, output, session) {
   # Nothing to do
 }
 
-#' Returns an HTML element that describes all installed 
+# Returns an HTML element that describes all installed 
 packageVersions <- function() {
   htmltools::tagList(
     htmltools::tags$pre(
-      paste(capture.output(print(sessionInfo())), collapse="\n")
+      paste(capture.output(print(utils::sessionInfo())), collapse="\n")
     ),
     htmltools::HTML(
       htmlTable::htmlTable(loadedPackages())
@@ -46,7 +46,7 @@ packageVersions <- function() {
 loadedPackages <- function() {
   df <- loadedNamespaces() %>%
     purrr::map_dfr(function(pkg) {
-      desc <- packageDescription(pkg)
+      desc <- utils::packageDescription(pkg)
       tibble::as_tibble(unclass(desc))
     })
   #df[, c("Package", "Version", "License", "Packaged", "Date/Publication", "Built") ]

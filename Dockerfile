@@ -21,6 +21,7 @@ RUN R -e 'install.packages("rhandsontable")'
 RUN R -e 'install.packages("shinyBS")'
 RUN R -e 'install.packages("shinyjs")'
 RUN R -e 'install.packages("anytime")'
+RUN R -e 'install.packages("htmlTable")'
 
 # Set the working directory to /app
 WORKDIR /app
