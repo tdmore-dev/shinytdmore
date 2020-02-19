@@ -14,6 +14,8 @@ mergePlots(p1, p2, p3, output, source)
 \item{p3}{third plot}
 
 \item{output}{main tdmore output}
+
+\item{source}{source to pass to ggplotly as event source}
 }
 \description{
 Merge plots.
