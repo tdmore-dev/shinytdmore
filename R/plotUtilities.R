@@ -58,6 +58,7 @@ getMeasureColumnLabel <- function(model, breakLine=T) {
 #' @param p2 second plot
 #' @param p3 third plot
 #' @param output main tdmore output
+#' @param source source to pass to ggplotly as event source
 #'
 mergePlots <- function(p1, p2, p3, output, source) {
   tooltip1 <- c("TIME", output, paste0(output, ".lower"), paste0(output, ".upper"))
