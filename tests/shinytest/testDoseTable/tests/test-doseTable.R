@@ -7,6 +7,7 @@ app$snapshotInit("test-doseTable")
 source("../../../testthat/helperShinytest.R")
 
 tableId <- "myDose-table-table"
+waitUntilPresent(tableId)
 
 app$snapshot(filename="start.json")
 

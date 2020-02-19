@@ -1,12 +1,18 @@
-## The below are utility functions useful when running the actual tests
-readyShouldUpdate <- function(id) {
+waitUntilPresent <- function(id, where=c("input", "output", "export"), times=20, sleep=2) {
   app <- get("app", envir=parent.frame())
-  js <- paste0(
-    "window.shinytest.updating=[", paste("'", id, "'", sep="", collapse=", "),"]"
-  )
-  app$executeScript(js)
+  testthat::try_again(times, {
+    values <- app$getAllValues()
+    where <- match.arg(where)
+    inputList <- values[[where]]
+    value <- inputList[[id]]
+    if(is.null(value)) {
+      Sys.sleep(sleep)
+      fail(paste0("Value ", id, " not found in ", where))
+    }
+  })
 }
-waitUntilReady <- function(timeout=3000, testUpdate=FALSE) {
+
+waitUntilReady <- function(timeout=30000, testUpdate=FALSE) {
   app <- get("app", envir=parent.frame())
   Sys.sleep(0.2)
   stopifnot( app$waitFor("$('.ht_master').length > 0", timeout=timeout) ) #wait until rhandsontable rendered
@@ -24,16 +30,6 @@ waitUntilReady <- function(timeout=3000, testUpdate=FALSE) {
   if(timeout != 0) waitUntilReady(timeout=0, testUpdate=testUpdate)
 }
 
-with_update <- function(id, code, timeout=3000) {
-  #app needs to be present for "readyShouldUpdate" and "waitUntilReady" to find it
-  app <- get("app", envir=parent.frame())
-  app #to get rid of warning about unused "app"
-  
-  readyShouldUpdate(id)
-  force(code)
-  waitUntilReady(testUpdate=TRUE, timeout=timeout)
-}
-
 snapshotSource <- function(id) {
   app <- get("app", envir=parent.frame())
   snapshot(app$getSource(), paste0(id,".html"))
@@ -49,17 +45,6 @@ snapshot <- function(text, id) {
   ## For more control, open a binary connection and specify the precise value
   writeLines(text, fileCon, sep="\n") #make sure downloaded HTML matches
   close(fileCon)
-}
-
-## ensure input/output/export all have a consistent order
-### YOU HAVE GOT TO BE KIDDING ME!
-### Sorting order is different between en_US and C locales!
-### See ?Comparison
-### Fix is to force the locale to C for collation
-Sys.setlocale(category="LC_COLLATE", "C")
-
-sortByName <- function(list) {
-  list[ sort(names(list)) ]
 }
 
 setupHtmlwidgetsDebug <- function(app) {

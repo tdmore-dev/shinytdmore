@@ -1,6 +1,6 @@
 #rstudioapi::getActiveDocumentContext()$path %>% dirname() %>% setwd()
 library(shinytest)
-app <- ShinyDriver$new("..", loadTimeout = 30000, seed=1234)
+app <- ShinyDriver$new("..", loadTimeout = 120*1000, seed=1234)
 app$snapshotInit("test-predictiontab")
 source("../../../testthat/helperShinytest.R")
 

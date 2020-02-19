@@ -7,8 +7,7 @@ app$snapshotInit("test-obsTable")
 source("../../../testthat/helperShinytest.R")
 
 tableId <- "myObs-table-table"
-
-waitUntilReady()
+waitUntilPresent(tableId)
 app$snapshot(filename = "start.json")
 
 ## table starts out blank
@@ -36,18 +35,6 @@ expect_equal(table[[1]][[1]], NULL)
 
 cellValue <- sub("<div.*</div>", "", cell(1)$getAttribute(name="innerHTML"))
 testthat::expect_equal(cellValue, "")
-
-## cell1 set invalid value
-## Not really a valid test; see testDoseTable for more info
-# readyShouldUpdate(tableId)
-# cell(1)$click(); Sys.sleep(1)
-# cell(1)$setValue("invalid_value")
-# cell(1)$sendKeys("invalid_value")
-# cell(1)$sendKeys("\t")
-# cellValue <- sub("<div.*</div>", "", cell(1)$getAttribute(name="innerHTML"))
-# testthat::expect_equal(cellValue, "") #no change
-# expect_error( waitUntilReady(testUpdate=TRUE),
-#               regex="Object.*myObs-table.*did not update") #there should be no update!
 
 ## cell1 set correct value
 ### This often does not work!!!
