@@ -1,13 +1,13 @@
 waitUntilPresent <- function(id, where=c("input", "output", "export"), times=20, sleep=2) {
   app <- get("app", envir=parent.frame())
+  where <- match.arg(where)
   testthat::try_again(times, {
-    values <- app$getAllValues()
-    where <- match.arg(where)
+    values <- app$getAllValues(input=(where=="input"), output=(where=="output"), export=(where=="export"))
     inputList <- values[[where]]
     value <- inputList[[id]]
     if(is.null(value)) {
       Sys.sleep(sleep)
-      fail(paste0("Value ", id, " not found in ", where))
+      fail(paste0("Value ", id, " not found in ", where, "; available names: ", paste(names(inputList), collapse=",")))
     }
   })
 }

@@ -4,8 +4,8 @@ app <- ShinyDriver$new("..", loadTimeout = 120*1000, seed=1234)
 app$snapshotInit("test-predictiontab")
 source("../../../testthat/helperShinytest.R")
 
-### TODO: In Linux, the prediction-recommendation-table-table is not present in the exported output
-### In windows, apparently it is??
+waitUntilPresent("prediction-doses-table-table")
+waitUntilPresent("prediction-observation-table-table")
 app$snapshot(filename="start.json", items=list(input=TRUE))
 
 # add a covariate
