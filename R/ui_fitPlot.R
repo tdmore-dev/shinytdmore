@@ -82,7 +82,7 @@ fitPlot <- function(input, output, session, state) {
                                     NULL,
                                     observed=state$observed, target=state$target, model=state$model, now=state$now,
                                     regimen=state$regimen)
-    z <- mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
+    z <- mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)), source=session$ns("population"))
     z
   })
   outputOptions(output, "population", priority = -10)
@@ -100,7 +100,8 @@ fitPlot <- function(input, output, session, state) {
                                     state$individualPredict,
                                     observed=state$observed, target=state$target, model=state$model, now=state$now,
                                     regimen=state$regimen)
-    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
+    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)),
+               source=session$ns("fit"))
   })
   outputOptions(output, "fit", priority = -10)
   ##
@@ -130,7 +131,8 @@ fitPlot <- function(input, output, session, state) {
       regimen=state$regimen,
       state$recommendation
       )
-    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)) )
+    mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)),
+               source=session$ns("recommendation"))
   })
   outputOptions(output, "recommendation", priority = -10)
 }

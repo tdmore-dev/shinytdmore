@@ -59,26 +59,26 @@ getMeasureColumnLabel <- function(model, breakLine=T) {
 #' @param p3 third plot
 #' @param output main tdmore output
 #'
-mergePlots <- function(p1, p2, p3, output) {
+mergePlots <- function(p1, p2, p3, output, source) {
   tooltip1 <- c("TIME", output, paste0(output, ".lower"), paste0(output, ".upper"))
   tooltip2 <- c("TIME", "AMT")
   #tooltip3 <- c("TIME", "Parameter", "Population", "Individual", "Change")
 
   if (is.null(p3)) {
     plot <- plotly::subplot(
-      plotly::ggplotly(p1, tooltip=tooltip1) %>% 
+      plotly::ggplotly(p1, tooltip=tooltip1, source=paste0(source, "-1")) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      plotly::ggplotly(p2, tooltip=tooltip2) %>% 
+      plotly::ggplotly(p2, tooltip=tooltip2, source=paste0(source, "-2")) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
       nrows = 2, heights = c(0.8, 0.2), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
     ) %>% plotly::layout(dragmode = "pan", autosize=TRUE )
   } else {
     plot <- plotly::subplot(
-      plotly::ggplotly(p1, tooltip=tooltip1) %>% 
+      plotly::ggplotly(p1, tooltip=tooltip1, source=paste0(source, "-1")) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      plotly::ggplotly(p2, tooltip=tooltip2) %>% 
+      plotly::ggplotly(p2, tooltip=tooltip2, source=paste0(source, "-2")) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      plotly::ggplotly(p3) %>% 
+      plotly::ggplotly(p3, source=paste0(source, "-3")) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
       nrows = 3, heights = c(0.7, 0.15, 0.15), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
     ) %>% plotly::layout(dragmode = "pan", legend = list(orientation = "h", y=-250), autosize=TRUE )

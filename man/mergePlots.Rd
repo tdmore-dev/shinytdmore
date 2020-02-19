@@ -4,7 +4,7 @@
 \alias{mergePlots}
 \title{Merge plots.}
 \usage{
-mergePlots(p1, p2, p3, output)
+mergePlots(p1, p2, p3, output, source)
 }
 \arguments{
 \item{p1}{first plot}
