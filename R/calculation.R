@@ -1,3 +1,7 @@
+#' Create a newdata data.frame compatible with [tdmore::predict.tdmorefit()]
+#' 
+#' @return a tibble with at least the regimen times, troughs, and observed times, and intermediate times per 0.5h
+#' @inheritParams shinytdmore-data
 getNewdata <- function(regimen, observed, model) {
   regimen$II <- tdmore::getDosingInterval(regimen$FORM, model=model)
   start <- 0
@@ -21,122 +25,144 @@ getNewdata <- function(regimen, observed, model) {
   return(newdata)
 }
 
-defaultData <- list(
-  regimen=tibble::tibble(time=as.POSIXct(character()), dose=numeric(), formulation=character(), fix=logical()),
-  observed=tibble::tibble(time=as.POSIXct(character()), dv=numeric(), use=logical()),
-  covariates=tibble::tibble(time=as.POSIXct(character())), #rest of columns depend on model
-  now=as.POSIXct("2000-01-01"),
-  target=list(min=as.numeric(NA), max=as.numeric(NA))
-)
+#' Reactives that can be used to support tdmore calculations
+#' 
+#' @name calculation
+#' @param millis time for debounce, see [shiny::debounce()]
+#' @param fit reactive of type [reactiveFit()] with the current fit
+#' @param mc.maxpts number of monte carlo samples to take, see [tdmore::predict.tdmorefit()]
+#' @param fitMillis time to wait until calculating new fit
+#' @param predictMillis time to wait until calculating a new prediction
+#' @param recommendationMillis time to wait until calculating a new recommendation
+#' @param recommendation recommendation reactive of type [reactiveRecommendation()]
+NULL
 
-#' This module performs all of the required calculation for the application.
-#' 
-#' Call it in your application using `calculation(state)`.
-#' 
-#' Shiny progress calls are used to report which calculation is being done. However, the progress bar does not advance.
-#' It is very difficult to create an encompassing progress bar throughout all steps, because some of these steps are shortcutted depending 
-#' on the changes done. As an example, changes in future doses will not change the fitted parameters.
-#' 
-#' @section Output:
-#' The module sets the following state variables:
-#' * `populationPredict` a data-frame with prediction data on the population level
-#' * `fit` a tdmorefit object
-#' * `individualPredict` a data-frame with prediction data for the individual
-#' * `recommendation` a data.frame in the same form as `regimen`, but where the AMT column was adapted
-#' 
-#' If any of these values could not be calculated, the outputs are set to the error that occurred during calculation. This may be
-#' a simple R error [simpleError()] or a more verbose shiny validation error (e.g. [shiny::validate()] or [shiny::req()])
-#' 
-#' @param state reactiveValues object with full state
-#' @param millis time delay for reacting to changes in the input
-#' @param mc.maxpts number of points in monte carlo 
-#' 
-#' @export
-calculation <- function(state, millis=500, mc.maxpts=100) {
-  ### TODO: See https://resources.rstudio.com/rstudio-conf-2019/effective-use-of-shiny-modules-in-application-development on time 14:14
-  ### Using a reactiveValues() object to pass state around is bad practice
-  ### We do it here anyway, because we may change some values
-  ### in multiple locations (similar to the AngularJS data binding principle)
-  ### See e.g. https://docs.angularjs.org/tutorial/step_06 for an example where
-  ### a global state is modified by Input elements.
-  
-  # setup default values
-  isolate({
-    missingNames <- setdiff(names(defaultData), names(state))
-    for(i in missingNames) state[[i]] <- defaultData[[i]]
-  })
+# By default, only includes the values needed for convertDataToTdmore
+debouncedState <- function(state, names=c("model", "regimen", "observed", "covariates", "now"), millis=2000, label=NULL) {
   notDebounced <- reactive({
-    list(
-      model=state$model,
-      regimen=state$regimen,
-      observed=state$observed,
-      covariates=state$covariates,
-      now=state$now, #state$now is used by convertDataToTdmore()
-      target=state$target #changes the recommendation
-    )
-  })
+    value <- lapply(names, function(x){state[[x]]})
+    names(value) <- names
+    value
+  }, label=label)
   debounced <- debounce(notDebounced, millis=millis)
-  
-  observeEvent(debounced(), {
-    withLogErrors({
-      executeCalculation(state, mc.maxpts=mc.maxpts)
-    })
-  }, 
-    label="TDMore calculation",
-    priority=-10 #low priority, run at the end
-  )
+  debounced
 }
 
-executeCalculation <- function(state, mc.maxpts=100) {
-  ## TODO: more fine-grained updating: compare original with new value, only store if really new
-  progress <- shiny::Progress$new()
-  on.exit(progress$close())
-  
-  progress$set(message = "Calculating prediction", value = 0)
-  
-  progress$set(detail = "Population prediction")
-  # this fires when any input data changes
-  args <- convertDataToTdmore(state)
-  state$populationPredict <- tryCatch({captureStackTraces(calculatePopulationPredict(state, progress, 1/5, mc.maxpts))}, error=function(e) e)
-  progress$inc(1/5, detail = "Fitting")
-  fit <- state$fit
-  if(needsUpdate(fit, args, onlyEstimate=TRUE) ) {
-    state$fit <- tryCatch({captureStackTraces({
+#' @rdname calculation
+#' @inheritParams shinytdmore-data
+#' @param population TRUE to calculate a population fit, FALSE to calculate an individual fit
+#' @export
+reactiveFit <- function(state, population=FALSE, millis=2000) {
+  dbState <- debouncedState(state, millis=millis, label="FitState")
+  lastFit <- NULL
+  updateNeeded <- reactiveVal(value=0, label="FitNeedsUpdate")
+  observe({
+    args <- convertDataToTdmore(dbState())
+    if(needsUpdate(lastFit, args))
+      updateNeeded(isolate({updateNeeded()}) + 1) #set value, thereby invalidating the reactive below
+  }, label="Update FitNeedsUpdate", priority=99) #ensure we never do a loop
+  reactiveFit <- reactive({
+    cat("Calculating reactiveFit (population=", population, ")\n")
+    updateNeeded() #set dependency, and use as *only* dependency!
+    args <- isolate({ convertDataToTdmore(state) })
+    if(population) args$observed <- NULL #remove observed values
+    fit <- lastFit
+    if(needsUpdate(fit, args, onlyEstimate=TRUE) ) {
       pars <- NULL
-      if(!is.null(state$fit)) pars <- stats::coef(state$fit)
+      if(!is.null(fit)) pars <- stats::coef(fit)
       fit <- tdmore::estimate(args$model, 
-                              observed=args$observed, 
-                              regimen=args$regimen, 
-                              covariates=args$covariates,
-                              par=pars)
-    })}, error=function(e) e)
-  } else if (needsUpdate(fit, args, onlyEstimate=FALSE) ){
-    state$fit <- tryCatch({captureStackTraces({
+                                observed=args$observed, 
+                                regimen=args$regimen, 
+                                covariates=args$covariates,
+                                par=pars)
+    } else if (needsUpdate(fit, args, onlyEstimate=FALSE) ){
       #just update the included regimen/observed/covariates
       fit$regimen <- args$regimen
       fit$observed <- args$observed
       fit$covariates <- args$covariates
-      fit
-    })}, error=function(e) e)
-  } else {
-    #no update needed
-  }
-  progress$set(detail = "Individual prediction")
-  state$individualPredict <- tryCatch( {captureStackTraces(calculateIndividualPredict(state, progress, 1/5, mc.maxpts))}, error=function(e) e)
-  progress$inc(1/5, detail = "Optimizing treatment")
-  state$recommendation <- tryCatch({ captureStackTraces(calculateRecommendation(state))}, error=function(e) e)
-  progress$set(detail = "Recommendation prediction")
-  state$recommendationPredict <- tryCatch({captureStackTraces(calculateRecommendationPredict(state, progress, 1/5, mc.maxpts))}, error=function(e) e)
+    } else {
+      #no update needed
+    }
+    lastFit <<- fit
+    fit
+  }, label="ReactiveFit")
+  reactiveFit
 }
 
+#' @rdname calculation
+#' @inheritParams shinytdmore-data
+#' @export
+reactiveRecommendation <- function(state, fit, millis=2000) {
+  dbState <- debouncedState(state, c("regimen", "target"), millis=millis)
+  recommendation <- reactive({
+    progress <- Progress$new(max=1/5)
+    on.exit(progress$close())
+    dbState()
+    isolate({
+      args <- convertDataToTdmore(state)
+      fit <- fit()
+      isolate({
+        rec <- tdmore::optimize(fit, regimen=args$regimen, targetMetadata=state$target %||% defaultData$target)
+        rec$regimen
+      })
+    })
+  })
+  recommendation
+}
 
+#' @rdname calculation
+#' @inheritParams shinytdmore-data
+#' @export
+calculationReactives <- function(state, mc.maxpts=100, fitMillis=2000, predictMillis=2000, recommendationMillis=500) {
+  cr <- list()
+  cr$populationPredict <- reactivePredict(state, mc.maxpts=mc.maxpts)
+  cr$fit <- reactiveFit(state, millis=fitMillis)
+  cr$populationPredictNoSe <- reactivePredict(state, mc.maxpts=1, millis=predictMillis) #TODO: allow '0'
+  cr$individualPredict <- reactivePredict(state, cr$fit, mc.maxpts=mc.maxpts, millis=predictMillis)
+  cr$individualPredictNoSe <- reactivePredict(state, cr$fit, mc.maxpts=1, millis=predictMillis)
+  cr$recommendation <- reactiveRecommendation(state, cr$fit, millis=recommendationMillis)
+  cr$recommendationPredict <- reactivePredict(state, cr$fit, cr$recommendation, mc.maxpts=mc.maxpts, millis=predictMillis)
+  cr
+}
 
-calculateRecommendation <- function(state) {
-    shiny::validate(
-      shiny::need(state$fit, message="The fit has not been calculated yet...")
+#' @rdname calculation
+#' @inheritParams shinytdmore-data
+#' @export
+reactivePredict <- function(state, fit=NULL, recommendation=NULL, mc.maxpts=100, millis=2000) {
+  if(is.null(fit)) fit = reactiveFit(state, population=TRUE)
+  
+  dependency <- debounce(reactive({
+    list(
+      state$regimen,
+      state$model,
+      state$covariates
     )
-    rec <- tdmore::optimize(state$fit, targetMetadata=state$target)
-    rec$regimen
+  }), millis=millis)
+  
+  r <- reactive({
+    dependency() #set up dependency
+    progress <- Progress$new()
+    progress$set(message="Calculating prediction")
+    on.exit(progress$close())
+    fit <- fit()
+    if(is.null(recommendation)) {
+      regimen <- NULL
+    } else {
+      regimen <- recommendation()
+    }
+    isolate({
+      calculatePredict(state, fit=fit, regimen=regimen, progress, mc.maxpts)
+    })
+  })
+  r
+}
+
+# An 'all.equal'-like function that has a wider interpretation
+# of equal if either a or b is empty (or empty-like)
+isEquivalent <- function(a, b) {
+  empty <- function(x) is.null(x) || nrow(x) == 0
+  (empty(a) && empty(b)) ||
+    isTRUE(all.equal(a, b))
 }
 
 #' @importFrom dplyr filter select distinct
@@ -144,7 +170,7 @@ needsUpdate <- function(fit, args, onlyEstimate=TRUE) {
   tryCatch({
     if(is.null(fit)) return(TRUE)
     if(!identical(fit$tdmore, args$model)) return(TRUE)
-    if(!isTRUE(all.equal(fit$observed, args$observed))) return(TRUE)
+    if(!isEquivalent(fit$observed, args$observed)) return(TRUE)
     
     if(onlyEstimate) {
       #only check parts that influence the estimation
@@ -171,38 +197,13 @@ needsUpdate <- function(fit, args, onlyEstimate=TRUE) {
   })
 }
 
-calculateIndividualPredict <- function(state, progress, amount, mc.maxpts) {
+calculatePredict <- function(state, fit=NULL, regimen=NULL, progress, mc.maxpts) {
   args <- convertDataToTdmore(state)
-  fit <- state$fit
-  if(is.null(fit)) stop("Fit not calculated yet...")
   newdata <- getNewdata(regimen=args$regimen, observed=args$observed, model=args$model)
+  if(is.null(fit)) fit <- tdmore::estimate(args$model, regimen=args$regimen, covariates=args$covariates)
   
-  p <- tdmore::ShinyToDplyrProgressFacade$new(proxy=progress, amount=amount)
-  data <- stats::predict(fit, newdata=newdata, se.fit=T, level=0.95, mc.maxpts=mc.maxpts, .progress=p) # 95% CI by default
-  data$TIME <- args$t0 + lubridate::dhours(data$TIME)
-  data
-}
-
-calculatePopulationPredict <- function(state, progress, amount, mc.maxpts) {
-  args <- convertDataToTdmore(state)
-  fit <- tdmore::estimate(args$model, regimen=args$regimen, covariates=args$covariates)
-  
-  newdata <- getNewdata(regimen=args$regimen, observed=args$observed, model=args$model)
-  
-  p <- tdmore::ShinyToDplyrProgressFacade$new(proxy=progress, amount=amount)
-  data <- stats::predict(fit, newdata=newdata, se.fit=T, level=0.95, mc.maxpts=mc.maxpts, .progress=p) # 95% CI by default
-  data$TIME <- args$t0 + lubridate::dhours(data$TIME)
-  data
-}
-
-calculateRecommendationPredict <- function(state, progress, amount, mc.maxpts) {
-  if(inherits(state$recommendation, "error")) stop(state$recommendation)
-  args <- convertDataToTdmore(state)
-  fit <- state$fit
-  newdata <- getNewdata(regimen=args$regimen, observed=args$observed, model=args$model)
-  
-  p <- tdmore::ShinyToDplyrProgressFacade$new(proxy=progress, amount=amount)
-  data <- stats::predict(fit, regimen=state$recommendation, newdata=newdata, se.fit=T, level=0.95, mc.maxpts=mc.maxpts, .progress=p) # 95% CI by default
+  p <- tdmore::ShinyToDplyrProgressFacade$new(proxy=progress)
+  data <- stats::predict(fit, regimen=regimen, newdata=newdata, se.fit=T, level=0.95, mc.maxpts=mc.maxpts, .progress=p) # 95% CI by default
   data$TIME <- args$t0 + lubridate::dhours(data$TIME)
   data
 }

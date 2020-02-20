@@ -4,7 +4,7 @@
 \alias{fitPlot}
 \title{Fitplot creates a Population, Fit and Recommendation plot}
 \usage{
-fitPlot(input, output, session, state)
+fitPlot(input, output, session, state, cr = NULL)
 }
 \arguments{
 \item{input}{Shiny input object}
@@ -14,6 +14,8 @@ fitPlot(input, output, session, state)
 \item{session}{Shiny session object}
 
 \item{state}{a reactiveValues object with the state of the application. See [convertDataToTdmore()] for more information.}
+
+\item{cr}{list of calculation-related reactives, see [calculationReactives()]}
 }
 \description{
 Fitplot creates a Population, Fit and Recommendation plot

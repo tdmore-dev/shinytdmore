@@ -14,7 +14,7 @@
 
       ]
     },
-    "plotly_afterplot-plots-population-2": "\"plots-population\"",
+    "plotly_afterplot-plots-population": "\"plots-population\"",
     "plots-active": "population"
   },
   "output": {
@@ -3608,7 +3608,7 @@
           "dragmode": "pan",
           "autosize": true
         },
-        "source": "plots-population-2",
+        "source": "plots-population",
         "config": {
           "doubleClick": "reset",
           "showSendToCloud": false,

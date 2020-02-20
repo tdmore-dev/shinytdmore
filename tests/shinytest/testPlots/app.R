@@ -44,7 +44,6 @@ shinyApp(ui=ui, server=function(input, output, session) {
   )
   state$model <- myModel
   state$now <- as.POSIXct("2000-01-02 08:00", tz="GMT")
-  calculation(state)
   callModule(fitPlot, "plots", state=state)
   # output$debug <- shiny::renderUI({
   #   out <- lapply(names(input), function(i){

@@ -2,34 +2,51 @@
 % Please edit documentation in R/calculation.R
 \name{calculation}
 \alias{calculation}
-\title{This module performs all of the required calculation for the application.}
+\alias{reactiveFit}
+\alias{reactiveRecommendation}
+\alias{calculationReactives}
+\alias{reactivePredict}
+\title{Reactives that can be used to support tdmore calculations}
 \usage{
-calculation(state, millis = 500, mc.maxpts = 100)
+reactiveFit(state, population = FALSE, millis = 2000)
+
+reactiveRecommendation(state, fit, millis = 2000)
+
+calculationReactives(
+  state,
+  mc.maxpts = 100,
+  fitMillis = 2000,
+  predictMillis = 2000,
+  recommendationMillis = 500
+)
+
+reactivePredict(
+  state,
+  fit = NULL,
+  recommendation = NULL,
+  mc.maxpts = 100,
+  millis = 2000
+)
 }
 \arguments{
-\item{state}{reactiveValues object with full state}
+\item{state}{reactiveValues() or list-like object with input data, see \link{shinytdmore-data} for more information}
 
-\item{millis}{time delay for reacting to changes in the input}
+\item{population}{TRUE to calculate a population fit, FALSE to calculate an individual fit}
 
-\item{mc.maxpts}{number of points in monte carlo}
+\item{millis}{time for debounce, see [shiny::debounce()]}
+
+\item{fit}{reactive of type [reactiveFit()] with the current fit}
+
+\item{mc.maxpts}{number of monte carlo samples to take, see [tdmore::predict.tdmorefit()]}
+
+\item{fitMillis}{time to wait until calculating new fit}
+
+\item{predictMillis}{time to wait until calculating a new prediction}
+
+\item{recommendationMillis}{time to wait until calculating a new recommendation}
+
+\item{recommendation}{recommendation reactive of type [reactiveRecommendation()]}
 }
 \description{
-Call it in your application using `calculation(state)`.
+Reactives that can be used to support tdmore calculations
 }
-\details{
-Shiny progress calls are used to report which calculation is being done. However, the progress bar does not advance.
-It is very difficult to create an encompassing progress bar throughout all steps, because some of these steps are shortcutted depending 
-on the changes done. As an example, changes in future doses will not change the fitted parameters.
-}
-\section{Output}{
-
-The module sets the following state variables:
-* `populationPredict` a data-frame with prediction data on the population level
-* `fit` a tdmorefit object
-* `individualPredict` a data-frame with prediction data for the individual
-* `recommendation` a data.frame in the same form as `regimen`, but where the AMT column was adapted
-
-If any of these values could not be calculated, the outputs are set to the error that occurred during calculation. This may be
-a simple R error [simpleError()] or a more verbose shiny validation error (e.g. [shiny::validate()] or [shiny::req()])
-}
-

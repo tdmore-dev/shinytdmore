@@ -67,19 +67,19 @@ mergePlots <- function(p1, p2, p3, output, source) {
 
   if (is.null(p3)) {
     plot <- plotly::subplot(
-      plotly::ggplotly(p1, tooltip=tooltip1, source=paste0(source, "-1")) %>% 
+      plotly::ggplotly(p1, tooltip=tooltip1, source=source) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      plotly::ggplotly(p2, tooltip=tooltip2, source=paste0(source, "-2")) %>% 
+      plotly::ggplotly(p2, tooltip=tooltip2, source=source) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
       nrows = 2, heights = c(0.8, 0.2), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
     ) %>% plotly::layout(dragmode = "pan", autosize=TRUE )
   } else {
     plot <- plotly::subplot(
-      plotly::ggplotly(p1, tooltip=tooltip1, source=paste0(source, "-1")) %>% 
+      plotly::ggplotly(p1, tooltip=tooltip1, source=source) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      plotly::ggplotly(p2, tooltip=tooltip2, source=paste0(source, "-2")) %>% 
+      plotly::ggplotly(p2, tooltip=tooltip2, source=source) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      plotly::ggplotly(p3, source=paste0(source, "-3")) %>% 
+      plotly::ggplotly(p3, source=source) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
       nrows = 3, heights = c(0.7, 0.15, 0.15), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
     ) %>% plotly::layout(dragmode = "pan", legend = list(orientation = "h", y=-250), autosize=TRUE )
@@ -97,6 +97,7 @@ mergePlots <- function(p1, p2, p3, output, source) {
 #' @return a new plot with the X intercept and 'past' and 'future' labels
 #'
 addNowLabelAndIntercept <- function(plot, now) {
+  now <- now %||% defaultData$now
   xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
   
   # Add X intercept (bug in plotly: as.numeric has to be called on the POSIX date)
@@ -144,6 +145,7 @@ preparePredictionPlots <- function(populationPredict, individualPredict, observe
 #' @inheritParams shinytdmore-data
 #'
 preparePredictionPlot <- function(populationPredict, individualPredict, observed, target, model, now) {
+  now <- now %||% defaultData$now
   population <- is.null(individualPredict)
   data <- if(population) populationPredict else individualPredict
   

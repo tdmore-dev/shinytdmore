@@ -1,8 +1,5 @@
-`%||%` <- function(a, b){
-  if(!is.null(a)) a else b
-}
-
-#' Convert shinyTDMore domain to TDMore domain
+#' @title Data format description
+#' @name shinytdmore-data
 #' 
 #' @md
 #' @details 
@@ -22,7 +19,7 @@
 #'   * `...` columns corresponding to covariates required in the tdmore model. If columns are missing, the method returns an error.
 #' * `state$now` a POSIXct time representing the current time
 #' 
-#' This is converted into a list of arguments compatible with [tdmore::estimate], [tdmore::predict.tdmore] and [tdmore::findDose]. 
+#' [convertDataToTdmore()] converts this into a list of arguments compatible with [tdmore::estimate], [tdmore::predict.tdmore] and [tdmore::findDose]. 
 #' * `model` the tdmore model
 #' * `regimen` all treatments in the right format
 #' * `observed` all observed values where use=TRUE, and with the `dv` column renamed to the default model output
@@ -33,17 +30,52 @@
 #' 
 #' Please note that `target` is missing here. This is determined by the optimization routines in `tdmore` itself.
 #' 
-#' @param state reactiveValues() or list-like object with input data
-#' @return named list of tdmore-compatible values
+#' @param state reactiveValues() or list-like object with input data, see [shinytdmore-data] for more information
+#' @param model a tdmore model with (ideally) metadata
+#' @param regimen a data.frame with the following columns:
+#'   * `time` a POSIXct time
+#'   * `dose` a numeric with the dose amount
+#'   * `formulation` a character vector that corresponds to formulations defined in the metadata of the model
+#'   * `fix` a boolean vector describing whether the given regimen can be modified in dose recommendation
+#' @param observed a data.frame with the following columns:
+#'   * `time` a POSIXct time
+#'   * `dv` the observed data
+#'   * `use` whether the observation should be used in the estimation
+#' @param covariates a data.frame with the following columns:
+#'   * `time` a POSIXct time
+#'   * `...` columns corresponding to covariates required in the tdmore model. If columns are missing, the method returns an error.
+#' @param now a POSIXct time representing the current time
+#' @param target a named list with min/max values to represent the target concentration
+#' @format NULL
+#' @usage NULL
+NULL
+
+`%||%` <- function(a, b){
+  if(!is.null(a)) a else b
+}
+
+#' @describeIn shinytdmore-data Default data
+#' @export
+#' @format NULL
+#' @usage NULL
+defaultData <- list(
+  regimen=tibble::tibble(time=as.POSIXct(character()), dose=numeric(), formulation=character(), fix=logical()),
+  observed=tibble::tibble(time=as.POSIXct(character()), dv=numeric(), use=logical()),
+  covariates=tibble::tibble(time=as.POSIXct(character())), #rest of columns depend on model
+  now=as.POSIXct("2000-01-01"),
+  target=list(min=as.numeric(NA), max=as.numeric(NA))
+)
+
+#' @describeIn shinytdmore-data Convert shinytdmore data to tdmore format
 #' @importFrom dplyr filter transmute full_join select mutate arrange everything
 #' @export
-#'
+#' @usage NULL
 convertDataToTdmore <- function(state) {
   model <- state$model
-  regimen <- state$regimen %||% tibble(time=as.POSIXct(character(0)), dose=numeric(0), formulation=character(0), fix=logical(0))
-  observed <- state$observed %||% tibble(time=as.POSIXct(character(0)), dv=numeric(0), use=logical(0))
-  covariates <- state$covariates %||% tibble::tibble(time=as.POSIXct(character(0)))
-  now <- state$now %||% as.POSIXct(NA)
+  regimen <- state$regimen %||% defaultData$regimen
+  observed <- state$observed %||% defaultData$observed
+  covariates <- state$covariates %||% defaultData$covariates
+  now <- state$now %||% defaultData$now
   
   result <- list()
   result$model <- model

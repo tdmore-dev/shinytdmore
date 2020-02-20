@@ -28,7 +28,7 @@
           "date": "character",
           "time": "character",
           "dose": "numeric",
-          "formulation": "character",
+          "formulation": "factor",
           "fix": "logical"
         },
         "rColnames": [
@@ -1525,9 +1525,17 @@
           },
           {
             "type": "dropdown",
+            "source": [
+              "Prograft",
+              "Advagraf"
+            ],
+            "allowInvalid": false,
             "default": null,
             "editor": "select",
-            "selectOptions": null
+            "selectOptions": [
+              "Prograft",
+              "Advagraf"
+            ]
           },
           {
             "type": "checkbox",

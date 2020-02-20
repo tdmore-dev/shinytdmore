@@ -54,24 +54,22 @@ predictionTabUI <- function(id, height="auto") {
 #'
 #' Prediction tab server.
 #'
-#' @param input shiny input
-#' @param output shiny output
-#' @param session shiny session
-#' @param state program state, containing the fields `now`, `model`, `regimen`, `observed`
-#' 
+#' @inheritParams shinytdmore-module
 #' @export
 #'
-predictionTab <- function(input, output, session, state) {
+predictionTab <- function(input, output, session, state, cr=NULL) {
+  if(is.null(cr)) cr <- calculationReactives(state)
+  
   # link input elements to `state`
   callModule(doseTable, "doses", state=state)
-  callModule(recommendationTable, "recommendation", state=state)
+  callModule(recommendationTable, "recommendation", state=state, recommendation=cr$recommendation)
   callModule(observationTable, "observation", state=state)
   callModule(covariatesTable, "covariates", state=state)
   callModule(nowInput, "now", state=state)
   callModule(targetInput, "target", state=state)
   
   # output plots
-  callModule(fitPlot, "plots", state=state)
+  callModule(fitPlot, "plots", state=state, cr=cr)
   
   # adapt visibility of input elements
   visibilityStates <- tibble(

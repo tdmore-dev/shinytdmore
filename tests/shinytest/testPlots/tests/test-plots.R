@@ -22,13 +22,13 @@ app$snapshot(filename="population.json")
 
 ## snapshot fit plot
 app$setInputs(`plots-active`="fit")
-waitUntilPresent("plotly_afterplot-plots-fit-3") #wait for plotly event to be registered in input list
+waitUntilPresent("plotly_afterplot-plots-fit") #wait for plotly event to be registered in input list
 app$snapshot(filename="fit.json")
 #snapshotSource("fit")
 
 ## snapshot recommendation plot
 app$setInputs(`plots-active`="recommendation")
-waitUntilPresent("plotly_afterplot-plots-recommendation-2") #wait for plotly event to be registered in input list
+waitUntilPresent("plotly_afterplot-plots-recommendation") #wait for plotly event to be registered in input list
 app$snapshot(filename="recommendation.json")
 #snapshotSource("recommendation")
 
@@ -36,3 +36,4 @@ app$snapshot(filename="recommendation.json")
 p <- app$.__enclos_env__$private$shinyProcess
 p$interrupt()
 p$wait()
+

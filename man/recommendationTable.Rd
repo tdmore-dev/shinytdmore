@@ -4,7 +4,7 @@
 \alias{recommendationTable}
 \title{The recommendationTable uses the state$regimen and state$recommendation tables}
 \usage{
-recommendationTable(input, output, session, state)
+recommendationTable(input, output, session, state, recommendation = NULL)
 }
 \arguments{
 \item{input}{Shiny input object}
@@ -14,6 +14,8 @@ recommendationTable(input, output, session, state)
 \item{session}{Shiny session object}
 
 \item{state}{a reactiveValues object with the state of the application. See [convertDataToTdmore()] for more information.}
+
+\item{recommendation}{a [reactiveRecommendation()], or NULL to create one}
 }
 \description{
 The recommendationTable uses the state$regimen and state$recommendation tables

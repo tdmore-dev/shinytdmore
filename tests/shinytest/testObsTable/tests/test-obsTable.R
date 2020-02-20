@@ -44,17 +44,11 @@ web <- app$.__enclos_env__$private$web ### TODO FIXME: the two Sleep commands ar
 web$getActiveElement()$sendKeys("1987-12-11\t"); Sys.sleep(2)
 web$getActiveElement()$sendKeys("12:15\t"); Sys.sleep(2)
 
-tryCatch(
-  testthat::try_again(30, { #wait long enough!
-    Sys.sleep(0.2)
-    observed <- app$getAllValues()$export$observed
-    expect_equal(observed$time, as.POSIXct("1987-12-11 12:15"), tol=1E-4)
-  }),
-  error=function(e) {
-    app$takeScreenshot()
-    browser()
-    stop(e)
-  })
+testthat::try_again(30, { #wait long enough!
+  Sys.sleep(0.2)
+  observed <- app$getAllValues()$export$observed
+  expect_equal(observed$time, as.POSIXct("1987-12-11 12:15"), tol=1E-4)
+})
 
 # set time
 cell(2)$click()

@@ -97,8 +97,11 @@ addDose <- function(state) {
 
 #' The recommendationTable uses the state$regimen and state$recommendation tables
 #' @inheritParams shinytdmore-module
-#' 
-recommendationTable <- function(input, output, session, state) {
+#' @param recommendation a [reactiveRecommendation()], or NULL to create one
+recommendationTable <- function(input, output, session, state, recommendation=NULL) {
+  if(is.null(recommendation)) {
+    recommendation <- reactiveRecommendation(state, reactiveFit(state))
+  }
   defaultReactive <- reactive({
     tibble(time=as.POSIXct(character(0)), 
            dose=numeric(0), 
@@ -116,7 +119,7 @@ recommendationTable <- function(input, output, session, state) {
   borders <- bordersReactiveVal(tableDf, state)
   callModule(synchronizedHot, "table", 
              stateDf=tableDf, expr={
-               regimen <- state$recommendation
+               regimen <- recommendation()
                shiny::req(regimen)
                df <- isolate({ tableDf() })
                shiny::req(nrow(df) == nrow(regimen)) #otherwise wait for update...

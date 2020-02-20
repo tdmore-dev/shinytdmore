@@ -14,8 +14,8 @@
 
       ]
     },
-    "plotly_afterplot-plots-fit-3": "\"plots-fit\"",
-    "plotly_afterplot-plots-population-2": "\"plots-population\"",
+    "plotly_afterplot-plots-fit": "\"plots-fit\"",
+    "plotly_afterplot-plots-population": "\"plots-population\"",
     "plots-active": "fit"
   },
   "output": {
@@ -6739,7 +6739,7 @@
           "dragmode": "pan",
           "autosize": true
         },
-        "source": "plots-fit-3",
+        "source": "plots-fit",
         "config": {
           "doubleClick": "reset",
           "showSendToCloud": false,
@@ -10453,7 +10453,7 @@
           "dragmode": "pan",
           "autosize": true
         },
-        "source": "plots-population-2",
+        "source": "plots-population",
         "config": {
           "doubleClick": "reset",
           "showSendToCloud": false,

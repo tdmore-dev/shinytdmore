@@ -11,6 +11,8 @@
 \item{session}{Shiny session object}
 
 \item{state}{a reactiveValues object with the state of the application. See [convertDataToTdmore()] for more information.}
+
+\item{cr}{list of calculation-related reactives, see [calculationReactives()]}
 }
 \description{
 Basic definition for module server components

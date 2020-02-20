@@ -12,7 +12,7 @@ library(shinytest)
 
 tmp_lib <- tdmore::ensurePackagePresent("shinytdmore", quiet=F)
 app <- withr::with_libpaths(tmp_lib, {
-      ShinyDriver$new(path="shinytdmoreApp", debug="all", shinyOptions = list(test.mode=TRUE))
+      ShinyDriver$new(path="shinytdmoreApp", debug="all", shinyOptions = list(test.mode=TRUE), loadTimeout=30*1000)
     }, action="prefix")
 
 file <- knitr::fig_path("png")

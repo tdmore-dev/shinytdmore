@@ -1,9 +1,9 @@
 icuSetCollate(locale="ASCII")
 Sys.setlocale(category="LC_TIME", locale="C")
 Sys.setenv(TZ='GMT')
+options(shiny.reactlog=TRUE)
 options(useFancyQuotes = FALSE)
 library(shinytdmore)
-options(shiny.reactlog=TRUE)
 
 rxModel <- RxODE::RxODE("
 KA = 0.3;
@@ -43,7 +43,6 @@ shinyApp(ui=ui, server=function(input, output, session) {
   #                                         dose=15,
   #                                         formulation=1, fix=FALSE
   # )
-  calculation(state)
   callModule(predictionTab, "prediction", state=state)
   exportTestValues(regimen = { state$regimen }, observed= {state$observed})
 })

@@ -4,16 +4,18 @@
 \alias{predictionTab}
 \title{Prediction tab server.}
 \usage{
-predictionTab(input, output, session, state)
+predictionTab(input, output, session, state, cr = NULL)
 }
 \arguments{
-\item{input}{shiny input}
+\item{input}{Shiny input object}
 
-\item{output}{shiny output}
+\item{output}{Shiny output object}
 
-\item{session}{shiny session}
+\item{session}{Shiny session object}
 
-\item{state}{program state, containing the fields `now`, `model`, `regimen`, `observed`}
+\item{state}{a reactiveValues object with the state of the application. See [convertDataToTdmore()] for more information.}
+
+\item{cr}{list of calculation-related reactives, see [calculationReactives()]}
 }
 \description{
 Prediction tab server.
