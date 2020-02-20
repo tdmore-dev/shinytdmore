@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Data definition — shinytdmore-data • shinytdmore</title>
+<title>Data format description — shinytdmore-data • shinytdmore</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -42,8 +42,8 @@
 
 
 
-<meta property="og:title" content="Data definition — shinytdmore-data" />
-<meta property="og:description" content="Data definition" />
+<meta property="og:title" content="Data format description — shinytdmore-data" />
+<meta property="og:description" content="Data format description" />
 <meta property="og:image" content="/logo.png" />
 <meta name="twitter:card" content="summary" />
 
@@ -116,19 +116,23 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Data definition</h1>
-    <small class="dont-index">Source: <a href='https://github.com/tdmore-dev/shinytdmore/blob/master/R/zPackage.R'><code>R/zPackage.R</code></a></small>
+    <h1>Data format description</h1>
+    <small class="dont-index">Source: <a href='https://github.com/tdmore-dev/shinytdmore/blob/master/R/dataConversion.R'><code>R/dataConversion.R</code></a></small>
     <div class="hidden name"><code>shinytdmore-data.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Data definition</p>
+    <p>Data format description</p>
     </div>
 
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>state</th>
+      <td><p>reactiveValues() or list-like object with input data, see shinytdmore-data for more information</p></td>
+    </tr>
     <tr>
       <th>model</th>
       <td><p>a tdmore model with (ideally) metadata</p></td>
@@ -167,12 +171,54 @@
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Shinytdmore uses the following data objects in a reactiveValues() state:</p><ul>
+<li><p><code>state$model</code> a tdmore model with (ideally) metadata</p></li>
+<li><p><code>state$regimen</code> a data.frame with the following columns:</p><ul>
+<li><p><code>time</code> a POSIXct time</p></li>
+<li><p><code>dose</code> a numeric with the dose amount</p></li>
+<li><p><code>formulation</code> a character vector that corresponds to formulations defined in the metadata of the model</p></li>
+<li><p><code>fix</code> a boolean vector describing whether the given regimen can be modified in dose recommendation</p></li>
+</ul></li>
+<li><p><code>state$observed</code> a data.frame with the following columns:</p><ul>
+<li><p><code>time</code> a POSIXct time</p></li>
+<li><p><code>dv</code> the observed data</p></li>
+<li><p><code>use</code> whether the observation should be used in the estimation</p></li>
+</ul></li>
+<li><p><code>state$covariates</code> a data.frame with the following columns:</p><ul>
+<li><p><code>time</code> a POSIXct time</p></li>
+<li><p><code>...</code> columns corresponding to covariates required in the tdmore model. If columns are missing, the method returns an error.</p></li>
+</ul></li>
+<li><p><code>state$now</code> a POSIXct time representing the current time</p></li>
+</ul>
+
+<p><code>convertDataToTdmore()</code> converts this into a list of arguments compatible with <a href='https://rdrr.io/pkg/tdmore/man/estimate.html'>tdmore::estimate</a>, <a href='https://rdrr.io/pkg/tdmore/man/predict.tdmore.html'>tdmore::predict.tdmore</a> and <a href='https://rdrr.io/pkg/tdmore/man/findDose.html'>tdmore::findDose</a>.</p><ul>
+<li><p><code>model</code> the tdmore model</p></li>
+<li><p><code>regimen</code> all treatments in the right format</p></li>
+<li><p><code>observed</code> all observed values where use=TRUE, and with the <code>dv</code> column renamed to the default model output</p></li>
+<li><p><code>covariates</code> all covariates, with an added covariate <code>FORM</code> that contains the formulation</p></li>
+<li><p><code>t0</code> a POSIXct time corresponding to time <code>0</code></p></li>
+<li><p><code>now</code> a numeric time, corresponding to the different between t0 and now</p></li>
+<li><p><code>doseRows</code> numeric vector specifying which rows can be modified: rows in the future where fix==FALSE</p></li>
+</ul>
+
+<p>Please note that <code>target</code> is missing here. This is determined by the optimization routines in <code>tdmore</code> itself.</p>
+    <h2 class="hasAnchor" id="functions"><a class="anchor" href="#functions"></a>Functions</h2>
+
+    
+<ul>
+<li><p><code>defaultData</code>: Default data</p></li>
+<li><p><code>convertDataToTdmore</code>: Convert shinytdmore data to tdmore format</p></li>
+</ul>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
+      <li><a href="#details">Details</a></li>
+      <li><a href="#functions">Functions</a></li>
     </ul>
 
   </div>

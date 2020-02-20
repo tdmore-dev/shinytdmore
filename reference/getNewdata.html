@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Convert shinyTDMore domain to TDMore domain — convertDataToTdmore • shinytdmore</title>
+<title>Create a newdata data.frame compatible with [tdmore::predict.tdmorefit()] — getNewdata • shinytdmore</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -42,8 +42,8 @@
 
 
 
-<meta property="og:title" content="Convert shinyTDMore domain to TDMore domain — convertDataToTdmore" />
-<meta property="og:description" content="Convert shinyTDMore domain to TDMore domain" />
+<meta property="og:title" content="Create a newdata data.frame compatible with [tdmore::predict.tdmorefit()] — getNewdata" />
+<meta property="og:description" content="Create a newdata data.frame compatible with [tdmore::predict.tdmorefit()]" />
 <meta property="og:image" content="/logo.png" />
 <meta name="twitter:card" content="summary" />
 
@@ -116,62 +116,46 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Convert shinyTDMore domain to TDMore domain</h1>
-    <small class="dont-index">Source: <a href='https://github.com/tdmore-dev/shinytdmore/blob/master/R/dataConversion.R'><code>R/dataConversion.R</code></a></small>
-    <div class="hidden name"><code>convertDataToTdmore.Rd</code></div>
+    <h1>Create a newdata data.frame compatible with [tdmore::predict.tdmorefit()]</h1>
+    <small class="dont-index">Source: <a href='https://github.com/tdmore-dev/shinytdmore/blob/master/R/calculation.R'><code>R/calculation.R</code></a></small>
+    <div class="hidden name"><code>getNewdata.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Convert shinyTDMore domain to TDMore domain</p>
+    <p>Create a newdata data.frame compatible with [tdmore::predict.tdmorefit()]</p>
     </div>
 
-    <pre class="usage"><span class='fu'>convertDataToTdmore</span>(<span class='no'>state</span>)</pre>
+    <pre class="usage"><span class='fu'>getNewdata</span>(<span class='no'>regimen</span>, <span class='no'>observed</span>, <span class='no'>model</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>state</th>
-      <td><p>reactiveValues() or list-like object with input data</p></td>
+      <th>regimen</th>
+      <td><p>a data.frame with the following columns:</p><ul>
+<li><p><code>time</code> a POSIXct time</p></li>
+<li><p><code>dose</code> a numeric with the dose amount</p></li>
+<li><p><code>formulation</code> a character vector that corresponds to formulations defined in the metadata of the model</p></li>
+<li><p><code>fix</code> a boolean vector describing whether the given regimen can be modified in dose recommendation</p></li>
+</ul></td>
+    </tr>
+    <tr>
+      <th>observed</th>
+      <td><p>a data.frame with the following columns:</p><ul>
+<li><p><code>time</code> a POSIXct time</p></li>
+<li><p><code>dv</code> the observed data</p></li>
+<li><p><code>use</code> whether the observation should be used in the estimation</p></li>
+</ul></td>
+    </tr>
+    <tr>
+      <th>model</th>
+      <td><p>a tdmore model with (ideally) metadata</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>named list of tdmore-compatible values</p>
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>Shinytdmore uses the following data objects in a reactiveValues() state:</p><ul>
-<li><p><code>state$model</code> a tdmore model with (ideally) metadata</p></li>
-<li><p><code>state$regimen</code> a data.frame with the following columns:</p><ul>
-<li><p><code>time</code> a POSIXct time</p></li>
-<li><p><code>dose</code> a numeric with the dose amount</p></li>
-<li><p><code>formulation</code> a character vector that corresponds to formulations defined in the metadata of the model</p></li>
-<li><p><code>fix</code> a boolean vector describing whether the given regimen can be modified in dose recommendation</p></li>
-</ul></li>
-<li><p><code>state$observed</code> a data.frame with the following columns:</p><ul>
-<li><p><code>time</code> a POSIXct time</p></li>
-<li><p><code>dv</code> the observed data</p></li>
-<li><p><code>use</code> whether the observation should be used in the estimation</p></li>
-</ul></li>
-<li><p><code>state$covariates</code> a data.frame with the following columns:</p><ul>
-<li><p><code>time</code> a POSIXct time</p></li>
-<li><p><code>...</code> columns corresponding to covariates required in the tdmore model. If columns are missing, the method returns an error.</p></li>
-</ul></li>
-<li><p><code>state$now</code> a POSIXct time representing the current time</p></li>
-</ul>
-
-<p>This is converted into a list of arguments compatible with <a href='https://rdrr.io/pkg/tdmore/man/estimate.html'>tdmore::estimate</a>, <a href='https://rdrr.io/pkg/tdmore/man/predict.tdmore.html'>tdmore::predict.tdmore</a> and <a href='https://rdrr.io/pkg/tdmore/man/findDose.html'>tdmore::findDose</a>.</p><ul>
-<li><p><code>model</code> the tdmore model</p></li>
-<li><p><code>regimen</code> all treatments in the right format</p></li>
-<li><p><code>observed</code> all observed values where use=TRUE, and with the <code>dv</code> column renamed to the default model output</p></li>
-<li><p><code>covariates</code> all covariates, with an added covariate <code>FORM</code> that contains the formulation</p></li>
-<li><p><code>t0</code> a POSIXct time corresponding to time <code>0</code></p></li>
-<li><p><code>now</code> a numeric time, corresponding to the different between t0 and now</p></li>
-<li><p><code>doseRows</code> numeric vector specifying which rows can be modified: rows in the future where fix==FALSE</p></li>
-</ul>
-
-<p>Please note that <code>target</code> is missing here. This is determined by the optimization routines in <code>tdmore</code> itself.</p>
+    <p>a tibble with at least the regimen times, troughs, and observed times, and intermediate times per 0.5h</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -179,7 +163,6 @@
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       <li><a href="#value">Value</a></li>
-      <li><a href="#details">Details</a></li>
     </ul>
 
   </div>

@@ -125,26 +125,30 @@
     <p>Prediction tab server.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>predictionTab</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>state</span>)</pre>
+    <pre class="usage"><span class='fu'>predictionTab</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>state</span>, <span class='kw'>cr</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>input</th>
-      <td><p>shiny input</p></td>
+      <td><p>Shiny input object</p></td>
     </tr>
     <tr>
       <th>output</th>
-      <td><p>shiny output</p></td>
+      <td><p>Shiny output object</p></td>
     </tr>
     <tr>
       <th>session</th>
-      <td><p>shiny session</p></td>
+      <td><p>Shiny session object</p></td>
     </tr>
     <tr>
       <th>state</th>
-      <td><p>program state, containing the fields `now`, `model`, `regimen`, `observed`</p></td>
+      <td><p>a reactiveValues object with the state of the application. See [convertDataToTdmore()] for more information.</p></td>
+    </tr>
+    <tr>
+      <th>cr</th>
+      <td><p>list of calculation-related reactives, see [calculationReactives()]</p></td>
     </tr>
     </table>
 

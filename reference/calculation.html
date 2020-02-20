@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>This module performs all of the required calculation for the application. — calculation • shinytdmore</title>
+<title>Reactives that can be used to support tdmore calculations — calculation • shinytdmore</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -42,8 +42,8 @@
 
 
 
-<meta property="og:title" content="This module performs all of the required calculation for the application. — calculation" />
-<meta property="og:description" content="Call it in your application using `calculation(state)`." />
+<meta property="og:title" content="Reactives that can be used to support tdmore calculations — calculation" />
+<meta property="og:description" content="Reactives that can be used to support tdmore calculations" />
 <meta property="og:image" content="/logo.png" />
 <meta name="twitter:card" content="summary" />
 
@@ -116,58 +116,82 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>This module performs all of the required calculation for the application.</h1>
+    <h1>Reactives that can be used to support tdmore calculations</h1>
     <small class="dont-index">Source: <a href='https://github.com/tdmore-dev/shinytdmore/blob/master/R/calculation.R'><code>R/calculation.R</code></a></small>
     <div class="hidden name"><code>calculation.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Call it in your application using `calculation(state)`.</p>
+    <p>Reactives that can be used to support tdmore calculations</p>
     </div>
 
-    <pre class="usage"><span class='fu'>calculation</span>(<span class='no'>state</span>, <span class='kw'>millis</span> <span class='kw'>=</span> <span class='fl'>500</span>, <span class='kw'>mc.maxpts</span> <span class='kw'>=</span> <span class='fl'>100</span>)</pre>
+    <pre class="usage"><span class='fu'>reactiveFit</span>(<span class='no'>state</span>, <span class='kw'>population</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>millis</span> <span class='kw'>=</span> <span class='fl'>2000</span>)
+
+<span class='fu'>reactiveRecommendation</span>(<span class='no'>state</span>, <span class='no'>fit</span>, <span class='kw'>millis</span> <span class='kw'>=</span> <span class='fl'>2000</span>)
+
+<span class='fu'>calculationReactives</span>(
+  <span class='no'>state</span>,
+  <span class='kw'>mc.maxpts</span> <span class='kw'>=</span> <span class='fl'>100</span>,
+  <span class='kw'>fitMillis</span> <span class='kw'>=</span> <span class='fl'>2000</span>,
+  <span class='kw'>predictMillis</span> <span class='kw'>=</span> <span class='fl'>2000</span>,
+  <span class='kw'>recommendationMillis</span> <span class='kw'>=</span> <span class='fl'>500</span>
+)
+
+<span class='fu'>reactivePredict</span>(
+  <span class='no'>state</span>,
+  <span class='kw'>fit</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>recommendation</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>mc.maxpts</span> <span class='kw'>=</span> <span class='fl'>100</span>,
+  <span class='kw'>millis</span> <span class='kw'>=</span> <span class='fl'>2000</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>state</th>
-      <td><p>reactiveValues object with full state</p></td>
+      <td><p>reactiveValues() or list-like object with input data, see shinytdmore-data for more information</p></td>
+    </tr>
+    <tr>
+      <th>population</th>
+      <td><p>TRUE to calculate a population fit, FALSE to calculate an individual fit</p></td>
     </tr>
     <tr>
       <th>millis</th>
-      <td><p>time delay for reacting to changes in the input</p></td>
+      <td><p>time for debounce, see [shiny::debounce()]</p></td>
+    </tr>
+    <tr>
+      <th>fit</th>
+      <td><p>reactive of type [reactiveFit()] with the current fit</p></td>
     </tr>
     <tr>
       <th>mc.maxpts</th>
-      <td><p>number of points in monte carlo</p></td>
+      <td><p>number of monte carlo samples to take, see [tdmore::predict.tdmorefit()]</p></td>
+    </tr>
+    <tr>
+      <th>fitMillis</th>
+      <td><p>time to wait until calculating new fit</p></td>
+    </tr>
+    <tr>
+      <th>predictMillis</th>
+      <td><p>time to wait until calculating a new prediction</p></td>
+    </tr>
+    <tr>
+      <th>recommendationMillis</th>
+      <td><p>time to wait until calculating a new recommendation</p></td>
+    </tr>
+    <tr>
+      <th>recommendation</th>
+      <td><p>recommendation reactive of type [reactiveRecommendation()]</p></td>
     </tr>
     </table>
 
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>Shiny progress calls are used to report which calculation is being done. However, the progress bar does not advance.
-It is very difficult to create an encompassing progress bar throughout all steps, because some of these steps are shortcutted depending 
-on the changes done. As an example, changes in future doses will not change the fitted parameters.</p>
-    <h2 class="hasAnchor" id="output"><a class="anchor" href="#output"></a>Output</h2>
-
-    
-
-<p>The module sets the following state variables:
-* `populationPredict` a data-frame with prediction data on the population level
-* `fit` a tdmorefit object
-* `individualPredict` a data-frame with prediction data for the individual
-* `recommendation` a data.frame in the same form as `regimen`, but where the AMT column was adapted</p>
-<p>If any of these values could not be calculated, the outputs are set to the error that occurred during calculation. This may be
-a simple R error [simpleError()] or a more verbose shiny validation error (e.g. [shiny::validate()] or [shiny::req()])</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#details">Details</a></li>
-      <li><a href="#output">Output</a></li>
     </ul>
 
   </div>

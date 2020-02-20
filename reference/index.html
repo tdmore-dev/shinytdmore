@@ -186,9 +186,9 @@ Note that the returned string will depend on the application timezone.</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="calculation.html">calculation()</a></code> </p>
+          <p><code><a href="calculation.html">reactiveFit()</a></code> <code><a href="calculation.html">reactiveRecommendation()</a></code> <code><a href="calculation.html">calculationReactives()</a></code> <code><a href="calculation.html">reactivePredict()</a></code> </p>
         </td>
-        <td><p>This module performs all of the required calculation for the application.</p></td>
+        <td><p>Reactives that can be used to support tdmore calculations</p></td>
       </tr><tr>
         
         <td>
@@ -213,12 +213,6 @@ Note that the returned string will depend on the application timezone.</p></td>
           <p><code><a href="checkModelName.html">checkModelName()</a></code> </p>
         </td>
         <td><p>Check model name.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="convertDataToTdmore.html">convertDataToTdmore()</a></code> </p>
-        </td>
-        <td><p>Convert shinyTDMore domain to TDMore domain</p></td>
       </tr><tr>
         
         <td>
@@ -321,6 +315,12 @@ If the given model is a mixture_model, the most likely model is returned.</p></t
           <p><code><a href="getModelOutput.html">getModelOutput()</a></code> </p>
         </td>
         <td><p>Get model output variable name.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="getNewdata.html">getNewdata()</a></code> </p>
+        </td>
+        <td><p>Create a newdata data.frame compatible with [tdmore::predict.tdmorefit()]</p></td>
       </tr><tr>
         
         <td>
@@ -507,7 +507,7 @@ Example if FUN is actionButton:
         <td>
           <p><code><a href="shinytdmore-data.html">shinytdmore-data</a></code> </p>
         </td>
-        <td><p>Data definition</p></td>
+        <td><p>Data format description</p></td>
       </tr><tr>
         
         <td>

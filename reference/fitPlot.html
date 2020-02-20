@@ -125,7 +125,7 @@
     <p>Fitplot creates a Population, Fit and Recommendation plot</p>
     </div>
 
-    <pre class="usage"><span class='fu'>fitPlot</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>state</span>)</pre>
+    <pre class="usage"><span class='fu'>fitPlot</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>state</span>, <span class='kw'>cr</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -145,6 +145,10 @@
     <tr>
       <th>state</th>
       <td><p>a reactiveValues object with the state of the application. See [convertDataToTdmore()] for more information.</p></td>
+    </tr>
+    <tr>
+      <th>cr</th>
+      <td><p>list of calculation-related reactives, see [calculationReactives()]</p></td>
     </tr>
     </table>
 
