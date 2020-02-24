@@ -4,7 +4,7 @@
 #' @name nowInput
 nowInputUI <- function(id) {
   ns <- NS(id)
-  editableCombodate(inputId=ns("now"), value="2000-01-01 00:00")
+  editableCombodate(inputId=ns("now"), value="Undefined")
 }
 
 #' @name nowInput
