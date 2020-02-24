@@ -11,6 +11,7 @@ hot_to_r_datetime <- function(x){
     time[i] <- as.POSIXct(paste(df$date, df$time), format="%Y-%m-%d %H:%M")[i]
     df$time <- time
   }
+  df$time <- as.POSIXct(df$time) #ensure time is still of type POSIXct, even if nrow==0 !
   value <- df %>% select(-date)
   value
 }
