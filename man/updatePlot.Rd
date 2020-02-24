@@ -2,15 +2,30 @@
 % Please edit documentation in R/plotUtilities.R
 \name{updatePlot}
 \alias{updatePlot}
-\title{Update plot using animation. NOT USED.}
+\title{Update an existing plot with new data using animation.}
 \usage{
-updatePlot(plot, outputId)
+updatePlot(
+  outputId,
+  plot,
+  ignoreAttrs = c("attrs", "shinyEvents", "highlight", "config", "source", "visdat",
+    "base_url", "cur_data"),
+  ignoreDataAttrs = c("text", "hoveron", "name", "legendgroup", "showlegend", "xaxis",
+    "yaxis", "hoverinfo", "frame"),
+  options = list(transition = list(duration = 1000, easing = "cubic-in-out"), frame =
+    list(duration = 1000))
+)
 }
 \arguments{
+\item{outputId}{the output ID}
+
 \item{plot}{the given plot}
 
-\item{outputId}{the output ID}
+\item{ignoreAttrs}{attributes to ignore, i.e. to not update}
+
+\item{ignoreDataAttrs}{data attributes to ignore}
+
+\item{options}{options to perform the animation}
 }
 \description{
-Update plot using animation. NOT USED.
+Update an existing plot with new data using animation.
 }

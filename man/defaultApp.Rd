@@ -4,9 +4,18 @@
 \alias{defaultApp}
 \title{Default full-featured application}
 \usage{
-defaultApp(...)
+defaultApp(
+  model = tdmore::getModel(name = "pheno", dir = system.file("models", package =
+    "shinytdmore")),
+  now = Sys.time(),
+  ...
+)
 }
 \arguments{
+\item{model}{a tdmore model with (ideally) metadata}
+
+\item{now}{a POSIXct time representing the current time}
+
 \item{...}{default values for the application (e.g. `regimen`, `observed`, etc)}
 }
 \description{

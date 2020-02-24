@@ -1,17 +1,23 @@
 #'
-#' Update plot using animation. NOT USED.
+#' Update an existing plot with new data using animation.
 #' 
 #' @param plot the given plot
 #' @param outputId the output ID
+#' @param ignoreAttrs attributes to ignore, i.e. to not update
+#' @param ignoreDataAttrs data attributes to ignore
+#' @param options options to perform the animation
 #'
-updatePlot <- function(plot, outputId) {
+updatePlot <- function(outputId, plot, 
+                       ignoreAttrs=c("attrs", "shinyEvents", "highlight", "config", "source", "visdat", "base_url", "cur_data"),
+                       ignoreDataAttrs=c("text", "hoveron", "name", "legendgroup", "showlegend", "xaxis", "yaxis", "hoverinfo", "frame"),
+                       options=list(transition=list(duration=1000, easing='cubic-in-out'), frame=list(duration=1000))
+                       ) {
   p2 <- plot %>% plotly::plotly_build()
   p2 <- p2$x
   p2$layout <- list(datarevision=round(runif(1)*1000))
-  p2[c("attrs", "shinyEvents", "highlight", "config", "source", "visdat")] <- NULL
-  p2[c("base_url", "cur_data")] <- NULL
+  p2[ignoreAttrs] <- NULL
   p2$data <- lapply(p2$data, function(x){
-    x[c("text", "hoveron", "name", "legendgroup", "showlegend", "xaxis", "yaxis", "hoverinfo", "frame")] <- NULL
+    x[ignoreDataAttrs] <- NULL
     x} )
   ## see https://codepen.io/plotly/pen/ZpWPpj
   ## and https://codepen.io/etpinard/pen/KrpMQa
@@ -20,10 +26,87 @@ updatePlot <- function(plot, outputId) {
   proxy <- plotly::plotlyProxy(outputId)
   plotly::plotlyProxyInvoke(
     proxy, "animate", plot_json,
-    list(transition=list(duration=1000, easing='cubic-in-out'), frame=list(duration=1000))
+    options
   )
+  plot #new plot
 }
 
+repaintDataOnly <- function() {
+  function(old,new) {
+    a <- plotly::plotly_build(old)
+    a <- a$x
+    b <- plotly::plotly_build(new)
+    b <- b$x
+    
+    if( !isTRUE( all.equal(a$layout, b$layout) )) {
+      cat("REPAINT\n")
+      print(all.equal(a$layout, b$layout) )
+      return(TRUE) #repaint required
+    }
+    cat("No repaint needed\n")
+    FALSE
+  }
+}
+
+renderUpdatePlotly <- function(output, outputId, expr, repaint=repaintDataOnly(), ...) {
+  fun <- NULL #avoid warnings from CMD CHECK
+  shiny::installExprFunction(substitute(expr), quoted=TRUE, eval.env=parent.frame(), name="fun")
+  
+  r <- reactive({
+    cat("Calculating reactive plot\n")
+    captureStackTraces(fun())
+  }, label=paste0(outputId, "::PlotReactive"))
+  
+  val <- NULL
+  initPlot <- reactiveVal(0, label=paste0(outputId, "::InitPlot"))
+  
+  
+  session <- getDefaultReactiveDomain()
+  
+  # update handler
+  handler <- observeEvent(r(), {
+    shiny::captureStackTraces({
+      cat("Should plot repaint? ")
+      if(inherits(val, "try-error")) {
+        cat("INITIALIZE, previous plot was try-error!\n")
+        initPlot(isolate({initPlot()})+1) #update by initializing
+      } else if (repaint(val, r())) {
+        cat("INITIALIZE, repaint required!\n")
+        initPlot(isolate({initPlot()})+1)
+      } else {
+        cat("UPDATE sufficient\n")
+        val <<- updatePlot(outputId, r(), ...)
+      }
+    })
+  }, ignoreInit=TRUE, suspended=TRUE, label=paste0(outputId, "::UpdatePlotHandler"))
+  #standard output renderers are suspended when the output is hidden
+  #we do the same here, manually
+  hidden <- function() {
+    id <- paste0("output_", session$ns(outputId), "_hidden")
+    value <- session$clientData[[ id ]]
+    if(is.null(value)) return(TRUE)
+    return(value)
+  }
+  observe({
+    if( hidden() ) {
+      cat("Plot hidden, handler should suspend\n")
+      handler$suspend() 
+    } else {
+      cat("Plot active, handler should resume\n")
+      handler$resume()
+    }
+  }, label=paste0(outputId, "::SuspendWhenHidden"))
+  output[[outputId]] <- plotly::renderPlotly({
+    initPlot()
+    val <<- isolate({ try( r() ) })
+    if(inherits(val, "try-error")) {
+      r() #establish an actual link to the reactive, because the plot will be considered "hidden"
+      stop(attr(val, "condition"))
+    }
+    
+    val
+  })
+}
 
 #' Get a nice Y-axis label.
 #' 
@@ -97,7 +180,8 @@ mergePlots <- function(p1, p2, p3, output, source) {
 #' @return a new plot with the X intercept and 'past' and 'future' labels
 #'
 addNowLabelAndIntercept <- function(plot, now) {
-  now <- now %||% defaultData$now
+  if(is.null(now) || is.na(now)) return(plot)
+  
   xintercept <- as.POSIXct(now) # Must be POSIXct for plotly
   
   # Add X intercept (bug in plotly: as.numeric has to be called on the POSIX date)
@@ -105,13 +189,12 @@ addNowLabelAndIntercept <- function(plot, now) {
     geom_vline(xintercept=as.numeric(xintercept), color=nowColor(), size=0.5, alpha=0.3)
   
   # Add 'Past' and 'Future' label close to the X intercept
-  yUpperRange <- layer_scales(plot)$y$range$range[2]
-  shift <- 3600*8
+  yUpperRange <- layer_scales(plot)$y$range$range[2] #plotly ignores y=Inf
+  shift <- 3600*8 #shift 8 hours; plotly ignores hjust parameter
   
   plot <- plot + 
     geom_text(aes(x=xintercept, y=yUpperRange, label=c()), label="Past", color=nowColor(), nudge_x=-shift, size=4) +
     geom_text(aes(x=xintercept, y=yUpperRange, label=c()), label="Future", color=nowColor(), nudge_x=shift, size=4)
-  
   return(plot)
 }
 
@@ -125,33 +208,35 @@ addNowLabelAndIntercept <- function(plot, now) {
 #' @export
 #'
 preparePredictionPlots <- function(populationPredict, individualPredict, observed, target, model, now, regimen) {
-  regimen <- regimen %||% tibble(time=as.POSIXct(character(0)), dose=numeric(0), formulation=character(0), fix=logical(0))
-  observed <- observed %||% tibble(time=as.POSIXct(character(0)), dv=numeric(0), use=logical(0))
+  regimen <- regimen %||% defaultData()$regimen
+  observed <- observed %||% defaultData()$observed
   
-  list(
-    p1=preparePredictionPlot(populationPredict, individualPredict, observed=observed, target=target, model=model, now=now),
+  predictionList <- list(individualPredict, populationPredict) %>%
+    stats::setNames(c(ipredColor(), predColor())) %>%
+    purrr::compact()
+  
+  z <- list(
+    p1=preparePredictionPlot(predictionList, observed=observed, target=target, model=model, now=now),
     p2=prepareTimelinePlot(populationPredict, individualPredict, regimen=regimen, recommendedRegimen=NULL, model=model, now=now),
     p3=prepareParametersPlot(populationPredict, individualPredict, parameters=tdmore::getObservedVariables(model))
   )
-  
   #return(list(p1=preparePredictionPlot(data=data, obs=obs, target=target, population=population, model=selectedModel, now=now),
-  
+  z
 }
 
 #'
 #' Prepare the prediction plot.
 #' 
+#' @param predictList list of prediction data.frames. The names determine the color that is plotted.
+#' The first element is plotted with uncertainty interval, the rest is not.
 #' @inheritParams shinytdmore-plot
 #' @inheritParams shinytdmore-data
 #'
-preparePredictionPlot <- function(populationPredict, individualPredict, observed, target, model, now) {
-  now <- now %||% defaultData$now
-  population <- is.null(individualPredict)
-  data <- if(population) populationPredict else individualPredict
+preparePredictionPlot <- function(predictList, observed, target, model, now) {
+  data <- predictList[[1]]
   
-  color <- if(population) {predColor()} else {ipredColor()}
-  observed <- observed %||% tibble(time=as.POSIXct(character(0)), dv=numeric(0), use=logical(0))
-  observed <- observed %>% dplyr::filter(.data$use==TRUE) # Plot only 'used' observations
+  color <- names(predictList[1])
+  observed <- observed %||% defaultData()$observed
   data <- data %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
   
   if(is.null(target) || all(is.na(target))) {
@@ -163,17 +248,21 @@ preparePredictionPlot <- function(populationPredict, individualPredict, observed
   output <- getModelOutput(defaultModel)
   
   plot <- ggplot(mapping=aes_string(x="TIME", y=output))
-  if (!population) plot <- plot + geom_line(data=populationPredict, color=predColor(), alpha=0.25)
+  if (length(predictList) > 1) {
+    for(i in seq(2, length(predictList))) {
+      plot <- plot + geom_line(data=predictList[[i]], color=names(predictList[i]), alpha=0.25)
+    }
+  }
   
   plot <- plot +
     geom_line(data=data, color=color) +
-    geom_point(data=observed, aes_string(x="time", y="dv"), color=ifelse(observed$time <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
+    geom_point(data=observed, aes_string(x="time", y="dv"), color=ifelse(observed$use, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes_string(yintercept="lower"), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes_string(yintercept="upper"), color=targetColor(), lty=2) +
     labs(y=getYAxisLabel(defaultModel))
   
-  ribbonLower <- paste0(output, ".lower") # Not there in MPC fit
-  ribbonUpper <- paste0(output, ".upper") # Not there in MPC fit
+  ribbonLower <- paste0(output, ".lower")
+  ribbonUpper <- paste0(output, ".upper")
   if ((ribbonLower %in% colnames(data)) && (ribbonUpper %in% colnames(data))) {
     plot <- plot + geom_ribbon(fill=color, aes_string(ymin=ribbonLower, ymax=ribbonUpper), data=data, alpha=0.1)
   }
@@ -225,34 +314,22 @@ prepareParametersPlot <- function(populationPredict, individualPredict, paramete
     return(NULL) # no parameters, so no interest
   # Keep useful parameters and melt data (ids: TIME and PRED_ columns)
   
-  colnames(populationPredict) <- paste0("PRED_", colnames(populationPredict))
+  individualPredict <- individualPredict[ , c("TIME", parameters) ] %>%
+    tidyr::pivot_longer(cols=-.data$TIME, names_to="variable", values_to="IPRED")
+  populationPredict <- populationPredict[ , c("TIME", parameters) ] %>%
+    tidyr::pivot_longer(cols=-.data$TIME, names_to="variable", values_to="PRED")
   
-  data <- individualPredict %>%
-    cbind(populationPredict) %>%
-    dplyr::select(c("TIME", parameters, paste0("PRED_", parameters))) %>% 
-    tidyr::pivot_longer(parameters, names_to="variable", values_to="value")
-  
-  # As data is molten, only 1 population column is needed (get rid of all PRED_ columns)
-  data$Population <- 0
-  data$Parameter <- data$variable
-  for (parameter in parameters) {
-    data[data$Parameter==parameter, "Population"] <- data[data$Parameter==parameter, paste0("PRED_", parameter)]
-  }
-  
-  # Compute percentage change
-  data$Individual <- data$value
-  data$Change <- (data$Individual - data$Population) / data$Population * 100
+  data <- individualPredict %>% 
+    dplyr::left_join(populationPredict, by=c("TIME", "variable")) %>%
+    transmute(TIME=.data$TIME,
+              variable=.data$variable,
+              change=(.data$IPRED / .data$PRED) - 1
+    )
 
-  # Get rid of other columns, round data
-  data <- data %>% dplyr::select("TIME", "Parameter", "Population", "Individual", "Change")
-  data <- data %>% dplyr::mutate_if(is.numeric, round, 3) # Round dataframe for better hover tooltips
-
-  plot <- ggplot(data=data, mapping=aes_(x=~TIME, y=~Change, linetype=~Parameter)) +
-    #TODO: originally included mapping=aes(text=sprintf("Population: %.3f<br>Individual: %.3f", .data$Population, .data$Individual))
-    #but none of the geom's have an attribute 'text'
+  plot <- ggplot(data=data, mapping=aes_(x=~TIME, y=~change, linetype=~variable)) +
     geom_line(color="slategray3") +
-    labs(x="Time", y="Change (%)")
-  #print(plot)
+    labs(x="Time", y="Change") +
+    scale_y_continuous(labels=scales::percent)
   return(plot)
 }
 
@@ -265,38 +342,11 @@ prepareParametersPlot <- function(populationPredict, individualPredict, paramete
 #' @return a list of two plots
 #'
 prepareRecommendationPlots <- function(populationPredict, individualPredict, recommendationPredict, observed, target, model, now, regimen, recommendedRegimen) {
-  shiny::req(nrow(regimen) == nrow(recommendedRegimen)) #if not, wait for update first!
-  regimen <- regimen %||% tibble(time=as.POSIXct(character(0)), dose=numeric(0), formulation=character(0), fix=logical(0))
-  observed <- observed %||% tibble(time=as.POSIXct(character(0)), dv=numeric(0), use=logical(0))
+  predictList <- list(recommendationPredict, individualPredict) %>%
+    stats::setNames(c(recommendationColor(), ipredColor())) %>%
+    purrr::compact()
+  p1 <- preparePredictionPlot(predictList, observed, target, model, now)
   
-  ipred <- individualPredict %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
-  ipredNew <- recommendationPredict %>% dplyr::mutate_if(is.numeric, round, 2) # Round dataframe for better hover tooltips
-  defaultModel <- getDefaultModel(model)
-  observed <- observed %||% tibble(time=as.POSIXct(character(0)), dv=numeric(0), use=logical(0))
-  observed <- observed %>% dplyr::filter(.data$use==TRUE) # Plot only used observations
-  
-  if(is.null(target) || all(is.na(target))) {
-    target <- tdmore::getMetadataByClass(model, "tdmore_target")
-  }
-  if(is.null(target)) target <- list(min=as.numeric(NA), max=as.numeric(NA))
-  ggplotTarget <- tibble(lower=target$min, upper=target$max)
-  output <- getModelOutput(defaultModel)
-  p1 <- ggplot(mapping=aes_string(x="TIME", y=output)) +
-    geom_line(data=ipred, color=ipredColor(), alpha=0.2) +
-    geom_line(data=ipredNew, color=recommendationColor()) +
-    geom_point(data=observed, aes_(x=~time, y=~dv), color=ifelse(observed$time <= now, samplesColor(), samplesColorFuture()), shape=4, size=3) +
-    geom_hline(data=ggplotTarget, aes_(yintercept=~lower), color=targetColor(), lty=2) +
-    geom_hline(data=ggplotTarget, aes_(yintercept=~upper), color=targetColor(), lty=2) +
-    labs(y=getYAxisLabel(defaultModel))
-  
-  ribbonLower <- paste0(output, ".lower") # Not there in MPC fit
-  ribbonUpper <- paste0(output, ".upper") # Not there in MPC fit
-  if ((ribbonLower %in% colnames(ipredNew)) && (ribbonUpper %in% colnames(ipredNew))) {
-    p1 <- p1 + geom_ribbon(fill=recommendationColor(), aes_string(ymin=ribbonLower, ymax=ribbonUpper), data=ipredNew, alpha=0.2)
-  }
-  p1 <- addNowLabelAndIntercept(p1, now)
-  
-  # We have to be very careful with as.Date(), zone should be always taken into account
   newDoses <- regimen
   newDoses$dose <- round(recommendedRegimen$AMT, digits=2)
   p2 <- prepareTimelinePlot(populationPredict, individualPredict, regimen=regimen, recommendedRegimen=newDoses, model=model, now=now)

@@ -49,17 +49,24 @@ pagerPanel <- function(id, ...) {
 fitPlot <- function(input, output, session, state, cr=NULL) {
   if(is.null(cr)) cr <- calculationReactives(state)
   
-  output$population <- plotly::renderPlotly({
+  renderUpdatePlotly(output, "population", {
+    pred <- try( cr$populationPredict() )
+    shiny::validate(
+      shiny::need(pred, message="Could not calculate prediction" )
+    )
     plots <- preparePredictionPlots(cr$populationPredict(),
                                     NULL,
                                     observed=state$observed, target=state$target, model=state$model, now=state$now,
                                     regimen=state$regimen)
     z <- mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)), source=session$ns("population"))
     z
-  })
-  outputOptions(output, "population", priority = -10)
+  }, ignoreDataAttrs=c("text", "hoveron", "name", "legendgroup", "showlegend", "hoverinfo", "frame"))
   
-  output$fit <- plotly::renderPlotly({
+  renderUpdatePlotly(output, "fit", {
+    shiny::validate(
+      shiny::need(cr$populationPredictNoSe(), message="Could not calculate population prediction"),
+      shiny::need(cr$individualPredict(), message="Could not calculate individual prediction")
+    )
     plots <- preparePredictionPlots(cr$populationPredictNoSe(),
                                     cr$individualPredict(),
                                     observed=state$observed, target=state$target, model=state$model, now=state$now,
@@ -67,9 +74,14 @@ fitPlot <- function(input, output, session, state, cr=NULL) {
     mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)),
                source=session$ns("fit"))
   })
-  outputOptions(output, "fit", priority = -10)
   
-  output$recommendation <- plotly::renderPlotly({
+  renderUpdatePlotly(output, "recommendation", {
+    shiny::validate(
+      shiny::need(cr$populationPredictNoSe(), message="Could not calculate prediction"),
+      shiny::need(cr$individualPredictNoSe(), message="Could not calculate prediction"),
+      shiny::need(cr$recommendationPredict(), message="Could not calculate prediction"),
+      shiny::need(cr$recommendation(), message="Could not calculate prediction")
+    )
     plots <- prepareRecommendationPlots(
       cr$populationPredictNoSe(),
       cr$individualPredictNoSe(),
@@ -81,5 +93,4 @@ fitPlot <- function(input, output, session, state, cr=NULL) {
     mergePlots(plots$p1, plots$p2, plots$p3, getModelOutput(getDefaultModel(state$model)),
                source=session$ns("recommendation"))
   })
-  outputOptions(output, "recommendation", priority = -10)
 }

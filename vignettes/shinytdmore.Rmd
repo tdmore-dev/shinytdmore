@@ -49,6 +49,9 @@ waitForRecalculating()
 
 app$findElement(".htCheckboxRendererInput")$click() #FIX the first dose
 
+Sys.sleep(2) #wait 2 seconds for debounce
+waitForRecalculating()
+
 file <- knitr::fig_path("png")
 app$takeScreenshot(file)
 knitr::include_graphics(file)

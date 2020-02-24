@@ -5,12 +5,16 @@
 getNewdata <- function(regimen, observed, model) {
   regimen$II <- tdmore::getDosingInterval(regimen$FORM, model=model)
   start <- 0
-  stop <- max(0+24, c(regimen$TIME + regimen$II, observed$TIME))  #at least 1 day
-    
+  stop <- max(0+24, c(regimen$TIME + regimen$II, observed$TIME), na.rm=TRUE)  #at least 1 day
+  if(!is.finite(stop)) browser()
   times <- seq(start, stop, by=0.5)
   minSamples <- 300
   if (length(times) < minSamples) {
     times <- seq(start, stop, length.out=minSamples)
+  }
+  maxSamples <- 1000
+  if (length(times) > maxSamples) {
+    times <- seq(start, stop, length.out=maxSamples)
   }
   important <- c(regimen$TIME, regimen$TIME+regimen$II, observed$TIME)
   times <- sort( unique(c(times, important, important+0.1, important-0.1)) ) #at least include these important timepoints
@@ -48,6 +52,7 @@ debouncedState <- function(state, names=c("model", "regimen", "observed", "covar
   debounced
 }
 
+
 #' @rdname calculation
 #' @inheritParams shinytdmore-data
 #' @param population TRUE to calculate a population fit, FALSE to calculate an individual fit
@@ -58,8 +63,12 @@ reactiveFit <- function(state, population=FALSE, millis=2000) {
   updateNeeded <- reactiveVal(value=0, label="FitNeedsUpdate")
   observe({
     args <- convertDataToTdmore(dbState())
-    if(needsUpdate(lastFit, args))
+    if(needsUpdate(lastFit, args, onlyEstimate=FALSE)) {
+      cat("FIT update needed\n")
       updateNeeded(isolate({updateNeeded()}) + 1) #set value, thereby invalidating the reactive below
+    } else {
+      cat("No FIT update needed\n")
+    }
   }, label="Update FitNeedsUpdate", priority=99) #ensure we never do a loop
   reactiveFit <- reactive({
     cat("Calculating reactiveFit (population=", population, ")\n")
@@ -102,7 +111,7 @@ reactiveRecommendation <- function(state, fit, millis=2000) {
       args <- convertDataToTdmore(state)
       fit <- fit()
       isolate({
-        rec <- tdmore::optimize(fit, regimen=args$regimen, targetMetadata=state$target %||% defaultData$target)
+        rec <- tdmore::optimize(fit, regimen=args$regimen, targetMetadata=state$target %||% defaultData()$target)
         rec$regimen
       })
     })
@@ -137,7 +146,7 @@ reactivePredict <- function(state, fit=NULL, recommendation=NULL, mc.maxpts=100,
       state$model,
       state$covariates
     )
-  }), millis=millis)
+  }, label="ReactivePredict::state"), millis=millis)
   
   r <- reactive({
     dependency() #set up dependency
@@ -153,7 +162,7 @@ reactivePredict <- function(state, fit=NULL, recommendation=NULL, mc.maxpts=100,
     isolate({
       calculatePredict(state, fit=fit, regimen=regimen, progress, mc.maxpts)
     })
-  })
+  }, label="ReactivePredict::pred")
   r
 }
 

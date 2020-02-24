@@ -1,13 +1,14 @@
 #' Default full-featured application
 #' 
+#' @inheritParams shinytdmore-data
 #' @param ... default values for the application (e.g. `regimen`, `observed`, etc)
 #' 
 #' @export
-defaultApp <- function(...) {
+defaultApp <- function(model=tdmore::getModel(name="pheno", dir=system.file("models", package="shinytdmore")), now=Sys.time(), ...) {
   options(shiny.reactlog=TRUE)
   options(useFancyQuotes = FALSE)
   
-  defaultValues <- list(...)
+  defaultValues <- list(model=model, now=now, ...)
   ui <- navbarPage(
     "Shinytdmore",
                    predictionTabUI("prediction", height="80vh"),

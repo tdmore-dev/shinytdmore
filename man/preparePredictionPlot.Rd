@@ -4,19 +4,11 @@
 \alias{preparePredictionPlot}
 \title{Prepare the prediction plot.}
 \usage{
-preparePredictionPlot(
-  populationPredict,
-  individualPredict,
-  observed,
-  target,
-  model,
-  now
-)
+preparePredictionPlot(predictList, observed, target, model, now)
 }
 \arguments{
-\item{populationPredict}{dataframe containing the individual prediction data}
-
-\item{individualPredict}{dataframe containing the population prediction data}
+\item{predictList}{list of prediction data.frames. The names determine the color that is plotted.
+The first element is plotted with uncertainty interval, the rest is not.}
 
 \item{observed}{a data.frame with the following columns:
 \itemize{

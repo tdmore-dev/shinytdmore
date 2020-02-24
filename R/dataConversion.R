@@ -58,29 +58,41 @@ NULL
 #' @export
 #' @format NULL
 #' @usage NULL
-defaultData <- list(
-  regimen=tibble::tibble(time=as.POSIXct(character()), dose=numeric(), formulation=character(), fix=logical()),
-  observed=tibble::tibble(time=as.POSIXct(character()), dv=numeric(), use=logical()),
-  covariates=tibble::tibble(time=as.POSIXct(character())), #rest of columns depend on model
-  now=as.POSIXct("2000-01-01"),
-  target=list(min=as.numeric(NA), max=as.numeric(NA))
-)
+defaultData <- function() {
+  list(
+    regimen=tibble::tibble(time=as.POSIXct(character()), dose=numeric(), formulation=character(), fix=logical()),
+    observed=tibble::tibble(time=as.POSIXct(character()), dv=numeric(), use=logical()),
+    covariates=tibble::tibble(time=as.POSIXct(character())), #rest of columns depend on model
+    now=as.POSIXct(as.character(NA)),
+    target=list(min=as.numeric(NA), max=as.numeric(NA))
+  )
+}
 
 #' @describeIn shinytdmore-data Convert shinytdmore data to tdmore format
+#' @param force if FALSE, emits a silent error (see [shiny::req()]) when no shiny data is available. If TRUE, tries to generate the args anyway.
 #' @importFrom dplyr filter transmute full_join select mutate arrange everything
 #' @export
 #' @usage NULL
-convertDataToTdmore <- function(state) {
+convertDataToTdmore <- function(state, force=FALSE) {
   model <- state$model
-  regimen <- state$regimen %||% defaultData$regimen
-  observed <- state$observed %||% defaultData$observed
-  covariates <- state$covariates %||% defaultData$covariates
-  now <- state$now %||% defaultData$now
+  regimen <- state$regimen %||% defaultData()$regimen
+  observed <- state$observed %||% defaultData()$observed
+  covariates <- state$covariates %||% defaultData()$covariates
+  now <- state$now %||% defaultData()$now
   
   result <- list()
   result$model <- model
-  allTimes <- c(regimen$time, observed$time, covariates$time, now)
-  result$t0 <- min(allTimes)
+  allTimes <- stats::na.omit( c(regimen$time, observed$time, covariates$time, now) )
+  if(length(allTimes)==0) {
+    if(force) {
+      result$t0 <- as.POSIXct(as.character(NA))
+    } else {
+      shiny::req(FALSE)
+    }
+    
+  } else {
+    result$t0 <- min(allTimes)
+  }
   
   result$now <- as.numeric( difftime(now, result$t0, units="hours") )
   result$regimen <- regimen %>% transmute(
