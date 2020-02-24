@@ -125,11 +125,24 @@
     <p>Default full-featured application</p>
     </div>
 
-    <pre class="usage"><span class='fu'>defaultApp</span>(<span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>defaultApp</span>(
+  <span class='kw'>model</span> <span class='kw'>=</span> <span class='kw pkg'>tdmore</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/tdmore/man/getModel.html'>getModel</a></span>(<span class='kw'>name</span> <span class='kw'>=</span> <span class='st'>"pheno"</span>, <span class='kw'>dir</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span>(<span class='st'>"models"</span>, <span class='kw'>package</span> <span class='kw'>=</span>
+    <span class='st'>"shinytdmore"</span>)),
+  <span class='kw'>now</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.time.html'>Sys.time</a></span>(),
+  <span class='no'>...</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>model</th>
+      <td><p>a tdmore model with (ideally) metadata</p></td>
+    </tr>
+    <tr>
+      <th>now</th>
+      <td><p>a POSIXct time representing the current time</p></td>
+    </tr>
     <tr>
       <th>...</th>
       <td><p>default values for the application (e.g. `regimen`, `observed`, etc)</p></td>

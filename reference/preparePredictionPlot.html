@@ -125,25 +125,15 @@
     <p>Prepare the prediction plot.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>preparePredictionPlot</span>(
-  <span class='no'>populationPredict</span>,
-  <span class='no'>individualPredict</span>,
-  <span class='no'>observed</span>,
-  <span class='no'>target</span>,
-  <span class='no'>model</span>,
-  <span class='no'>now</span>
-)</pre>
+    <pre class="usage"><span class='fu'>preparePredictionPlot</span>(<span class='no'>predictList</span>, <span class='no'>observed</span>, <span class='no'>target</span>, <span class='no'>model</span>, <span class='no'>now</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>populationPredict</th>
-      <td><p>dataframe containing the individual prediction data</p></td>
-    </tr>
-    <tr>
-      <th>individualPredict</th>
-      <td><p>dataframe containing the population prediction data</p></td>
+      <th>predictList</th>
+      <td><p>list of prediction data.frames. The names determine the color that is plotted.
+The first element is plotted with uncertainty interval, the rest is not.</p></td>
     </tr>
     <tr>
       <th>observed</th>

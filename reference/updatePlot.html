@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Update plot using animation. NOT USED. — updatePlot • shinytdmore</title>
+<title>Update an existing plot with new data using animation. — updatePlot • shinytdmore</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -42,8 +42,8 @@
 
 
 
-<meta property="og:title" content="Update plot using animation. NOT USED. — updatePlot" />
-<meta property="og:description" content="Update plot using animation. NOT USED." />
+<meta property="og:title" content="Update an existing plot with new data using animation. — updatePlot" />
+<meta property="og:description" content="Update an existing plot with new data using animation." />
 <meta property="og:image" content="/logo.png" />
 <meta name="twitter:card" content="summary" />
 
@@ -116,27 +116,48 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Update plot using animation. NOT USED.</h1>
+    <h1>Update an existing plot with new data using animation.</h1>
     <small class="dont-index">Source: <a href='https://github.com/tdmore-dev/shinytdmore/blob/master/R/plotUtilities.R'><code>R/plotUtilities.R</code></a></small>
     <div class="hidden name"><code>updatePlot.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Update plot using animation. NOT USED.</p>
+    <p>Update an existing plot with new data using animation.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>updatePlot</span>(<span class='no'>plot</span>, <span class='no'>outputId</span>)</pre>
+    <pre class="usage"><span class='fu'>updatePlot</span>(
+  <span class='no'>outputId</span>,
+  <span class='no'>plot</span>,
+  <span class='kw'>ignoreAttrs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"attrs"</span>, <span class='st'>"shinyEvents"</span>, <span class='st'>"highlight"</span>, <span class='st'>"config"</span>, <span class='st'>"source"</span>, <span class='st'>"visdat"</span>,
+    <span class='st'>"base_url"</span>, <span class='st'>"cur_data"</span>),
+  <span class='kw'>ignoreDataAttrs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"text"</span>, <span class='st'>"hoveron"</span>, <span class='st'>"name"</span>, <span class='st'>"legendgroup"</span>, <span class='st'>"showlegend"</span>, <span class='st'>"xaxis"</span>,
+    <span class='st'>"yaxis"</span>, <span class='st'>"hoverinfo"</span>, <span class='st'>"frame"</span>),
+  <span class='kw'>options</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>transition</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>duration</span> <span class='kw'>=</span> <span class='fl'>1000</span>, <span class='kw'>easing</span> <span class='kw'>=</span> <span class='st'>"cubic-in-out"</span>), <span class='kw'>frame</span> <span class='kw'>=</span>
+    <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>duration</span> <span class='kw'>=</span> <span class='fl'>1000</span>))
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
+      <th>outputId</th>
+      <td><p>the output ID</p></td>
+    </tr>
+    <tr>
       <th>plot</th>
       <td><p>the given plot</p></td>
     </tr>
     <tr>
-      <th>outputId</th>
-      <td><p>the output ID</p></td>
+      <th>ignoreAttrs</th>
+      <td><p>attributes to ignore, i.e. to not update</p></td>
+    </tr>
+    <tr>
+      <th>ignoreDataAttrs</th>
+      <td><p>data attributes to ignore</p></td>
+    </tr>
+    <tr>
+      <th>options</th>
+      <td><p>options to perform the animation</p></td>
     </tr>
     </table>
 
