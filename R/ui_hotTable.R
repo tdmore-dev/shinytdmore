@@ -48,7 +48,7 @@ doseTable <- function(input, output, session, state) {
   defaultReactive <- reactive({
     tibble(time=as.POSIXct(character(0)), 
            dose=numeric(0), 
-           formulation=factor(levels=getFormulationList(state$model)), 
+           formulation=factor(levels=getFormulationList(state$model)),  #TODO: decide whether formulations is factor or charc
            fix=logical(0))
   })
   tableDf <- singleReactive(state, "regimen",
