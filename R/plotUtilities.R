@@ -59,7 +59,15 @@ renderUpdatePlotly <- function(output, outputId, expr, repaint=repaintDataOnly()
   
   r <- reactive({
     cat("Calculating reactive plot\n")
-    captureStackTraces(fun())
+    plot <- captureStackTraces(fun())
+    x <- plotly::plotly_build(plot)
+    ## See https://codepen.io/plotly/pen/ZpWPpj; do not simplify lines when animating
+    x$x$data <- lapply(x$x$data, function(x) {
+      if(!is.null(x$line)) x$line <- c(x$line, list(simplify=FALSE))
+      x
+    })
+    x
+    
   }, label=paste0(outputId, "::PlotReactive"))
   
   val <- NULL
