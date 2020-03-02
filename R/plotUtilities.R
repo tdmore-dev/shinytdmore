@@ -38,9 +38,14 @@ repaintDataOnly <- function() {
     b <- plotly::plotly_build(new)
     b <- b$x
     
-    if( !isTRUE( all.equal(a$layout, b$layout) )) {
+    aLayout <- a$layout
+    aLayout <- aLayout[ setdiff( names(aLayout), c("xaxis", "yaxis", "yaxis2", "yaxis3")) ]
+    bLayout <- b$layout
+    bLayout <- bLayout[ setdiff( names(bLayout), c("xaxis", "yaxis", "yaxis2", "yaxis3")) ]
+    
+    if( !isTRUE( all.equal(aLayout, bLayout) )) {
       cat("REPAINT\n")
-      print(all.equal(a$layout, b$layout) )
+      print(all.equal(aLayout, bLayout) )
       return(TRUE) #repaint required
     }
     cat("No repaint needed\n")
@@ -150,19 +155,19 @@ mergePlots <- function(p1, p2, p3, output, source) {
 
   if (is.null(p3)) {
     plot <- plotly::subplot(
-      plotly::ggplotly(p1, tooltip=tooltip1, source=source) %>% 
+      plotly::ggplotly(p1, tooltip=tooltip1, source=source, dynamicTicks=TRUE) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      plotly::ggplotly(p2, tooltip=tooltip2, source=source) %>% 
+      plotly::ggplotly(p2, tooltip=tooltip2, source=source, dynamicTicks=TRUE) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
       nrows = 2, heights = c(0.8, 0.2), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
     ) %>% plotly::layout(dragmode = "pan", autosize=TRUE )
   } else {
     plot <- plotly::subplot(
-      plotly::ggplotly(p1, tooltip=tooltip1, source=source) %>% 
+      plotly::ggplotly(p1, tooltip=tooltip1, source=source, dynamicTicks=TRUE) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      plotly::ggplotly(p2, tooltip=tooltip2, source=source) %>% 
+      plotly::ggplotly(p2, tooltip=tooltip2, source=source, dynamicTicks=TRUE) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
-      plotly::ggplotly(p3, source=source) %>% 
+      plotly::ggplotly(p3, source=source, dynamicTicks=TRUE) %>% 
         plotly::config(scrollZoom=T, displayModeBar=F, displaylogo=F),
       nrows = 3, heights = c(0.7, 0.15, 0.15), widths = c(1), shareX=T, shareY=F, titleX=T, titleY=T
     ) %>% plotly::layout(dragmode = "pan", legend = list(orientation = "h", y=-250), autosize=TRUE )
@@ -256,10 +261,12 @@ preparePredictionPlot <- function(predictList, observed, target, model, now) {
   
   plot <- plot +
     geom_line(data=data, color=color) +
-    geom_point(data=observed, aes_string(x="time", y="dv"), color=ifelse(observed$use, samplesColor(), samplesColorFuture()), shape=4, size=3) +
     geom_hline(data=ggplotTarget, aes_string(yintercept="lower"), color=targetColor(), lty=2) +
     geom_hline(data=ggplotTarget, aes_string(yintercept="upper"), color=targetColor(), lty=2) +
     labs(y=getYAxisLabel(defaultModel))
+  
+  if(nrow(observed) > 0) #only add data if observed
+    plot <- plot + geom_point(data=observed, aes_string(x="time", y="dv"), color=ifelse(observed$use, samplesColor(), samplesColorFuture()), shape=4, size=3)
   
   ribbonLower <- paste0(output, ".lower")
   ribbonUpper <- paste0(output, ".upper")
