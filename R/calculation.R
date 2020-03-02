@@ -59,11 +59,14 @@ debouncedState <- function(state, names=c("model", "regimen", "observed", "covar
 #' @export
 reactiveFit <- function(state, population=FALSE, millis=2000) {
   dbState <- debouncedState(state, millis=millis, label="FitState")
-  lastFit <- NULL
+  cache <- new.env()
+  observeEvent(state$model, {
+    cache$lastFit <<- NULL
+  })
   updateNeeded <- reactiveVal(value=0, label="FitNeedsUpdate")
   observe({
     args <- convertDataToTdmore(dbState())
-    if(needsUpdate(lastFit, args, onlyEstimate=FALSE)) {
+    if(needsUpdate(cache$lastFit, args, onlyEstimate=FALSE)) {
       cat("FIT update needed\n")
       updateNeeded(isolate({updateNeeded()}) + 1) #set value, thereby invalidating the reactive below
     } else {
@@ -75,7 +78,7 @@ reactiveFit <- function(state, population=FALSE, millis=2000) {
     updateNeeded() #set dependency, and use as *only* dependency!
     args <- isolate({ convertDataToTdmore(state) })
     if(population) args$observed <- NULL #remove observed values
-    fit <- lastFit
+    fit <- cache$lastFit
     if(needsUpdate(fit, args, onlyEstimate=TRUE) ) {
       pars <- NULL
       if(!is.null(fit)) pars <- stats::coef(fit)
@@ -92,9 +95,10 @@ reactiveFit <- function(state, population=FALSE, millis=2000) {
     } else {
       #no update needed
     }
-    lastFit <<- fit
+    cache$lastFit <<- fit
     fit
   }, label="ReactiveFit")
+  attr(reactiveFit, "cache") <- cache
   reactiveFit
 }
 
@@ -126,11 +130,15 @@ calculationReactives <- function(state, mc.maxpts=100, fitMillis=2000, predictMi
   cr <- list()
   cr$populationPredict <- reactivePredict(state, mc.maxpts=mc.maxpts)
   cr$fit <- reactiveFit(state, millis=fitMillis)
-  cr$populationPredictNoSe <- reactivePredict(state, mc.maxpts=1, millis=predictMillis) #TODO: allow '0'
+  cr$populationPredictNoSe <- if(mc.maxpts == 0) cr$populationPredict else reactivePredict(state, mc.maxpts=0, millis=predictMillis)
   cr$individualPredict <- reactivePredict(state, cr$fit, mc.maxpts=mc.maxpts, millis=predictMillis)
-  cr$individualPredictNoSe <- reactivePredict(state, cr$fit, mc.maxpts=1, millis=predictMillis)
+  cr$individualPredictNoSe <- if(mc.maxpts == 0) cr$individualPredict else reactivePredict(state, cr$fit, mc.maxpts=0, millis=predictMillis)
   cr$recommendation <- reactiveRecommendation(state, cr$fit, millis=recommendationMillis)
   cr$recommendationPredict <- reactivePredict(state, cr$fit, cr$recommendation, mc.maxpts=mc.maxpts, millis=predictMillis)
+  cr$updateFit <- function(fit) {
+    env <- attr(cr$fit, 'cache')
+    env$lastFit <- fit
+  }
   cr
 }
 
