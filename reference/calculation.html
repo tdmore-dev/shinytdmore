@@ -125,7 +125,12 @@
     <p>Reactives that can be used to support tdmore calculations</p>
     </div>
 
-    <pre class="usage"><span class='fu'>reactiveFit</span>(<span class='no'>state</span>, <span class='kw'>population</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>millis</span> <span class='kw'>=</span> <span class='fl'>2000</span>)
+    <pre class="usage"><span class='fu'>reactiveFit</span>(
+  <span class='no'>state</span>,
+  <span class='kw'>population</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>millis</span> <span class='kw'>=</span> <span class='fl'>2000</span>,
+  <span class='kw'>label</span> <span class='kw'>=</span> <span class='kw'>if</span> (<span class='no'>population</span>) <span class='st'>"PopulationFit"</span> <span class='kw'>else</span> <span class='st'>"IndividualFit"</span>
+)
 
 <span class='fu'>reactiveRecommendation</span>(<span class='no'>state</span>, <span class='no'>fit</span>, <span class='kw'>millis</span> <span class='kw'>=</span> <span class='fl'>2000</span>)
 
@@ -159,6 +164,10 @@
     <tr>
       <th>millis</th>
       <td><p>time for debounce, see [shiny::debounce()]</p></td>
+    </tr>
+    <tr>
+      <th>label</th>
+      <td><p>label for all reactives in this system</p></td>
     </tr>
     <tr>
       <th>fit</th>
