@@ -2,10 +2,13 @@
 #' 
 #' @return a tibble with at least the regimen times, troughs, and observed times, and intermediate times per 0.5h
 #' @inheritParams shinytdmore-data
-getNewdata <- function(regimen, observed, model) {
+getNewdata <- function(state, model) {
+  args <- convertDataToTdmore(state)
+  regimen <- args$regimen
+  
   regimen$II <- tdmore::getDosingInterval(regimen$FORM, model=model)
   start <- 0
-  stop <- max(0+24, c(regimen$TIME + regimen$II, observed$TIME), na.rm=TRUE)  #at least 1 day
+  stop <- max(0+24, c(regimen$TIME + regimen$II, args$allTimes), na.rm=TRUE)  #at least 1 day
   if(!is.finite(stop)) browser()
   times <- seq(start, stop, by=0.5)
   minSamples <- 300
@@ -16,7 +19,7 @@ getNewdata <- function(regimen, observed, model) {
   if (length(times) > maxSamples) {
     times <- seq(start, stop, length.out=maxSamples)
   }
-  important <- c(regimen$TIME, regimen$TIME+regimen$II, observed$TIME)
+  important <- c(regimen$TIME+regimen$II, args$allTimes)
   times <- sort( unique(c(times, important, important+0.1, important-0.1)) ) #at least include these important timepoints
   times <- times[ times >= 0]
   
@@ -87,13 +90,17 @@ reactiveFit <- function(state, population=FALSE, millis=2000, label=if(populatio
     if(population) args$observed <- NULL #remove observed values
     fit <- cache$lastFit
     if(needsUpdate(fit, args, onlyEstimate=TRUE) ) {
+      progress <- Progress$new()
+      progress$set(message="Calculating fit...")
+      on.exit(progress$close())
       pars <- NULL
       if(!is.null(fit)) pars <- stats::coef(fit)
       fit <- tdmore::estimate(args$model, 
                                 observed=args$observed, 
                                 regimen=args$regimen, 
                                 covariates=args$covariates,
-                                par=pars)
+                                par=pars,
+                              .progress=progress)
     } else if (needsUpdate(fit, args, onlyEstimate=FALSE) ){
       #just update the included regimen/observed/covariates
       fit$regimen <- args$regimen
@@ -115,16 +122,16 @@ reactiveFit <- function(state, population=FALSE, millis=2000, label=if(populatio
 reactiveRecommendation <- function(state, fit, millis=2000) {
   dbState <- debouncedState(state, c("regimen", "target"), millis=millis)
   recommendation <- reactive({
-    progress <- Progress$new(max=1/5)
+    progress <- Progress$new()
+    progress$set(message="Calculating recommendation...")
     on.exit(progress$close())
     dbState()
+    fit() #different fit is different recommendation!
     isolate({
       args <- convertDataToTdmore(state)
       fit <- fit()
-      isolate({
-        rec <- tdmore::optimize(fit, regimen=args$regimen, targetMetadata=state$target %||% defaultData()$target)
-        rec$regimen
-      })
+      rec <- tdmore::optimize(fit, regimen=args$regimen, targetMetadata=state$target %||% defaultData()$target)
+      rec$regimen
     })
   })
   recommendation
@@ -223,7 +230,7 @@ needsUpdate <- function(fit, args, onlyEstimate=TRUE) {
 
 calculatePredict <- function(state, fit=NULL, regimen=NULL, progress, mc.maxpts) {
   args <- convertDataToTdmore(state)
-  newdata <- getNewdata(regimen=args$regimen, observed=args$observed, model=args$model)
+  newdata <- getNewdata(state, model=args$model)
   if(is.null(fit)) fit <- tdmore::estimate(args$model, regimen=args$regimen, covariates=args$covariates)
   
   p <- tdmore::ShinyToDplyrProgressFacade$new(proxy=progress)

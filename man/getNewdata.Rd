@@ -4,23 +4,10 @@
 \alias{getNewdata}
 \title{Create a newdata data.frame compatible with [tdmore::predict.tdmorefit()]}
 \usage{
-getNewdata(regimen, observed, model)
+getNewdata(state, model)
 }
 \arguments{
-\item{regimen}{a data.frame with the following columns:
-\itemize{
-\item \code{time} a POSIXct time
-\item \code{dose} a numeric with the dose amount
-\item \code{formulation} a character vector that corresponds to formulations defined in the metadata of the model
-\item \code{fix} a boolean vector describing whether the given regimen can be modified in dose recommendation
-}}
-
-\item{observed}{a data.frame with the following columns:
-\itemize{
-\item \code{time} a POSIXct time
-\item \code{dv} the observed data
-\item \code{use} whether the observation should be used in the estimation
-}}
+\item{state}{reactiveValues() or list-like object with input data, see \link{shinytdmore-data} for more information}
 
 \item{model}{a tdmore model with (ideally) metadata}
 }
