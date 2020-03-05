@@ -94,6 +94,7 @@ convertDataToTdmore <- function(state, force=FALSE) {
     result$t0 <- min(allTimes)
   }
   
+  result$allTimes <- as.numeric( difftime(allTimes, result$t0, units="hours") )
   result$now <- as.numeric( difftime(now, result$t0, units="hours") )
   result$regimen <- regimen %>% transmute(
     TIME = as.numeric(difftime(.data$time, result$t0, units="hours")),
