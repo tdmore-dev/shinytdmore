@@ -39,9 +39,9 @@ repaintDataOnly <- function() {
     b <- b$x
     
     aLayout <- a$layout
-    aLayout <- aLayout[ setdiff( names(aLayout), c("xaxis", "yaxis", "yaxis2", "yaxis3")) ]
+    aLayout <- aLayout[ setdiff( names(aLayout), c("xaxis", "yaxis", "yaxis2", "yaxis3", "margin")) ]
     bLayout <- b$layout
-    bLayout <- bLayout[ setdiff( names(bLayout), c("xaxis", "yaxis", "yaxis2", "yaxis3")) ]
+    bLayout <- bLayout[ setdiff( names(bLayout), c("xaxis", "yaxis", "yaxis2", "yaxis3", "margin")) ]
     
     if( !isTRUE( all.equal(aLayout, bLayout) )) {
       cat("REPAINT\n")
