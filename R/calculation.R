@@ -57,24 +57,30 @@ debouncedState <- function(state, names=c("model", "regimen", "observed", "covar
 #' @inheritParams shinytdmore-data
 #' @param population TRUE to calculate a population fit, FALSE to calculate an individual fit
 #' @export
-reactiveFit <- function(state, population=FALSE, millis=2000) {
-  dbState <- debouncedState(state, millis=millis, label="FitState")
+reactiveFit <- function(state, population=FALSE, millis=2000, label=if(population) "PopulationFit" else "IndividualFit") {
+  log <- function(...) {
+    cat(label, ":: ", ...)
+  }
+  dbState <- debouncedState(state, millis=millis, label=paste0(label,"::FitState"))
   cache <- new.env()
   observeEvent(state$model, {
+    log("Resetting lastFit because model changed")
     cache$lastFit <<- NULL
-  })
-  updateNeeded <- reactiveVal(value=0, label="FitNeedsUpdate")
-  observe({
+  }, label=paste0(label,"::FitResetOnModelChange"), ignoreInit=TRUE)
+  updateNeeded <- reactiveVal(value=0, label=paste0(label,"::FitNeedsUpdate"))
+  observeEvent(dbState(), {
     args <- convertDataToTdmore(dbState())
+    if(population) args$observed <- NULL #remove observed values
+    
     if(needsUpdate(cache$lastFit, args, onlyEstimate=FALSE)) {
-      cat("FIT update needed\n")
+      log("FIT update needed\n")
       updateNeeded(isolate({updateNeeded()}) + 1) #set value, thereby invalidating the reactive below
     } else {
-      cat("No FIT update needed\n")
+      log("No FIT update needed\n")
     }
-  }, label="Update FitNeedsUpdate", priority=99) #ensure we never do a loop
+  }, label=paste0(label,"::HandleFitNeedsUpdate"), priority=99) #ensure we never do a loop
   reactiveFit <- reactive({
-    cat("Calculating reactiveFit (population=", population, ")\n")
+    log("Calculating new fit\n")
     updateNeeded() #set dependency, and use as *only* dependency!
     args <- isolate({ convertDataToTdmore(state) })
     if(population) args$observed <- NULL #remove observed values
@@ -97,7 +103,7 @@ reactiveFit <- function(state, population=FALSE, millis=2000) {
     }
     cache$lastFit <<- fit
     fit
-  }, label="ReactiveFit")
+  }, label=paste0(label,"::Fit"))
   attr(reactiveFit, "cache") <- cache
   reactiveFit
 }

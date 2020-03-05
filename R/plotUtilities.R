@@ -53,12 +53,16 @@ repaintDataOnly <- function() {
   }
 }
 
-renderUpdatePlotly <- function(output, outputId, expr, repaint=repaintDataOnly(), ...) {
+renderUpdatePlotly <- function(output, outputId, expr, repaint=repaintDataOnly(), ..., label=paste0("output$",outputId)) {
+  log <- function(...) {
+    cat(label, "::", ...)
+  }
+  
   fun <- NULL #avoid warnings from CMD CHECK
   shiny::installExprFunction(substitute(expr), quoted=TRUE, eval.env=parent.frame(), name="fun")
   
   r <- reactive({
-    cat("Calculating reactive plot\n")
+    log("Calculating reactive plot\n")
     plot <- captureStackTraces(fun())
     x <- plotly::plotly_build(plot)
     ## See https://codepen.io/plotly/pen/ZpWPpj; do not simplify lines when animating
@@ -68,10 +72,10 @@ renderUpdatePlotly <- function(output, outputId, expr, repaint=repaintDataOnly()
     })
     x
     
-  }, label=paste0(outputId, "::PlotReactive"))
+  }, label=paste0(label, "::Plot"))
   
   val <- NULL
-  initPlot <- reactiveVal(0, label=paste0(outputId, "::InitPlot"))
+  initPlot <- reactiveVal(0, label=paste0(label, "::InitPlot"))
   
   
   session <- getDefaultReactiveDomain()
@@ -79,19 +83,19 @@ renderUpdatePlotly <- function(output, outputId, expr, repaint=repaintDataOnly()
   # update handler
   handler <- observeEvent(r(), {
     shiny::captureStackTraces({
-      cat("Should plot repaint? ")
+      log("Should plot repaint? ")
       if(inherits(val, "try-error")) {
-        cat("INITIALIZE, previous plot was try-error!\n")
+        log("INITIALIZE, previous plot was try-error!\n")
         initPlot(isolate({initPlot()})+1) #update by initializing
       } else if (repaint(val, r())) {
-        cat("INITIALIZE, repaint required!\n")
+        log("INITIALIZE, repaint required!\n")
         initPlot(isolate({initPlot()})+1)
       } else {
-        cat("UPDATE sufficient\n")
+        log("UPDATE sufficient\n")
         val <<- updatePlot(outputId, r(), ...)
       }
     })
-  }, ignoreInit=TRUE, suspended=TRUE, label=paste0(outputId, "::UpdatePlotHandler"))
+  }, ignoreInit=TRUE, suspended=TRUE, label=paste0(label, "::UpdatePlotHandler"))
   #standard output renderers are suspended when the output is hidden
   #we do the same here, manually
   hidden <- function() {
@@ -102,13 +106,13 @@ renderUpdatePlotly <- function(output, outputId, expr, repaint=repaintDataOnly()
   }
   observe({
     if( hidden() ) {
-      cat("Plot hidden, handler should suspend\n")
+      log("Plot hidden, handler should suspend\n")
       handler$suspend() 
     } else {
-      cat("Plot active, handler should resume\n")
+      log("Plot active, handler should resume\n")
       handler$resume()
     }
-  }, label=paste0(outputId, "::SuspendWhenHidden"))
+  }, label=paste0(label, "::SuspendWhenHidden"))
   output[[outputId]] <- plotly::renderPlotly({
     initPlot()
     val <<- isolate({ try( r() ) })
