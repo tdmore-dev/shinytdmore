@@ -56,6 +56,7 @@ debouncedState <- function(state, names=c("model", "regimen", "observed", "covar
 #' @rdname calculation
 #' @inheritParams shinytdmore-data
 #' @param population TRUE to calculate a population fit, FALSE to calculate an individual fit
+#' @param label label for all reactives in this system
 #' @export
 reactiveFit <- function(state, population=FALSE, millis=2000, label=if(population) "PopulationFit" else "IndividualFit") {
   log <- function(...) {
