@@ -125,27 +125,14 @@
     <p>Create a newdata data.frame compatible with [tdmore::predict.tdmorefit()]</p>
     </div>
 
-    <pre class="usage"><span class='fu'>getNewdata</span>(<span class='no'>regimen</span>, <span class='no'>observed</span>, <span class='no'>model</span>)</pre>
+    <pre class="usage"><span class='fu'>getNewdata</span>(<span class='no'>state</span>, <span class='no'>model</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>regimen</th>
-      <td><p>a data.frame with the following columns:</p><ul>
-<li><p><code>time</code> a POSIXct time</p></li>
-<li><p><code>dose</code> a numeric with the dose amount</p></li>
-<li><p><code>formulation</code> a character vector that corresponds to formulations defined in the metadata of the model</p></li>
-<li><p><code>fix</code> a boolean vector describing whether the given regimen can be modified in dose recommendation</p></li>
-</ul></td>
-    </tr>
-    <tr>
-      <th>observed</th>
-      <td><p>a data.frame with the following columns:</p><ul>
-<li><p><code>time</code> a POSIXct time</p></li>
-<li><p><code>dv</code> the observed data</p></li>
-<li><p><code>use</code> whether the observation should be used in the estimation</p></li>
-</ul></td>
+      <th>state</th>
+      <td><p>reactiveValues() or list-like object with input data, see shinytdmore-data for more information</p></td>
     </tr>
     <tr>
       <th>model</th>
