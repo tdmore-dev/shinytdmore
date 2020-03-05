@@ -8,7 +8,12 @@
 \alias{reactivePredict}
 \title{Reactives that can be used to support tdmore calculations}
 \usage{
-reactiveFit(state, population = FALSE, millis = 2000)
+reactiveFit(
+  state,
+  population = FALSE,
+  millis = 2000,
+  label = if (population) "PopulationFit" else "IndividualFit"
+)
 
 reactiveRecommendation(state, fit, millis = 2000)
 
@@ -34,6 +39,8 @@ reactivePredict(
 \item{population}{TRUE to calculate a population fit, FALSE to calculate an individual fit}
 
 \item{millis}{time for debounce, see [shiny::debounce()]}
+
+\item{label}{label for all reactives in this system}
 
 \item{fit}{reactive of type [reactiveFit()] with the current fit}
 
