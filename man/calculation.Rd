@@ -12,7 +12,8 @@ reactiveFit(
   state,
   population = FALSE,
   millis = 2000,
-  label = if (population) "PopulationFit" else "IndividualFit"
+  label = if (population) "PopulationFit" else "IndividualFit",
+  estimate = tdmore::estimate
 )
 
 reactiveRecommendation(state, fit, millis = 2000)
@@ -22,7 +23,8 @@ calculationReactives(
   mc.maxpts = 100,
   fitMillis = 2000,
   predictMillis = 2000,
-  recommendationMillis = 500
+  recommendationMillis = 500,
+  estimate = tdmore::estimate
 )
 
 reactivePredict(
@@ -41,6 +43,8 @@ reactivePredict(
 \item{millis}{time for debounce, see [shiny::debounce()]}
 
 \item{label}{label for all reactives in this system}
+
+\item{estimate}{estimation function, uses `tdmore::estimate` by default}
 
 \item{fit}{reactive of type [reactiveFit()] with the current fit}
 

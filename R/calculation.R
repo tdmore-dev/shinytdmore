@@ -60,8 +60,9 @@ debouncedState <- function(state, names=c("model", "regimen", "observed", "covar
 #' @inheritParams shinytdmore-data
 #' @param population TRUE to calculate a population fit, FALSE to calculate an individual fit
 #' @param label label for all reactives in this system
+#' @param estimate estimation function, uses `tdmore::estimate` by default
 #' @export
-reactiveFit <- function(state, population=FALSE, millis=2000, label=if(population) "PopulationFit" else "IndividualFit") {
+reactiveFit <- function(state, population=FALSE, millis=2000, label=if(population) "PopulationFit" else "IndividualFit", estimate=tdmore::estimate) {
   log <- function(...) {
     cat(label, ":: ", ...)
   }
@@ -95,7 +96,7 @@ reactiveFit <- function(state, population=FALSE, millis=2000, label=if(populatio
       on.exit(progress$close())
       pars <- NULL
       if(!is.null(fit)) pars <- stats::coef(fit)
-      fit <- tdmore::estimate(args$model, 
+      fit <- estimate(args$model, 
                                 observed=args$observed, 
                                 regimen=args$regimen, 
                                 covariates=args$covariates,
@@ -139,11 +140,12 @@ reactiveRecommendation <- function(state, fit, millis=2000) {
 
 #' @rdname calculation
 #' @inheritParams shinytdmore-data
+#' @param estimate estimation function, uses `tdmore::estimate` by default
 #' @export
-calculationReactives <- function(state, mc.maxpts=100, fitMillis=2000, predictMillis=2000, recommendationMillis=500) {
+calculationReactives <- function(state, mc.maxpts=100, fitMillis=2000, predictMillis=2000, recommendationMillis=500, estimate=tdmore::estimate) {
   cr <- list()
   cr$populationPredict <- reactivePredict(state, mc.maxpts=mc.maxpts)
-  cr$fit <- reactiveFit(state, millis=fitMillis)
+  cr$fit <- reactiveFit(state, millis=fitMillis, estimate=estimate)
   cr$populationPredictNoSe <- if(mc.maxpts == 0) cr$populationPredict else reactivePredict(state, mc.maxpts=0, millis=predictMillis)
   cr$individualPredict <- reactivePredict(state, cr$fit, mc.maxpts=mc.maxpts, millis=predictMillis)
   cr$individualPredictNoSe <- if(mc.maxpts == 0) cr$individualPredict else reactivePredict(state, cr$fit, mc.maxpts=0, millis=predictMillis)

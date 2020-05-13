@@ -44,7 +44,13 @@ shinyApp(ui=ui, server=function(input, output, session) {
   )
   state$model <- myModel
   state$now <- as.POSIXct("2000-01-02 08:00", tz="GMT")
-  callModule(fitPlot, "plots", state=state)
+  callModule(fitPlot, "plots", state=state, cr=calculationReactives(state, estimate=function(...){
+    ipred <- tdmore::estimate(...)
+    ## the result is rounded, to ensure reproducibility
+    ipred$res <- signif(ipred$res, 6)
+    ipred$varcov <- signif(ipred$varcov, 3)
+    ipred
+  }))
   # output$debug <- shiny::renderUI({
   #   out <- lapply(names(input), function(i){
   #     tags$li(tags$b(i),

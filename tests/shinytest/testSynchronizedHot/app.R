@@ -13,7 +13,16 @@ ui <- fluidPage(
   plotOutput("plot")
 )
 
+## rnorm and runif not fully reproducible across systems...
+rnorm <- function(...) {
+  signif(stats::rnorm(...), 8)
+}
+runif <- function(...) {
+  signif(stats::runif(...), 8)
+}
+
 server <- function(input, output, session) {
+  set.seed(0)
   state <- reactiveValues(df = data.frame(foo=rnorm(Nstart), bar=runif(Nstart)))
   callModule(synchronizedHot, 
              id="hot", 
