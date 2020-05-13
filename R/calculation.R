@@ -142,10 +142,10 @@ reactiveRecommendation <- function(state, fit, millis=2000) {
 #' @inheritParams shinytdmore-data
 #' @param estimate estimation function, uses `tdmore::estimate` by default
 #' @export
-calculationReactives <- function(state, mc.maxpts=100, fitMillis=2000, predictMillis=2000, recommendationMillis=500, estimate=tdmore::estimate) {
+calculationReactives <- function(state, mc.maxpts=100, fitMillis=2000, predictMillis=2000, recommendationMillis=500) {
   cr <- list()
   cr$populationPredict <- reactivePredict(state, mc.maxpts=mc.maxpts)
-  cr$fit <- reactiveFit(state, millis=fitMillis, estimate=estimate)
+  cr$fit <- reactiveFit(state, millis=fitMillis)
   cr$populationPredictNoSe <- if(mc.maxpts == 0) cr$populationPredict else reactivePredict(state, mc.maxpts=0, millis=predictMillis)
   cr$individualPredict <- reactivePredict(state, cr$fit, mc.maxpts=mc.maxpts, millis=predictMillis)
   cr$individualPredictNoSe <- if(mc.maxpts == 0) cr$individualPredict else reactivePredict(state, cr$fit, mc.maxpts=0, millis=predictMillis)

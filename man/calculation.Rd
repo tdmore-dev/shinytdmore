@@ -23,8 +23,7 @@ calculationReactives(
   mc.maxpts = 100,
   fitMillis = 2000,
   predictMillis = 2000,
-  recommendationMillis = 500,
-  estimate = tdmore::estimate
+  recommendationMillis = 500
 )
 
 reactivePredict(

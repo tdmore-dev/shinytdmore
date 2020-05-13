@@ -28,6 +28,24 @@ ui <- fluidPage(
   htmlOutput("debug")
 )
 
+## This rounds the reactive value, to ensure reproducibility between machines
+roundedReactive <- function(r, digits=6, label="Rounded reactive") {
+  force(r)
+  reactive({
+    res <- r()
+    cat("Rounding reactive ",label, " of class ", class(res), "...\n")
+    if(is.data.frame(res)) {
+      res <- dplyr::mutate_if(res, is.numeric, signif, digits=digits)
+    } else if (tdmore::is.tdmorefit(res)){
+      res$res <- signif(res$res, 5)
+      res$varcov <- signif(res$varcov, 3)
+    } else {
+      stop("Unknown type: ", class(res))
+    }
+    res
+  }, label=label)
+}
+
 shinyApp(ui=ui, server=function(input, output, session) {
   state <- reactiveValues()
   state$regimen <- tibble::tibble(
@@ -44,13 +62,12 @@ shinyApp(ui=ui, server=function(input, output, session) {
   )
   state$model <- myModel
   state$now <- as.POSIXct("2000-01-02 08:00", tz="GMT")
-  callModule(fitPlot, "plots", state=state, cr=calculationReactives(state, estimate=function(...){
-    ipred <- tdmore::estimate(...)
-    ## the result is rounded, to ensure reproducibility
-    ipred$res <- signif(ipred$res, 6)
-    ipred$varcov <- signif(ipred$varcov, 3)
-    ipred
-  }))
+  
+  set.seed(0)
+  cr <- calculationReactives(state)
+  roundKeys <- c("fit", "populationPredict", "populationPredictNoSe", "individualPredict", "individualPredictNoSe", "recommendationPredict")
+  for(i in roundKeys) cr[[i]] <- roundedReactive(cr[[i]], digits=4, label=i)
+  callModule(fitPlot, "plots", state=state, cr=cr)
   # output$debug <- shiny::renderUI({
   #   out <- lapply(names(input), function(i){
   #     tags$li(tags$b(i),
