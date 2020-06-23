@@ -235,8 +235,7 @@ calculatePredict <- function(state, fit=NULL, regimen=NULL, progress, mc.maxpts)
   newdata <- getNewdata(state, model=args$model)
   if(is.null(fit)) fit <- tdmore::estimate(args$model, regimen=args$regimen, covariates=args$covariates)
   
-  p <- tdmore::ShinyToDplyrProgressFacade$new(proxy=progress)
-  data <- stats::predict(fit, regimen=regimen, newdata=newdata, se.fit=T, level=0.95, mc.maxpts=mc.maxpts, .progress=p) # 95% CI by default
+  data <- stats::predict(fit, regimen=regimen, newdata=newdata, se.fit=T, level=0.95, mc.maxpts=mc.maxpts, .progress=progress) # 95% CI by default
   data$TIME <- args$t0 + lubridate::dhours(data$TIME)
   data
 }

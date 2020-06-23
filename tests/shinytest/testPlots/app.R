@@ -1,6 +1,7 @@
 icuSetCollate(locale="ASCII")
 Sys.setlocale(category="LC_TIME", locale="C")
 library(shinytdmore)
+library(shiny)
 
 rxModel <- RxODE::RxODE(
 "

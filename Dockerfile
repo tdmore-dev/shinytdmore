@@ -15,6 +15,7 @@ RUN R -e 'install.packages("mongolite")'
 RUN R -e 'install.packages("R6")'
 
 ## Requirements for Shiny app
+RUN R -e 'install.packages("shiny")'
 RUN R -e 'install.packages("DT")'
 RUN R -e 'install.packages("plotly")'
 RUN R -e 'install.packages("rhandsontable")'

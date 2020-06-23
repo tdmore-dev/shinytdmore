@@ -1,3 +1,7 @@
+setup({
+  Sys.setenv("QT_QPA_PLATFORM"="")
+})
+
 waitUntilPresent <- function(id, where=c("input", "output", "export"), times=20, sleep=2) {
   app <- get("app", envir=parent.frame())
   where <- match.arg(where)
