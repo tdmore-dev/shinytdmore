@@ -10,3 +10,5 @@
 ^docker-compose\.test\.yml$
 ^R-disabled$
 ^vignettes-disabled$
+^doc$
+^Meta$
