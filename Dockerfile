@@ -1,5 +1,6 @@
+ARG DOCKER_TAG=latest
 # Use the pre-built tdmore image
-FROM rfaelens/tdmore:latest
+FROM rfaelens/tdmore:$DOCKER_TAG
 
 # prepare for installation of packages via apt-get
 RUN apt-get update
