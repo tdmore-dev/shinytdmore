@@ -12,7 +12,7 @@ library(shinytest)
 
 tmp_lib <- tdmore::ensurePackagePresent("shinytdmore", quiet=F)
 app <- withr::with_libpaths(tmp_lib, {
-      ShinyDriver$new(path="shinytdmoreApp", debug="all", shinyOptions = list(test.mode=TRUE), loadTimeout=30*1000)
+    ShinyDriver$new(path="shinytdmoreApp", debug="all", shinyOptions = list(test.mode=TRUE), loadTimeout=30*1000)
     }, action="prefix")
 
 file <- knitr::fig_path("png")
@@ -61,6 +61,7 @@ When you add a dose, the default formulation in the model is used. Clicking *add
 ## Add an observation
 ```{r}
 app$setInputs(`prediction-observation-add`="click")
+waitForRecalculating()
 table <- app$findElements("#prediction-observation-table-table td")
 table[[2]]$click()
 table[[2]]$sendKeys("06:50\t")
@@ -79,9 +80,18 @@ The observation is not used yet, because the current time ("now") is still 1st o
 ```{r}
 now <- app$findElement("#prediction-now-now")
 now$click()
+waitForRecalculating()
+
+file <- knitr::fig_path("png")
+app$takeScreenshot(file)
+knitr::include_graphics(file)
 
 combodate <- app$findElements(".popover-content .combodate select")
+combodate[[1]]$setValue("2000")
+combodate[[2]]$setValue("01")
+combodate[[3]]$setValue("01")
 combodate[[4]]$setValue("11")
+combodate[[5]]$setValue("00")
 
 submit <- app$findElement(".popover-content .editable-submit")
 submit$click()
