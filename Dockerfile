@@ -1,36 +1,22 @@
 ARG DOCKER_TAG=latest
 # Use the pre-built tdmore image
 FROM rfaelens/tdmore:$DOCKER_TAG
+WORKDIR /app/shinytdmore
 
 # prepare for installation of packages via apt-get
-RUN apt-get update
+RUN apt-get update && apt-get install -y libv8-dev libssl-dev libsasl2-dev
 
-# install dependent packages
-RUN apt-get install -y libv8-dev
-RUN apt-get install -y libssl-dev
-RUN apt-get install -y libsasl2-dev
-RUN R -e 'install.packages("jsonvalidate")'
-RUN R -e 'install.packages("rjson")'
-RUN R -e 'install.packages("plumber")'
-RUN R -e 'install.packages("mongolite")'
-RUN R -e 'install.packages("R6")'
+## Initialize renv, see https://environments.rstudio.com/docker#r-packages
+COPY renv.lock .
+RUN R -e 'renv::restore(library=.libPaths()[1])'
 
-## Requirements for Shiny app
-RUN R -e 'install.packages("shiny")'
-RUN R -e 'install.packages("DT")'
-RUN R -e 'install.packages("plotly")'
-RUN R -e 'install.packages("rhandsontable")'
-RUN R -e 'install.packages("shinyBS")'
-RUN R -e 'install.packages("shinyjs")'
-RUN R -e 'install.packages("anytime")'
-RUN R -e 'install.packages("htmlTable")'
+## Ensure all required packages were installed through renv
+COPY DESCRIPTION .
+RUN R -e 'stopifnot( all(remotes::local_package_deps(dependencies=TRUE) %in% rownames( installed.packages() )) )'
 
-# Set the working directory to /app
-WORKDIR /app
-COPY . /app
-
-# Do not consider dependencies here
-# This solves the issue that tdmore-dev/tdmore is a private repository,
-# to which devtools will not have access...
-# Devtools should use the pre-installed tdmore from the base Docker image
+## Install full package; dependencies were installed earlier
+## This solves the issue that tdmore-dev/tdmore is a private repository,
+## to which devtools will not have access...
+## Devtools should use the pre-installed tdmore from the base Docker image
+COPY . .
 RUN R -e 'devtools::install(dependencies=FALSE)'
