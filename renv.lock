@@ -116,10 +116,15 @@
     },
     "RxODE": {
       "Package": "RxODE",
-      "Version": "1.0.4",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "4a94a1b18a7f59d5eb921f56685d001b"
+      "Version": "1.0.5",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "RxODE",
+      "RemoteUsername": "nlmixrdevelopment",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "39d815ad6a808ddd1972e5d6178ac4820b425269",
+      "Hash": "c091c56dd6ea10f8b9b3325288f7bf7c"
     },
     "StanHeaders": {
       "Package": "StanHeaders",
@@ -319,10 +324,10 @@
     },
     "desc": {
       "Package": "desc",
-      "Version": "1.2.0",
+      "Version": "1.3.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "6c8fe8fa26a23b79949375d372c7b395"
+      "Hash": "b6963166f7f10b970af1006c462ce6cd"
     },
     "devtools": {
       "Package": "devtools",
@@ -361,10 +366,10 @@
     },
     "dplyr": {
       "Package": "dplyr",
-      "Version": "1.0.4",
+      "Version": "1.0.5",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "01c82e3b053eb7660a8ace8d932265b8"
+      "Hash": "d0d76c11ec807eb3f000eba4e3eb0f68"
     },
     "ellipsis": {
       "Package": "ellipsis",
@@ -749,12 +754,12 @@
       "Version": "2.0.1",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteUsername": "nlmixrdevelopment",
-      "RemoteRepo": "nlmixr",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "9bdfa43c3153abd430410ac8273d521b83cf4443",
       "RemoteHost": "api.github.com",
-      "Hash": "530d5f2df74ff545ab6cd9becdeefce1"
+      "RemoteRepo": "nlmixr",
+      "RemoteUsername": "nlmixrdevelopment",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "422f4d15ead3e204cb0384ff8571d302344a53d1",
+      "Hash": "77a646b524f30c7521aaf6eae3c73433"
     },
     "numDeriv": {
       "Package": "numDeriv",
@@ -793,10 +798,10 @@
     },
     "pillar": {
       "Package": "pillar",
-      "Version": "1.5.0",
+      "Version": "1.5.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "39a778e4e487ded8b1bf5bb617c567b3"
+      "Hash": "24622aa4a0d3de3463c34513edca99b2"
     },
     "pingr": {
       "Package": "pingr",
@@ -898,10 +903,10 @@
     },
     "qs": {
       "Package": "qs",
-      "Version": "0.23.6",
+      "Version": "0.24.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "44fef19898d6a2760e9a002732b32227"
+      "Hash": "ae3d3cf661d0357973e8d24076efe937"
     },
     "ragg": {
       "Package": "ragg",
@@ -1179,8 +1184,14 @@
     "tdmore": {
       "Package": "tdmore",
       "Version": "1.2.0.900",
-      "Source": "unknown",
-      "Hash": "2b019a9b8b98c0f8c2e3dbd7c4f0c5a6"
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "tdmore-dev",
+      "RemoteRepo": "tdmore",
+      "RemoteRef": "master",
+      "RemoteSha": "2e40bbd947c5d48ba3e725afd781bbb69477d0fe",
+      "Hash": "1700a8e1ded56d3189a05e2f9fdfb2bd"
     },
     "testthat": {
       "Package": "testthat",
@@ -1231,13 +1242,6 @@
       "Repository": "CRAN",
       "Hash": "066f49a225dc3215cb1f32bc23535f88"
     },
-    "units": {
-      "Package": "units",
-      "Version": "0.7-0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "57404a7676b139cdcc3e2530508c864e"
-    },
     "usethis": {
       "Package": "usethis",
       "Version": "2.0.1",
@@ -1275,10 +1279,10 @@
     },
     "waldo": {
       "Package": "waldo",
-      "Version": "0.2.4",
+      "Version": "0.2.5",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "29df52c781e572c967f90de9713423c4"
+      "Hash": "20c45f1d511a3f730b7b469f4d11e104"
     },
     "webdriver": {
       "Package": "webdriver",
@@ -1346,14 +1350,9 @@
     "zip": {
       "Package": "zip",
       "Version": "2.1.1",
-      "Source": "Local",
-      "RemoteType": "local",
-      "RemoteUsername": "r-lib",
-      "RemoteRepo": "zip",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "189ae3bd0c8f9723bc0da9b2516df01196b7d32a",
-      "RemoteHost": "api.github.com",
-      "Hash": "abf34a27f72688746e6ed9190c84f782"
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "3bc8405c637d988801ec5ea88372d0c2"
     },
     "zoo": {
       "Package": "zoo",
