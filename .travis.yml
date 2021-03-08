@@ -14,33 +14,41 @@ env:
     - secure: "eRdUKzGRgegCU6BF+jQj8oh7ouEaQqR66hHqFd25Pe1hXrlERypDIJ+reDO2/nui0TmBapmEo6Z7TDAz9QwL7IK+jVjnY6LdQYrLOP5OYyEPj8TSJgpLxLOGV5Jf48h0YCv2a2WO42tu46TFfHuatr9ZLSioTP7wAfRu3c78kT4iolpYkcyGy7Y6cnTIWXzqjPDp1ypaBgRSpai+pXxTfvo4uQU8x5t3OiK7ELqFPAiBB0htJQuHT4hA8ipnw8dkhvmwd2l3sw8EhU4VHc44Q/YMoMxczKJrk7RBaVMwWT/SrK1Er/jWOhIZXcp5lMBGMT3ovKn7VygetCGt1zceooU7lnDSz9KW6IEhzTGqSsni/UkRpKrXjZY/favK/w+v5a0Y3d0d2/Jt6YyIolskxSotlSD8j9OoWkLI1wCle+Qk6ZIDXdRAZ/6h8yq75oUJFtKwd56U/JDrNVQ/6rlKFyELP3qLEcZnPh3VLAepx8QTGr1ULNzQteOa+urNTlUZ5X72W2Cf5gsePCsTcktiK8pqvt8PjQvDME3VF21ngDlGkwMNwfNhm0roDlckh2KajExc3Yxx801dvYTVETNuyG0DyvapyeaDSUf8hyTiH3z3mOBjbaUtCJkJTNSj3EVf0LUxq598npREOQwYaxiy0M9ypu8FTDnh1zFRqFSXcS0="
 
 cache:
+  directories:
+  - $HOME/.local/share/renv
+  - $TRAVIS_BUILD_DIR/renv/library
   packages: true
-directories:
-  - travis_phantomjs
 
-# Install PhantomJS (if not cached)
-before_install:
-  - "export PHANTOMJS_VERSION=2.1.1"
-  - "phantomjs --version"
-  - "export PATH=$PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64/bin:$PATH"
-  - "hash -r"
-  - "phantomjs --version"
-  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then rm -rf $PWD/travis_phantomjs; mkdir -p $PWD/travis_phantomjs; fi"
-  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then wget https://github.com/Medium/phantomjs/releases/download/v$PHANTOMJS_VERSION/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2 -O $PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2; fi"
-  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then tar -xvf $PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2 -C $PWD/travis_phantomjs; fi"
-  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then hash -r; fi"
-  - "phantomjs --version"
+# apt_packages is an travis-r-specific key, applied in the *script* section
+# we override the *script* section
+# instead, we need to use the 'apt' addon
+addons:
+  apt:
+    packages:
+      - libudunits2-dev
+      - lbzip2
+      - libharfbuzz-dev
+      - libfribidi-dev
+      - libmpfr-dev
+      - libgit2-dev
 
-apt_packages:
-  - libudunits2-dev
-  - libgit2-dev
 
-r_packages:
-  - covr
-  - devtools
+install:
+  - Rscript -e "if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv')"
+  # use renv purely to restore the packages from renv.lock
+  - Rscript -e "renv::restore(library=.libPaths()[1])"
+  # Install PhantomJS (if not cached)
+  - Rscript -e 'shinytest::installDependencies()'
+
+script:
+  - Rscript -e 'devtools::check()'
+
+stages:
+  - name: after_success
+    if: branch = master
 
 after_success:
-  - Rscript -e 'library(covr);codecov(quiet=FALSE)'
+  - Rscript -e 'library(covr);codecov(quiet=FALSE, token=Sys.getenv("CODECOV_TOKEN"))'
   - Rscript -e 'library(pkgdown);pkgdown::build_site()'
 
 deploy:
@@ -54,8 +62,8 @@ deploy:
 
 notifications:
   email:
-  recipients:
-  - ruben.faelens@kuleuven.be
-  - nicolas.luyckx@sgs.com
-on_success: change # default: change
-on_failure: always # default: always
+    recipients:
+      - ruben.faelens@kuleuven.be
+      - nicolas.luyckx@sgs.com
+    on_success: change # default: change
+    on_failure: always # default: always
