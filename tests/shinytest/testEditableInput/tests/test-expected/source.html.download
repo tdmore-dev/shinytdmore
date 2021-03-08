@@ -1,17 +1,16 @@
 <!DOCTYPE html><html class=""><head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <script type="application/shiny-singletons"></script>
-  <script type="application/html-dependencies">json2[2014.02.04];jquery[3.5.1];shiny[1.5.0];shiny-testmode[1.5.0];bootstrap[3.4.1];bootstrap-editable[1.5.1];editableInput[0.1.0];momentJs[2.24.0]</script>
-<script src="shared/json2-min.js"></script>
+  <script type="application/html-dependencies">jquery[3.5.1];shiny-css[1.6.0];shiny-javascript[1.6.0];shiny-testmode[1.6.0];bootstrap[3.4.1];bootstrap-editable[1.5.1];editableInput[0.1.0];momentJs[2.24.0]</script>
 <script src="shared/jquery.min.js"></script>
-<link href="shared/shiny.css" rel="stylesheet">
+<link href="shared/shiny.min.css" rel="stylesheet">
 <script src="shared/shiny.min.js"></script>
 <script src="shared/shiny-testmode.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="shared/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<link href="shared/bootstrap/accessibility/css/bootstrap-accessibility.min.css" rel="stylesheet">
 <script src="shared/bootstrap/js/bootstrap.min.js"></script>
-<script src="shared/bootstrap/shim/html5shiv.min.js"></script>
-<script src="shared/bootstrap/shim/respond.min.js"></script>
+<script src="shared/bootstrap/accessibility/js/bootstrap-accessibility.min.js"></script>
 <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet">
 <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
 <script src="shinyEditable/editableInput.js"></script>
@@ -27,7 +26,7 @@
     <br>
     <a id="myDateCombodate" class="shinyEditable-bound-input editable editable-click shiny-bound-input">2019-12-10 20:00</a>
     <script>$("[id='myDateCombodate']").editable({"format":"YYYY-MM-DD HH:mm","template":"YYYY-MM-DD HH:mm","viewformat":"YYYY-MM-DD HH:mm","combodate":{"minYear":1970,"maxYear":2030},"type":"combodate","placement":"auto"});</script>
-    <pre id="bar" class="shiny-text-output noplaceholder shiny-bound-output">myText --&gt; Example Text  of class  character
+    <pre class="shiny-text-output noplaceholder shiny-bound-output" id="bar" aria-live="polite">myText --&gt; Example Text  of class  character
 myDateHtml5 --&gt; Empty  of class  character
 myDateCombodate --&gt; 2019-12-10 20:00  of class  character</pre>
   </div>

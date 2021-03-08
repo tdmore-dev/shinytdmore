@@ -62,7 +62,7 @@ debouncedState <- function(state, names=c("model", "regimen", "observed", "covar
 #' @param label label for all reactives in this system
 #' @param estimate estimation function, uses `tdmore::estimate` by default
 #' @export
-reactiveFit <- function(state, population=FALSE, millis=2000, label=if(population) "PopulationFit" else "IndividualFit", estimate=tdmore::estimate) {
+reactiveFit <- function(state, population=FALSE, millis=2000, label=if(population) "PopulationFit" else "IndividualFit", estimate=shinytdmore::estimate) {
   log <- function(...) {
     cat(label, ":: ", ...)
   }
@@ -131,7 +131,7 @@ reactiveRecommendation <- function(state, fit, millis=2000) {
     isolate({
       args <- convertDataToTdmore(state)
       fit <- fit()
-      rec <- tdmore::optimize(fit, regimen=args$regimen, targetMetadata=state$target %||% defaultData()$target)
+      rec <- tdmore::findDoses(fit, regimen=args$regimen, targetMetadata=state$target %||% defaultData()$target)
       rec$regimen
     })
   })
@@ -233,7 +233,7 @@ needsUpdate <- function(fit, args, onlyEstimate=TRUE) {
 calculatePredict <- function(state, fit=NULL, regimen=NULL, progress, mc.maxpts) {
   args <- convertDataToTdmore(state)
   newdata <- getNewdata(state, model=args$model)
-  if(is.null(fit)) fit <- tdmore::estimate(args$model, regimen=args$regimen, covariates=args$covariates)
+  if(is.null(fit)) fit <- estimate(args$model, regimen=args$regimen, covariates=args$covariates)
   
   data <- stats::predict(fit, regimen=regimen, newdata=newdata, se.fit=T, level=0.95, mc.maxpts=mc.maxpts, .progress=progress) # 95% CI by default
   data$TIME <- args$t0 + lubridate::dhours(data$TIME)

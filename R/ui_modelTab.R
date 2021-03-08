@@ -14,7 +14,7 @@ modelTabUI <- function(id, dir=system.file("models", package="shinytdmore")) {
     fluidRow(
       htmlOutput(ns("currentDescription")),
       textInput(ns("dir"), "Directory", value=dir),
-      selectInput(ns("model"), "Your model", choices=tdmore::listModels(dir=dir)),
+      selectInput(ns("model"), "Your model", choices=tdmore:::listModels(dir=dir)),
       actionButton(ns("update"), label="Apply this model", icon=icon("thumbs-up")),
       htmlOutput(ns("description")),
       style="margin-left: 5px; margin-right: 5px;"
@@ -32,7 +32,7 @@ modelTabUI <- function(id, dir=system.file("models", package="shinytdmore")) {
 #' 
 modelTab <- function(input, output, session, state, rmdFile=system.file("model.Rmd", package="shinytdmore")) {
   observeEvent(input$dir, {
-    updateSelectInput(session, "model", choices=tdmore::listModels(dir=input$dir))
+    updateSelectInput(session, "model", choices=tdmore:::listModels(dir=input$dir))
   })
   output$currentDescription <- renderUI({
     tempRmd <- file.path(tempdir(), basename(rmdFile))
@@ -57,7 +57,7 @@ modelTab <- function(input, output, session, state, rmdFile=system.file("model.R
   })
   
   output$description <- renderUI({
-    if(! input$model %in% tdmore::listModels(dir=input$dir) ) return("Model not available in dir")
+    if(! input$model %in% tdmore:::listModels(dir=input$dir) ) return("Model not available in dir")
     tempRmd <- file.path(tempdir(), basename(rmdFile))
     on.exit({unlink(tempRmd)})
     file.copy(rmdFile, tempRmd, overwrite = TRUE)

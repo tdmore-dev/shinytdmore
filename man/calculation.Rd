@@ -13,7 +13,7 @@ reactiveFit(
   population = FALSE,
   millis = 2000,
   label = if (population) "PopulationFit" else "IndividualFit",
-  estimate = tdmore::estimate
+  estimate = shinytdmore::estimate
 )
 
 reactiveRecommendation(state, fit, millis = 2000)

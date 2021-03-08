@@ -56,7 +56,7 @@ cell(2)$sendKeys("13:23\t")
 
 testthat::try_again(20, {
   Sys.sleep(0.2)
-  app$takeScreenshot()
+  app$takeScreenshot("shot1.png")
   
   observed <- app$getAllValues()$export$observed
   expect_equal(observed$time, as.POSIXct("1987-12-11 13:23"), tol=1E-4)

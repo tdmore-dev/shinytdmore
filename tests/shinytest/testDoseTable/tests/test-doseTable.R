@@ -28,7 +28,7 @@ expect_equal(regimen$formulation, factor("FormA", levels=c("FormA", "FormB")) )
 expect_equal(regimen$fix, FALSE)
 
 ## Fill in table
-app$takeScreenshot()
+app$takeScreenshot("shot1.png")
 tableCore <- app$findElement("table.htCore")
 cell <- function(i) {tableCore$findElements("td")[[i]]}
 
@@ -71,7 +71,7 @@ cell(2)$click()
 cell(2)$sendKeys("12:00\t")
 cell(4)$click()
 
-app$takeScreenshot()
+app$takeScreenshot("shot2.png")
 
 testthat::try_again(100, {
   Sys.sleep(0.2)
@@ -94,7 +94,7 @@ testthat::try_again(100, {
 app$setInputs(`myDose-add`="click")
 app$setInputs(`myDose-add`="click")
 
-app$takeScreenshot()
+app$takeScreenshot("shot3.png")
 
 testthat::try_again(10, {
   Sys.sleep(0.2)

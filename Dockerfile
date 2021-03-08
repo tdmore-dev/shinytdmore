@@ -12,7 +12,7 @@ RUN R -e 'renv::restore(library=.libPaths()[1])'
 
 ## Ensure all required packages were installed through renv
 COPY DESCRIPTION .
-RUN R -e 'stopifnot( all(remotes::local_package_deps(dependencies=TRUE) %in% rownames( installed.packages() )) )'
+RUN R -e 'req <- remotes::local_package_deps(dependencies=TRUE); i <- req %in% rownames( installed.packages() ); if(!all(i)) stop(req[!i])'
 
 ## Install full package; dependencies were installed earlier
 ## This solves the issue that tdmore-dev/tdmore is a private repository,

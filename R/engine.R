@@ -1,0 +1,2 @@
+#' @export
+estimate <- tdmore:::estimate

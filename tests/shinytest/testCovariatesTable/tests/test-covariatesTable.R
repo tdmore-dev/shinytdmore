@@ -71,7 +71,7 @@ testthat::try_again(10, {
 cell(3)$click()
 cell(3)$setValue("15")
 cell(1)$click()
-app$takeScreenshot()
+app$takeScreenshot("shot1.png")
 
 testthat::try_again(10, {
   Sys.sleep(0.2)
@@ -128,7 +128,7 @@ expect_equal(app$getAllValues()$export$covs,
 # set first cell as Male
 cell(4)$click()
 cell(4)$sendKeys("Ma", webdriver::key$enter)
-app$takeScreenshot()
+app$takeScreenshot("shot2.png")
 
 expect_equal(app$getAllValues()$export$covs,
              data.frame(time=c(as.POSIXct("1987-12-11 12:15"), as.POSIXct("1987-12-12 12:15")),

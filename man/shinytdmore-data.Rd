@@ -65,7 +65,7 @@ Shinytdmore uses the following data objects in a reactiveValues() state:
 \item \code{state$now} a POSIXct time representing the current time
 }
 
-\code{\link[=convertDataToTdmore]{convertDataToTdmore()}} converts this into a list of arguments compatible with \link[tdmore:estimate]{tdmore::estimate}, \link[tdmore:predict.tdmore]{tdmore::predict.tdmore} and \link[tdmore:findDose]{tdmore::findDose}.
+\code{\link[=convertDataToTdmore]{convertDataToTdmore()}} converts this into a list of arguments compatible with \link[tdmore:estimate]{tdmore::estimate}, \link[tdmore:predict.tdmore]{tdmore::predict.tdmore} and \link[tdmore:doseSimulation]{tdmore::findDose}.
 \itemize{
 \item \code{model} the tdmore model
 \item \code{regimen} all treatments in the right format

@@ -25,11 +25,11 @@ cell$click()
 for(i in 1:Nstart)
   cell$sendKeys("99\n")
 
-app$takeScreenshot()
+app$takeScreenshot("shot1.png")
 # df first column should all be '99'
 df <- app$getAllValues()$export$df #this waits until all rendering has stopped
 testthat::expect_equal( df[, 1], rep(99, Nstart) )
-app$takeScreenshot()
+app$takeScreenshot("shot2.png")
 
 # Test Add Row in rapid succession ----------------------------------------
 el <- app$findWidget("add")$getElement()
@@ -46,7 +46,7 @@ p <- app$.__enclos_env__$private$shinyProcess
 ## Better to wait like this:
 app$waitFor(paste0( "$('#table .ht_master .htCore tbody tr').length == ", (Nstart+15)), timeout=15*PlotSleep*1000)
 app$executeScript("return( $('#table .ht_master .htCore tbody tr').length );" )
-app$takeScreenshot()
+app$takeScreenshot("shot3.png")
 
 # should have received 15 clicks
 testthat::expect_equal(

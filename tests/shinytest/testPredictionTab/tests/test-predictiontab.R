@@ -20,7 +20,7 @@ if(length(cells) < 3) stop("A: Insufficient cells!! Number of cells: ", length(c
 cells[[1]]$click(); cells[[1]]$setValue("2000-01-02")
 cells[[2]]$click(); cells[[2]]$setValue("08:00")
 cells[[3]]$click(); cells[[3]]$setValue("70"); cells[[3]]$sendKeys("\n")
-app$takeScreenshot()
+app$takeScreenshot("shot1.png")
 
 # add a dose
 app$setInputs(`prediction-doses-add`="click", values_=FALSE) #do not request values_; fails because of plotly output / shiny::req issue
@@ -35,13 +35,13 @@ if(length(cells) < 5) stop("B: Insufficient cells!! Number of cells: ", length(c
 cells[[1]]$click(); cells[[1]]$setValue("2000-01-02")
 cells[[2]]$click(); cells[[2]]$setValue("08:00")
 cells[[3]]$click(); cells[[3]]$setValue("150"); cells[[3]]$sendKeys("\n")
-app$takeScreenshot()
+app$takeScreenshot("shot2.png")
 
 
 lapply( app$getAllValues(output=FALSE), lapply, names)
 
 
-app$takeScreenshot()
+app$takeScreenshot("shot3.png")
 
 # shut down table
 p <- app$.__enclos_env__$private$shinyProcess
