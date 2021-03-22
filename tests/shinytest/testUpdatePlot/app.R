@@ -4,7 +4,7 @@ ui <- fluidPage(
 )
 
 model <- tdmore::getModel()
-pop <- estimate(model, regimen=data.frame(TIME=0, AMT=10), covariates=c(WT=70))
+pop <- tdmore:::estimate(model, regimen=data.frame(TIME=0, AMT=10), covariates=c(WT=70))
 
 server <- function(input, output, session) {
   shinytdmore::renderUpdatePlotly(output, outputId="plot", expr={

@@ -56,10 +56,28 @@ editableHtml5 <- function(inputId, type="text", options=list()) {
   editableInput(inputId, type="text", options=options)
 }
 
+basicToJson <- function(value) {
+  if(is.list(value)) {
+    strings <- lapply(value, basicToJson)
+    paste('{',
+      paste('"', names(value), '":', strings, sep="", collapse=",")
+            ,'}', sep="")
+  } else if(is.numeric(value)){
+    return(value)
+  } else {
+    return(paste0('"', as.character(value), '"'))
+  }
+}
 
 buildScript <- function(inputId, type, options) {
   options <- c(options, list(type = type, placement = "auto"))
-  optionsJson <- jsonlite::toJSON(options, auto_unbox = TRUE, force = TRUE)
+  if (requireNamespace("jsonlite", quietly = TRUE)) {
+    optionsJson <- jsonlite::toJSON(options, auto_unbox = TRUE, force = TRUE)
+  } else {
+    #jsonlite not available
+    warning("jsonlite not available, using basic toJson function")
+    optionsJson <- basicToJson(options)
+  }
   
   selector <- sprintf("[id='%s']", inputId)
   js <- sprintf("$(\"%s\").editable(%s);", selector, optionsJson)

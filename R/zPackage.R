@@ -1,13 +1,10 @@
-`%>%` <- magrittr::`%>%`
-tibble <- tibble::tibble
-add_column <- tibble::add_column
-as.tibble <- tibble::as.tibble
-bind_cols <- dplyr::bind_cols
-
 #' @import shiny
 #' @import ggplot2
 #' @importFrom stats runif
 #' @importFrom utils capture.output
+#' @importFrom magrittr %>%
+#' @importFrom tibble tibble add_column as.tibble
+#' @importFrom dplyr bind_cols
 NULL
 
 #' Basic definition for module server components

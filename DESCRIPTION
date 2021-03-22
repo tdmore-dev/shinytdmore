@@ -14,9 +14,9 @@ Authors@R: c(
   )
 Description: The functions in this package allow you to quickly create a shiny application for dose adaptation.
 Depends: R (>= 3.5.0)
-Imports: tdmore, dplyr, rjson, jsonlite, lubridate, mongolite, 
-  shiny, shinyBS, tidyverse, plotly, shinyjs, DT, htmlTable,
-  rhandsontable (<= 0.3.7), R6, ggplot2, scales, purrr, tidyr, htmltools, tibble, rlang
+Imports: tdmore, magrittr, dplyr, tidyr, tibble, purrr, lubridate, 
+  shiny, shinyBS, shinyjs, plotly, htmlTable, htmltools,
+  rhandsontable (<= 0.3.7), ggplot2, scales
 Note: The dependency on rhandsontable is limited to version 0.3.7, because of a
   particular licensing issue. Rhandsontable depends on handsontable.js, which changed
   from an MIT license to a proprietary license in version 7.0.0. This proprietary license
@@ -28,7 +28,7 @@ License: file LICENSE
 Encoding: UTF-8
 Language: en-US
 LazyData: true
-Suggests: stringr, knitr, rmarkdown, testthat, roxygen2, devtools, vdiffr, svglite, pkgdown, bookdown, webshot, shinytest, rprojroot, withr
+Suggests: jsonlite, stringr, knitr, rmarkdown, testthat, roxygen2, devtools, vdiffr, svglite, pkgdown, bookdown, webshot, shinytest, rprojroot, withr, mnormt, MCMCpack
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
 URL: https://github.com/tdmore-dev/shinytdmore

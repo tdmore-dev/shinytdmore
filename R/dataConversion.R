@@ -19,7 +19,7 @@
 #'   * `...` columns corresponding to covariates required in the tdmore model. If columns are missing, the method returns an error.
 #' * `state$now` a POSIXct time representing the current time
 #' 
-#' [convertDataToTdmore()] converts this into a list of arguments compatible with [tdmore::estimate], [tdmore::predict.tdmore] and [tdmore::findDose]. 
+#' [convertDataToTdmore()] converts this into a list of arguments compatible with `tdmore` fitting routines. 
 #' * `model` the tdmore model
 #' * `regimen` all treatments in the right format
 #' * `observed` all observed values where use=TRUE, and with the `dv` column renamed to the default model output

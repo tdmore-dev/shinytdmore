@@ -14,3 +14,4 @@
 ^vignettes-disabled$
 ^doc$
 ^Meta$
+^hooks$

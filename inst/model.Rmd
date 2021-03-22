@@ -12,7 +12,6 @@ params:
 library(tdmore)
 library(shinytdmore)
 library(knitr)
-library(tidyverse)
 library(assertthat)
 ```
 

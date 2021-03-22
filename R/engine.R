@@ -1,2 +1,7 @@
+#' Link to protected `tdmore:::estimate` function
+#' @param ... passed to estimate method
+#' @return a tdmorefit object
 #' @export
-estimate <- tdmore:::estimate
+estimate <- function(...) {
+  tdmore:::estimate(...)
+}

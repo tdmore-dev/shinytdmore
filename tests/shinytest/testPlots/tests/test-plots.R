@@ -1,5 +1,6 @@
 #rstudioapi::getActiveDocumentContext()$path %>% dirname() %>% setwd()
 library(shinytest)
+library(testthat)
 app <- ShinyDriver$new("..", loadTimeout = 120*1000, seed=1234)
 app$snapshotInit("test-plots")
 source("../../../testthat/helperShinytest.R")
@@ -12,7 +13,6 @@ app$waitFor("$('.recalculating').length == 0")
 ## And https://github.com/rstudio/crosstalk/blob/68b0b617ee82e5d6b738f26106933254ce5ede53/R/crosstalk.R#L97
 ## and https://github.com/rstudio/crosstalk/blob/master/javascript/src/var.js#L37
 app$waitFor("$('.plotly .plot-container .svg-container').length > 0")
-
 waitUntilPresent(".clientValue-default-plotlyCrosstalkOpts")
 
 

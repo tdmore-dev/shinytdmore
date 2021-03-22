@@ -37,13 +37,6 @@
       "Repository": "CRAN",
       "Hash": "4ef21dd0348b9abb7f8bd1d77e4cd0c3"
     },
-    "Matrix": {
-      "Package": "Matrix",
-      "Version": "1.3-2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "ff280503079ad8623d3c4b1519b24ea2"
-    },
     "PreciseSums": {
       "Package": "PreciseSums",
       "Version": "0.4",
@@ -714,13 +707,6 @@
       "Repository": "CRAN",
       "Hash": "9fd59716311ee82cba83dc2826fc5577"
     },
-    "mongolite": {
-      "Package": "mongolite",
-      "Version": "2.3.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "49389ed197912afb8b11c8e022a0fca0"
-    },
     "munsell": {
       "Package": "munsell",
       "Version": "0.5.0",
@@ -781,13 +767,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "a1c84e73700f08816f062e244cb9faa9"
-    },
-    "optimr": {
-      "Package": "optimr",
-      "Version": "2019-12.16",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "3752a39ff8a663d682ae0943d7cac9a7"
     },
     "parsedate": {
       "Package": "parsedate",
@@ -991,20 +970,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "bf38ba1df24ecb204ae64b81c4774b43"
-    },
-    "rjson": {
-      "Package": "rjson",
-      "Version": "0.2.20",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "7d597f982ee6263716b6a2f28efd29fa"
-    },
-    "rlang": {
-      "Package": "rlang",
-      "Version": "0.4.10",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "599df23c40a4fce9c7b4764f28c37857"
     },
     "rmarkdown": {
       "Package": "rmarkdown",
