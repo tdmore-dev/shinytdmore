@@ -338,10 +338,10 @@
     },
     "diffobj": {
       "Package": "diffobj",
-      "Version": "0.3.3",
+      "Version": "0.3.4",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "55fae7ec1418d2a47bd552571673d1af"
+      "Hash": "feb5b7455eba422a2c110bb89852e6a3"
     },
     "digest": {
       "Package": "digest",
@@ -854,10 +854,10 @@
     },
     "processx": {
       "Package": "processx",
-      "Version": "3.4.5",
+      "Version": "3.5.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "22aab6098cb14edd0a5973a8438b569b"
+      "Hash": "605f57cffff369dabc0b6c344e9b4492"
     },
     "promises": {
       "Package": "promises",
@@ -1124,18 +1124,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "6e899d7c097698d50ec87b1d8e65f246"
-    },
-    "tdmore": {
-      "Package": "tdmore",
-      "Version": "1.2.0.900",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "tdmore",
-      "RemoteUsername": "tdmore-dev",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "84ab7e7b6abc07a3f923e96e77c6d247d3d5b872",
-      "Hash": "f8d9517f01baf46e0352cad2ac6e7bd0"
     },
     "testthat": {
       "Package": "testthat",
