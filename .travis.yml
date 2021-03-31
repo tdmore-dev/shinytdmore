@@ -31,7 +31,6 @@ addons:
       - libfribidi-dev
       - libmpfr-dev
       - libgit2-dev
-      - libdparser-dev
 
 
 install:
