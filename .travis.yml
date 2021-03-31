@@ -39,6 +39,7 @@ install:
   - Rscript -e "renv::restore(library=.libPaths()[1])"
   # Install PhantomJS (if not cached)
   - Rscript -e 'shinytest::installDependencies()'
+  - Rscript -e "devtools::install_github('tdmore-dev/tdmore@"$TRAVIS_BRANCH"')"
 
 script:
   - Rscript -e 'devtools::check()'
