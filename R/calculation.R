@@ -59,18 +59,21 @@ debouncedState <- function(state, names=c("model", "regimen", "observed", "covar
 #' @rdname calculation
 #' @inheritParams shinytdmore-data
 #' @param population TRUE to calculate a population fit, FALSE to calculate an individual fit
+#' @param se.fit calculate standard errors in the fit
 #' @param label label for all reactives in this system
 #' @param estimate estimation function, uses `tdmore::estimate` by default
 #' @export
-reactiveFit <- function(state, population=FALSE, millis=2000, label=if(population) "PopulationFit" else "IndividualFit", estimate=shinytdmore::estimate) {
+reactiveFit <- function(state, population=FALSE, se.fit=TRUE, millis=2000, label=if(population) "PopulationFit" else "IndividualFit", estimate=shinytdmore::estimate) {
   log <- function(...) {
     cat(label, ":: ", ...)
   }
   dbState <- debouncedState(state, millis=millis, label=paste0(label,"::FitState"))
   cache <- new.env()
   observeEvent(state$model, {
-    log("Resetting lastFit because model changed")
-    cache$lastFit <<- NULL
+    if(!identical(cache$lastFit$tdmore, state$model)) {
+      log("Resetting lastFit because model changed\n")
+      cache$lastFit <<- NULL
+    }
   }, label=paste0(label,"::FitResetOnModelChange"), ignoreInit=TRUE)
   updateNeeded <- reactiveVal(value=0, label=paste0(label,"::FitNeedsUpdate"))
   observeEvent(dbState(), {
@@ -101,6 +104,7 @@ reactiveFit <- function(state, population=FALSE, millis=2000, label=if(populatio
                                 regimen=args$regimen, 
                                 covariates=args$covariates,
                                 par=pars,
+                                se.fit=se.fit,
                               .progress=progress)
     } else if (needsUpdate(fit, args, onlyEstimate=FALSE) ){
       #just update the included regimen/observed/covariates
@@ -145,7 +149,7 @@ reactiveRecommendation <- function(state, fit, millis=2000) {
 calculationReactives <- function(state, mc.maxpts=100, fitMillis=2000, predictMillis=2000, recommendationMillis=500) {
   cr <- list()
   cr$populationPredict <- reactivePredict(state, mc.maxpts=mc.maxpts)
-  cr$fit <- reactiveFit(state, millis=fitMillis)
+  cr$fit <- reactiveFit(state, millis=fitMillis, se.fit=(mc.maxpts > 0))
   cr$populationPredictNoSe <- if(mc.maxpts == 0) cr$populationPredict else reactivePredict(state, mc.maxpts=0, millis=predictMillis)
   cr$individualPredict <- reactivePredict(state, cr$fit, mc.maxpts=mc.maxpts, millis=predictMillis)
   cr$individualPredictNoSe <- if(mc.maxpts == 0) cr$individualPredict else reactivePredict(state, cr$fit, mc.maxpts=0, millis=predictMillis)
@@ -162,7 +166,7 @@ calculationReactives <- function(state, mc.maxpts=100, fitMillis=2000, predictMi
 #' @inheritParams shinytdmore-data
 #' @export
 reactivePredict <- function(state, fit=NULL, recommendation=NULL, mc.maxpts=100, millis=2000) {
-  if(is.null(fit)) fit = reactiveFit(state, population=TRUE)
+  if(is.null(fit)) fit = reactiveFit(state, population=TRUE, se.fit=(mc.maxpts>0))
   
   dependency <- debounce(reactive({
     list(
